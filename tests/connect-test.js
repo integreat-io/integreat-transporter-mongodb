@@ -1,11 +1,11 @@
 import test from 'ava'
-import {dbUri} from './helpers/mongo'
+import {baseUri} from './helpers/mongo'
 
 import adapter from '..'
 
 // Helpers
 
-const sourceOptions = {dbUri}
+const sourceOptions = {baseUri}
 
 // Tests
 

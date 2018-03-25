@@ -1,6 +1,6 @@
 import test from 'ava'
 import {
-  dbUri,
+  baseUri,
   openMongoWithCollection,
   closeMongo,
   insertDocuments,
@@ -12,7 +12,7 @@ import adapter from '..'
 
 // Helpers
 
-const sourceOptions = {dbUri}
+const sourceOptions = {baseUri}
 
 test.beforeEach(async (t) => {
   t.context = await openMongoWithCollection('test')
