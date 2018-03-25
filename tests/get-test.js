@@ -14,10 +14,20 @@ import adapter from '..'
 
 const sourceOptions = {dbUri}
 
+test.beforeEach(async (t) => {
+  t.context = await openMongoWithCollection('test')
+})
+
+test.afterEach.always(async (t) => {
+  const {client, collection} = t.context
+  deleteDocuments(collection, {type: 'entry'})
+  closeMongo(client)
+})
+
 // Tests
 
 test('get a document by type and id', async (t) => {
-  const {client, collection, collectionName} = await openMongoWithCollection('test')
+  const {collection, collectionName} = t.context
   await insertDocuments(collection, [
     {id: 'ent1', type: 'entry'},
     {id: 'ent2', type: 'entry'}
@@ -43,13 +53,10 @@ test('get a document by type and id', async (t) => {
   const {data} = response
   t.is(data.length, 1)
   t.is(data[0].id, 'ent1')
-
-  deleteDocuments(collection, {type: 'entry'})
-  closeMongo(client)
 })
 
 test('get documents by type', async (t) => {
-  const {client, collection, collectionName} = await openMongoWithCollection('test')
+  const {collection, collectionName} = t.context
   await insertDocuments(collection, [
     {id: 'ent1', type: 'entry'},
     {id: 'ent2', type: 'entry'}
@@ -75,7 +82,4 @@ test('get documents by type', async (t) => {
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
   t.is(data[1].id, 'ent2')
-
-  deleteDocuments(collection, {type: 'entry'})
-  closeMongo(client)
 })

@@ -13,10 +13,20 @@ import adapter from '..'
 
 const sourceOptions = {dbUri}
 
+test.beforeEach(async (t) => {
+  t.context = await openMongoWithCollection('test')
+})
+
+test.afterEach.always(async (t) => {
+  const {client, collection} = t.context
+  deleteDocuments(collection, {type: 'entry'})
+  closeMongo(client)
+})
+
 // Tests
 
 test('should set one document', async (t) => {
-  const {client, collection, collectionName} = await openMongoWithCollection('test')
+  const {collection, collectionName} = t.context
   const request = {
     action: 'SET',
     data: {
@@ -38,13 +48,10 @@ test('should set one document', async (t) => {
   const docs = await getDocuments(collection, {type: 'entry'})
   t.is(docs.length, 1)
   t.is(docs[0].id, 'ent1')
-
-  deleteDocuments(collection, {type: 'entry'})
-  closeMongo(client)
 })
 
 test('should set array of documents', async (t) => {
-  const {client, collection, collectionName} = await openMongoWithCollection('test')
+  const {collection, collectionName} = t.context
   const request = {
     action: 'SET',
     data: [
@@ -67,7 +74,4 @@ test('should set array of documents', async (t) => {
   t.is(docs.length, 2)
   t.true(docs.some(doc => doc.id === 'ent1'))
   t.true(docs.some(doc => doc.id === 'ent2'))
-
-  deleteDocuments(collection, {type: 'entry'})
-  closeMongo(client)
 })

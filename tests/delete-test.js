@@ -14,10 +14,20 @@ import adapter from '..'
 
 const sourceOptions = {dbUri}
 
+test.beforeEach(async (t) => {
+  t.context = await openMongoWithCollection('test')
+})
+
+test.afterEach.always(async (t) => {
+  const {client, collection} = t.context
+  deleteDocuments(collection, {type: 'entry'})
+  closeMongo(client)
+})
+
 // Tests
 
 test('should delete one document', async (t) => {
-  const {client, collection, collectionName} = await openMongoWithCollection('test')
+  const {collection, collectionName} = t.context
   await insertDocuments(collection, [
     {id: 'ent1', type: 'entry'},
     {id: 'ent2', type: 'entry'}
@@ -43,13 +53,10 @@ test('should delete one document', async (t) => {
   const docs = await getDocuments(collection, {type: 'entry'})
   t.is(docs.length, 1)
   t.is(docs[0].id, 'ent2')
-
-  deleteDocuments(collection, {type: 'entry'})
-  closeMongo(client)
 })
 
 test('should delete array of documents', async (t) => {
-  const {client, collection, collectionName} = await openMongoWithCollection('test')
+  const {collection, collectionName} = t.context
   const request = {
     action: 'DELETE',
     data: [
@@ -70,7 +77,4 @@ test('should delete array of documents', async (t) => {
   t.is(response.status, 'ok')
   const docs = await getDocuments(collection, {type: 'entry'})
   t.is(docs.length, 0)
-
-  deleteDocuments(collection, {type: 'entry'})
-  closeMongo(client)
 })
