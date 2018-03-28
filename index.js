@@ -1,3 +1,3 @@
-const mongodb = require('./lib/mongodb')
+const adapter = require('./lib/adapter')
 
-module.exports = mongodb
+module.exports = {adapter}

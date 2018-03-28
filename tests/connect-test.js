@@ -1,7 +1,8 @@
 import test from 'ava'
 import {baseUri} from './helpers/mongo'
 
-import adapter from '..'
+import mongodb from '..'
+const {adapter} = mongodb
 
 // Helpers
 

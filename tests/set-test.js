@@ -8,7 +8,8 @@ import {
   deleteDocuments
 } from './helpers/mongo'
 
-import adapter from '..'
+import mongodb from '..'
+const {adapter} = mongodb
 
 // Helpers
 
