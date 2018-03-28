@@ -2,7 +2,7 @@ version: '3.1'
 services:
   tests:
     build: .
-    command: npm run test:once
+    command: npm run test
     tty: true
     volumes:
       - .:/usr/app/
