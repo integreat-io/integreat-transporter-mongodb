@@ -1,4 +1,4 @@
-# don't run deprecated test on any development dependencies
+# Just warn about deprecated development dependencies
 ci:
   development:
     tests:
