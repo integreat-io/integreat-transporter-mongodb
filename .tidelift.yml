@@ -1,0 +1,5 @@
+# don't run deprecated test on any development dependencies
+ci:
+  development:
+    tests:
+      deprecated: warn
