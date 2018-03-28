@@ -1,3 +1,6 @@
 const adapter = require('./lib/adapter')
+const wrapper = require('./lib/wrapper')
 
-module.exports = {adapter}
+wrapper.adapter = adapter
+
+module.exports = wrapper
