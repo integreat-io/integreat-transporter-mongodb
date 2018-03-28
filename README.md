@@ -6,7 +6,7 @@ as source.
 
 [![Build Status](https://travis-ci.org/integreat-io/integreat-adapter-mongodb.svg?branch=master)](https://travis-ci.org/integreat-io/integreat-adapter-mongodb)
 [![Coverage Status](https://coveralls.io/repos/github/integreat-io/integreat-adapter-mongodb/badge.svg?branch=master)](https://coveralls.io/github/integreat-io/integreat-adapter-mongodb?branch=master)
-[![Dependencies Status](https://tidelift.com/badges/github/owner/repo)](https://tidelift.com/repo/github/integreat-io/integreat-adapter-mongodb)
+[![Dependencies Status](https://tidelift.com/badges/github/integreat-io/integreat-adapter-mongodb?style=flat)](https://tidelift.com/repo/github/integreat-io/integreat-adapter-mongodb)
 
 ## Getting started
 
