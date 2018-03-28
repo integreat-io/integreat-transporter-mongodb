@@ -47,7 +47,7 @@ test('should set one document', async (t) => {
 
   t.truthy(response)
   t.is(response.status, 'ok')
-  const docs = await getDocuments(collection, {type: 'entry'})
+  const docs = await getDocuments(collection, {_id: 'entry:ent1'})
   t.is(docs.length, 1)
   t.is(docs[0].id, 'ent1')
 })
@@ -74,13 +74,14 @@ test('should set array of documents', async (t) => {
   t.is(response.status, 'ok')
   const docs = await getDocuments(collection, {type: 'entry'})
   t.is(docs.length, 2)
-  t.true(docs.some(doc => doc.id === 'ent1'))
-  t.true(docs.some(doc => doc.id === 'ent2'))
+  t.true(docs.some(doc => doc._id === 'entry:ent1'))
+  t.true(docs.some(doc => doc._id === 'entry:ent2'))
 })
 
 test('should update existing document', async (t) => {
   const {collection, collectionName} = t.context
   await insertDocument(collection, {
+    _id: 'entry:ent1',
     id: 'ent1',
     type: 'entry',
     title: 'Entry 1',

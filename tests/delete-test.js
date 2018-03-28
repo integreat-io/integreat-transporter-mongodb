@@ -30,8 +30,8 @@ test.afterEach.always(async (t) => {
 test('should delete one document', async (t) => {
   const {collection, collectionName} = t.context
   await insertDocuments(collection, [
-    {id: 'ent1', type: 'entry'},
-    {id: 'ent2', type: 'entry'}
+    {_id: 'entry:ent1', id: 'ent1', type: 'entry'},
+    {_id: 'entry:ent2', id: 'ent2', type: 'entry'}
   ])
   const request = {
     action: 'DELETE',
@@ -58,6 +58,10 @@ test('should delete one document', async (t) => {
 
 test('should delete array of documents', async (t) => {
   const {collection, collectionName} = t.context
+  await insertDocuments(collection, [
+    {_id: 'entry:ent1', id: 'ent1', type: 'entry'},
+    {_id: 'entry:ent2', id: 'ent2', type: 'entry'}
+  ])
   const request = {
     action: 'DELETE',
     data: [
