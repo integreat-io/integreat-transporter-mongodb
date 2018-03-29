@@ -1,6 +1,6 @@
 {
   "name": "integreat-adapter-mongodb",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Integreat adapter for mongodb",
   "main": "index.js",
   "author": "Kjell-Morten Bratsberg Thorsen <post@kjellmorten.no>",
@@ -9,6 +9,7 @@
     "start": "node index.js",
     "test": "nyc --reporter=text-summary ava",
     "test:teardown": "docker-compose -f docker-compose-test.yml down",
+    "test:rebuild": "docker-compose -f docker-compose-test.yml build",
     "test:local": "npm run lint && docker-compose -f docker-compose-test.yml up --abort-on-container-exit",
     "test:watch": "ava --watch",
     "dev": "docker-compose -f docker-compose-dev.yml up && exit 0",
@@ -44,19 +45,19 @@
   },
   "homepage": "https://github.com/integreat-io/integreat-adapter-mongodb#readme",
   "engines": {
-    "node": ">=8.6.x",
-    "npm": ">= 5.4.x"
+    "node": ">= 8.6",
+    "npm": ">= 5.4"
   },
   "dependencies": {
     "dot-prop": "^4.2.0",
-    "mongodb": "^3.0.4"
+    "mongodb": "^3.0.5"
   },
   "devDependencies": {
     "ava": "^0.25.0",
     "babel-preset-env": "^1.6.1",
     "coveralls": "^3.0.0",
-    "nyc": "^11.4.1",
-    "sinon": "^4.4.2",
-    "standard": "^11.0.0"
+    "nyc": "^11.6.0",
+    "sinon": "^4.4.9",
+    "standard": "^11.0.1"
   }
 }
