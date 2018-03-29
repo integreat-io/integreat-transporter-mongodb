@@ -48,6 +48,7 @@
     "npm": ">= 5.4.x"
   },
   "dependencies": {
+    "dot-prop": "^4.2.0",
     "mongodb": "^3.0.4"
   },
   "devDependencies": {

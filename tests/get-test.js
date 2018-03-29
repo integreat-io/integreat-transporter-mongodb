@@ -83,3 +83,35 @@ test('get documents by type', async (t) => {
   t.is(data[0].id, 'ent1')
   t.is(data[1].id, 'ent2')
 })
+
+test('get a document with endpoint query', async (t) => {
+  const {collection, collectionName} = t.context
+  await insertDocuments(collection, [
+    {_id: 'entry:ent1', id: 'ent1', type: 'entry', attributes: {title: 'Entry 1'}},
+    {_id: 'entry:ent2', id: 'ent2', type: 'entry', attributes: {title: 'Entry 2'}}
+  ])
+  const request = {
+    action: 'GET',
+    params: {
+      type: 'entry'
+    },
+    endpoint: {
+      collection: collectionName,
+      db: 'test',
+      query: [
+        {path: 'type', param: 'type'},
+        {path: 'attributes\\.title', value: 'Entry 2'}
+      ]
+    }
+  }
+
+  const connection = await adapter.connect({sourceOptions})
+  const response = await adapter.send(request, connection)
+  await adapter.disconnect(connection)
+
+  t.truthy(response)
+  t.is(response.status, 'ok')
+  const {data} = response
+  t.is(data.length, 1)
+  t.is(data[0].id, 'ent2')
+})

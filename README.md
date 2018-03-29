@@ -53,6 +53,48 @@ Example source configuration:
 
 The `baseUri` is used as the uri to the database.
 
+An endpoint may have a `query` property, which should be an array of path
+objects describing the query object used with MongoDB's `find()` method.
+
+Here's an example:
+
+```javascript
+{
+  ...
+  endpoints: [
+    {
+      id: 'getDrafts',
+      options: {
+        db: 'store',
+        collection: 'documents',
+        query: [
+          {path: 'type', param: 'type'},
+          {path: 'attributes\\.status', value: 'draft'}
+        ]
+      }
+    }
+  ]
+}
+```
+
+The `path` property describes what property to set, and the property is set to
+the value of `value` or to the value of the request parameter in `param`. Note
+that dots in paths must be escaped here, as we are not setting the status
+property on an attributes object, but rather setting the `attributes.status`
+property.
+
+The query object will look like this, for a request for items of type `entry`:
+```javascript
+{
+  type: 'entry',
+  'attributes.status': 'draft'
+}
+```
+
+**Note:** This adapter is currently updating and deleting arrays of documents
+by calling `updateOne` and `deleteOne` for every item in the array. This is not
+the best method of doing it, so stay tuned for improvements.
+
 ### Running the tests
 
 The tests can be run with `npm test`.
