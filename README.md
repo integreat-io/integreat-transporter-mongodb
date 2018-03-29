@@ -43,8 +43,8 @@ Example source configuration:
 {
   id: 'store',
   adapter: 'mongodb',
-  auth: 'db',
-  baseUri: 'mongodb://mymongo.com',
+  auth: true,
+  baseUri: 'mongodb://username:password@mymongo.com',
   endpoints: [
     {options: {db: 'store', collection: 'documents'}}
   ]
@@ -91,9 +91,14 @@ The query object will look like this, for a request for items of type `entry`:
 }
 ```
 
-**Note:** This adapter is currently updating and deleting arrays of documents
+**Note 1:** This adapter is currently updating and deleting arrays of documents
 by calling `updateOne` and `deleteOne` for every item in the array. This is not
 the best method of doing it, so stay tuned for improvements.
+
+**Note 2:** Including credential in the connection uri, is a fairly common
+practice with MongoDB. To tell Integreat that the source is authenticated and
+make all built in security measures kick in, simply set `auth: true` on the
+source def.
 
 ### Running the tests
 
