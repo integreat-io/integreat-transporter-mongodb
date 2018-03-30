@@ -1,6 +1,6 @@
 {
   "name": "integreat-adapter-mongodb",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Integreat adapter for mongodb",
   "main": "index.js",
   "author": "Kjell-Morten Bratsberg Thorsen <post@kjellmorten.no>",
