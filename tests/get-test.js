@@ -115,3 +115,34 @@ test('get a document with endpoint query', async (t) => {
   t.is(data.length, 1)
   t.is(data[0].id, 'ent2')
 })
+
+test('get one page of documents', async (t) => {
+  const {collection, collectionName} = t.context
+  await insertDocuments(collection, [
+    {_id: 'entry:ent1', id: 'ent1', type: 'entry'},
+    {_id: 'entry:ent2', id: 'ent2', type: 'entry'},
+    {_id: 'entry:ent3', id: 'ent2', type: 'entry'}
+  ])
+  const request = {
+    action: 'GET',
+    params: {
+      type: 'entry',
+      pageSize: 2
+    },
+    endpoint: {
+      collection: collectionName,
+      db: 'test'
+    }
+  }
+
+  const connection = await adapter.connect({sourceOptions})
+  const response = await adapter.send(request, connection)
+  await adapter.disconnect(connection)
+
+  t.truthy(response)
+  t.is(response.status, 'ok')
+  const {data} = response
+  t.is(data.length, 2)
+  t.is(data[0].id, 'ent1')
+  t.is(data[1].id, 'ent2')
+})
