@@ -116,7 +116,7 @@ test('get a document with endpoint query', async (t) => {
   t.is(data[0].id, 'ent2')
 })
 
-test('get one page of documents', async (t) => {
+test('get one page of documents with params for next page', async (t) => {
   const {collection, collectionName} = t.context
   await insertDocuments(collection, [
     {_id: 'entry:ent1', id: 'ent1', type: 'entry'},
@@ -134,6 +134,13 @@ test('get one page of documents', async (t) => {
       db: 'test'
     }
   }
+  const expectedPaging = {
+    next: {
+      query: {_id: {$gte: 'entry:ent2'}},
+      pageAfter: 'entry:ent2',
+      pageSize: 2
+    }
+  }
 
   const connection = await adapter.connect({sourceOptions})
   const response = await adapter.send(request, connection)
@@ -145,4 +152,47 @@ test('get one page of documents', async (t) => {
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
   t.is(data[1].id, 'ent2')
+  t.deepEqual(response.paging, expectedPaging)
+})
+
+test('get second page of documents', async (t) => {
+  const {collection, collectionName} = t.context
+  await insertDocuments(collection, [
+    {_id: 'entry:ent1', id: 'ent1', type: 'entry'},
+    {_id: 'entry:ent2', id: 'ent2', type: 'entry'},
+    {_id: 'entry:ent3', id: 'ent3', type: 'entry'},
+    {_id: 'entry:ent4', id: 'ent4', type: 'entry'}
+  ])
+  const request = {
+    action: 'GET',
+    params: {
+      type: 'entry',
+      query: {_id: {$gte: 'entry:ent2'}},
+      pageAfter: 'entry:ent2',
+      pageSize: 2
+    },
+    endpoint: {
+      collection: collectionName,
+      db: 'test'
+    }
+  }
+  const expectedPaging = {
+    next: {
+      query: {_id: {$gte: 'entry:ent4'}},
+      pageAfter: 'entry:ent4',
+      pageSize: 2
+    }
+  }
+
+  const connection = await adapter.connect({sourceOptions})
+  const response = await adapter.send(request, connection)
+  await adapter.disconnect(connection)
+
+  t.truthy(response)
+  t.is(response.status, 'ok')
+  const {data} = response
+  t.is(data.length, 2)
+  t.is(data[0].id, 'ent3')
+  t.is(data[1].id, 'ent4')
+  t.deepEqual(response.paging, expectedPaging)
 })
