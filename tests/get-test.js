@@ -26,7 +26,7 @@ test.afterEach.always(async (t) => {
 
 // Tests
 
-test('get a document by type and id', async (t) => {
+test('should get a document by type and id', async (t) => {
   const {collection, collectionName} = t.context
   await insertDocuments(collection, [
     {_id: 'entry:ent1', id: 'ent1', type: 'entry'},
@@ -55,7 +55,7 @@ test('get a document by type and id', async (t) => {
   t.is(data[0].id, 'ent1')
 })
 
-test('get documents by type', async (t) => {
+test('should get documents by type', async (t) => {
   const {collection, collectionName} = t.context
   await insertDocuments(collection, [
     {_id: 'entry:ent1', id: 'ent1', type: 'entry'},
@@ -84,7 +84,7 @@ test('get documents by type', async (t) => {
   t.is(data[1].id, 'ent2')
 })
 
-test('get a document with endpoint query', async (t) => {
+test('should get a document with endpoint query', async (t) => {
   const {collection, collectionName} = t.context
   await insertDocuments(collection, [
     {_id: 'entry:ent1', id: 'ent1', type: 'entry', attributes: {title: 'Entry 1'}},
@@ -116,7 +116,7 @@ test('get a document with endpoint query', async (t) => {
   t.is(data[0].id, 'ent2')
 })
 
-test('get one page of documents with params for next page', async (t) => {
+test('should get one page of documents with params for next page', async (t) => {
   const {collection, collectionName} = t.context
   await insertDocuments(collection, [
     {_id: 'entry:ent1', id: 'ent1', type: 'entry'},
@@ -156,7 +156,7 @@ test('get one page of documents with params for next page', async (t) => {
   t.deepEqual(response.paging, expectedPaging)
 })
 
-test('get second page of documents', async (t) => {
+test('should get second page of documents', async (t) => {
   const {collection, collectionName} = t.context
   await insertDocuments(collection, [
     {_id: 'entry:ent1', id: 'ent1', type: 'entry'},
@@ -197,4 +197,36 @@ test('get second page of documents', async (t) => {
   t.is(data[0].id, 'ent3')
   t.is(data[1].id, 'ent4')
   t.deepEqual(response.paging, expectedPaging)
+})
+
+test('should sort documents', async (t) => {
+  const {collection, collectionName} = t.context
+  await insertDocuments(collection, [
+    {_id: 'entry:ent1', id: 'ent1', type: 'entry', attributes: {index: 2}},
+    {_id: 'entry:ent2', id: 'ent2', type: 'entry', attriubtes: {index: 1}}
+  ])
+  const request = {
+    action: 'GET',
+    params: {
+      type: 'entry'
+    },
+    endpoint: {
+      collection: collectionName,
+      db: 'test',
+      sort: {
+        'attributes.index': 1
+      }
+    }
+  }
+
+  const connection = await adapter.connect({sourceOptions})
+  const response = await adapter.send(request, connection)
+  await adapter.disconnect(connection)
+
+  t.truthy(response)
+  t.is(response.status, 'ok')
+  const {data} = response
+  t.is(data.length, 2)
+  t.is(data[0].id, 'ent2')
+  t.is(data[1].id, 'ent1')
 })
