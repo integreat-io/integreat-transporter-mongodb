@@ -136,6 +136,7 @@ test('get one page of documents with params for next page', async (t) => {
   }
   const expectedPaging = {
     next: {
+      type: 'entry',
       query: {_id: {$gte: 'entry:ent2'}},
       pageAfter: 'entry:ent2',
       pageSize: 2
@@ -178,6 +179,7 @@ test('get second page of documents', async (t) => {
   }
   const expectedPaging = {
     next: {
+      type: 'entry',
       query: {_id: {$gte: 'entry:ent4'}},
       pageAfter: 'entry:ent4',
       pageSize: 2
