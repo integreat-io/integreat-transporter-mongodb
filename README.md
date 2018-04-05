@@ -91,6 +91,11 @@ The query object will look like this, for a request for items of type `entry`:
 }
 ```
 
+When the `pageSize` param is set in a request, it is taken as the max number of
+documents to return in the response. When nothing else is specified, the first
+page of documents is returned, and the `paging.next` prop on the response will
+hold a params object that may be used to get the next page.
+
 **Note 1:** This adapter is currently updating and deleting arrays of documents
 by calling `updateOne` and `deleteOne` for every item in the array. This is not
 the best method of doing it, so stay tuned for improvements.
