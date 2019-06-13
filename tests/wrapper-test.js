@@ -4,7 +4,7 @@ import mongodb from '..'
 
 test('should wrap resources', (t) => {
   const resources = {
-    adapters: {json: {}},
+    adapters: { json: {} },
     formatters: {}
   }
 

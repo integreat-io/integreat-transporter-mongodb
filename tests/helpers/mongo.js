@@ -9,7 +9,7 @@ async function openMongoWithCollection (dbName = 'test') {
   const collectionName = `docs_${Date.now()}_${collectionCount++}`
   const client = await mongo.connect(baseUri, { useNewUrlParser: true })
   const collection = client.db(dbName).collection(collectionName)
-  return {client, collection, collectionName}
+  return { client, collection, collectionName }
 }
 
 function closeMongo (client) {
