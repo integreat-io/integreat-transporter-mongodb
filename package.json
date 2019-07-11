@@ -52,7 +52,7 @@
     "npm": ">= 5.4"
   },
   "dependencies": {
-    "@sindresorhus/is": "^0.17.0",
+    "@sindresorhus/is": "^1.0.0",
     "dot-prop": "^5.1.0",
     "mongodb": "^3.2.7"
   },
