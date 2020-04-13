@@ -46,7 +46,7 @@
   "dependencies": {
     "@sindresorhus/is": "^2.1.0",
     "dot-prop": "^5.2.0",
-    "mongodb": "^3.2.7"
+    "mongodb": "^3.5.5"
   },
   "devDependencies": {
     "@ava/babel": "^1.0.1",

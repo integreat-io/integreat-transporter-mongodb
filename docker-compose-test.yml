@@ -14,4 +14,4 @@ services:
     environment:
       MONGO_URI: mongodb://mongodb:27017
   mongodb:
-    image: mongo:3.6
+    image: mongo:4.2
