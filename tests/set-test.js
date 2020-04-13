@@ -1,6 +1,6 @@
 import test from 'ava'
 import {
-  baseUri,
+  uri,
   openMongoWithCollection,
   closeMongo,
   insertDocument,
@@ -13,7 +13,7 @@ const { adapter } = mongodb
 
 // Helpers
 
-const sourceOptions = { baseUri }
+const sourceOptions = { uri }
 
 test.beforeEach(async (t) => {
   t.context = await openMongoWithCollection('test')
@@ -41,7 +41,7 @@ test('should set one document', async (t) => {
     }
   }
 
-  const connection = await adapter.connect({ sourceOptions })
+  const connection = await adapter.connect(sourceOptions)
   const response = await adapter.send(request, connection)
   await adapter.disconnect(connection)
 
@@ -66,7 +66,7 @@ test('should set array of documents', async (t) => {
     }
   }
 
-  const connection = await adapter.connect({ sourceOptions })
+  const connection = await adapter.connect(sourceOptions)
   const response = await adapter.send(request, connection)
   await adapter.disconnect(connection)
 
@@ -101,7 +101,7 @@ test('should update existing document', async (t) => {
     }
   }
 
-  const connection = await adapter.connect({ sourceOptions })
+  const connection = await adapter.connect(sourceOptions)
   const response = await adapter.send(request, connection)
   await adapter.disconnect(connection)
 

@@ -44,14 +44,16 @@ Example source configuration:
   id: 'store',
   adapter: 'mongodb',
   auth: true,
-  baseUri: 'mongodb://username:password@mymongo.com',
+  options: {
+    uri: 'mongodb://username:password@mymongo.com',
+  }
   endpoints: [
-    {options: {db: 'store', collection: 'documents'}}
+    { options: { db: 'store', collection: 'documents' } }
   ]
 }
 ```
 
-The `baseUri` is used as the uri to the database.
+The `uri` is used as the uri to the database.
 
 An endpoint may have a `query` property, which should be an array of path
 objects describing the query object used with MongoDB's `find()` method.
@@ -68,8 +70,8 @@ Here's an example:
         db: 'store',
         collection: 'documents',
         query: [
-          {path: 'type', param: 'type'},
-          {path: 'attributes\\.status', value: 'draft'}
+          { path: 'type', param: 'type' },
+          { path: 'attributes\\.status', value: 'draft' }
         ]
       }
     }

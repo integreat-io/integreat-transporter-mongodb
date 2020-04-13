@@ -1,6 +1,6 @@
 import test from 'ava'
 import {
-  baseUri,
+  uri,
   openMongoWithCollection,
   closeMongo,
   insertDocuments,
@@ -12,7 +12,7 @@ const { adapter } = mongodb
 
 // Helpers
 
-const sourceOptions = { baseUri }
+const sourceOptions = { uri }
 
 test.beforeEach(async (t) => {
   t.context = await openMongoWithCollection('test')
@@ -44,7 +44,7 @@ test('should get a document by type and id', async (t) => {
     }
   }
 
-  const connection = await adapter.connect({ sourceOptions })
+  const connection = await adapter.connect(sourceOptions)
   const response = await adapter.send(request, connection)
   await adapter.disconnect(connection)
 
@@ -72,7 +72,7 @@ test('should get documents by type', async (t) => {
     }
   }
 
-  const connection = await adapter.connect({ sourceOptions })
+  const connection = await adapter.connect(sourceOptions)
   const response = await adapter.send(request, connection)
   await adapter.disconnect(connection)
 
@@ -105,7 +105,7 @@ test('should get a document with endpoint query', async (t) => {
     }
   }
 
-  const connection = await adapter.connect({ sourceOptions })
+  const connection = await adapter.connect(sourceOptions)
   const response = await adapter.send(request, connection)
   await adapter.disconnect(connection)
 
@@ -136,7 +136,7 @@ test('should sort documents', async (t) => {
     }
   }
 
-  const connection = await adapter.connect({ sourceOptions })
+  const connection = await adapter.connect(sourceOptions)
   const response = await adapter.send(request, connection)
   await adapter.disconnect(connection)
 

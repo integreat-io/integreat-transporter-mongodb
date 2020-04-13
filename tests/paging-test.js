@@ -1,6 +1,6 @@
 import test from 'ava'
 import {
-  baseUri,
+  uri,
   openMongoWithCollection,
   closeMongo,
   insertDocuments,
@@ -12,7 +12,7 @@ const { adapter } = mongodb
 
 // Helpers
 
-const sourceOptions = { baseUri }
+const sourceOptions = { uri }
 
 test.beforeEach(async (t) => {
   t.context = await openMongoWithCollection('test')
@@ -53,7 +53,7 @@ test('should get one page of documents with params for next page', async (t) => 
     }
   }
 
-  const connection = await adapter.connect({ sourceOptions })
+  const connection = await adapter.connect(sourceOptions)
   const response = await adapter.send(request, connection)
   await adapter.disconnect(connection)
 
@@ -96,7 +96,7 @@ test('should get second page of documents', async (t) => {
     }
   }
 
-  const connection = await adapter.connect({ sourceOptions })
+  const connection = await adapter.connect(sourceOptions)
   const response = await adapter.send(request, connection)
   await adapter.disconnect(connection)
 
@@ -138,7 +138,7 @@ test('should return less than a full page at the end', async (t) => {
     }
   }
 
-  const connection = await adapter.connect({ sourceOptions })
+  const connection = await adapter.connect(sourceOptions)
   const response = await adapter.send(request, connection)
   await adapter.disconnect(connection)
 
@@ -175,7 +175,7 @@ test('should return empty array when past last page', async (t) => {
     next: null
   }
 
-  const connection = await adapter.connect({ sourceOptions })
+  const connection = await adapter.connect(sourceOptions)
   const response = await adapter.send(request, connection)
   await adapter.disconnect(connection)
 
@@ -209,7 +209,7 @@ test('should not throw when pageAfter does not exist', async (t) => {
     next: null
   }
 
-  const connection = await adapter.connect({ sourceOptions })
+  const connection = await adapter.connect(sourceOptions)
   const response = await adapter.send(request, connection)
   await adapter.disconnect(connection)
 
@@ -251,7 +251,7 @@ test('should get second page of documents when sorting', async (t) => {
     }
   }
 
-  const connection = await adapter.connect({ sourceOptions })
+  const connection = await adapter.connect(sourceOptions)
   const response = await adapter.send(request, connection)
   await adapter.disconnect(connection)
 
@@ -295,7 +295,7 @@ test('should get second page of documents when sorting descending', async (t) =>
     }
   }
 
-  const connection = await adapter.connect({ sourceOptions })
+  const connection = await adapter.connect(sourceOptions)
   const response = await adapter.send(request, connection)
   await adapter.disconnect(connection)
 
@@ -339,7 +339,7 @@ test('should get second page of documents when sorting key is not unique', async
     }
   }
 
-  const connection = await adapter.connect({ sourceOptions })
+  const connection = await adapter.connect(sourceOptions)
   const response = await adapter.send(request, connection)
   await adapter.disconnect(connection)
 
