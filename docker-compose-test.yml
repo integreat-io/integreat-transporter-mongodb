@@ -15,3 +15,10 @@ services:
       MONGO_URI: mongodb://mongodb:27017
   mongodb:
     image: mongo:4.2
+    ports:
+      - '27017:27017'
+    restart: always
+    volumes:
+      - ./mongodb:/data/db
+    logging:
+      driver: none

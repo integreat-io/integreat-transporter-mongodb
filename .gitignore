@@ -5,6 +5,7 @@ logs
 .nyc_output
 coverage
 npm-debug.log.*
+report.*.json
 
 # Dependency directory
 node_modules
@@ -30,3 +31,6 @@ nbproject
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+
+# Temps and outputs
+mongodb

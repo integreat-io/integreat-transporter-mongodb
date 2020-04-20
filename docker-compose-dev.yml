@@ -1,19 +1,22 @@
 version: '3.1'
 services:
-  tests:
-    build: .
-    command: npm run test:watch
-    tty: true
-    volumes:
-      - .:/usr/app/
-      - /usr/app/node_modules
-    ports:
-      - 3000:3000
-    depends_on:
-      - mongodb
-    environment:
-      MONGO_URI: mongodb://mongodb:27017
+  # tests:
+  #   build: .
+  #   command: npm run test:watch
+  #   tty: true
+  #   volumes:
+  #     - .:/usr/app/
+  #     - /usr/app/node_modules
+  #   ports:
+  #     - 3000:3000
+  #   depends_on:
+  #     - mongodb
+  #   environment:
+  #     MONGO_URI: mongodb://mongodb:27017
   mongodb:
     image: mongo:4.2
-    logging:
-      driver: none
+    ports:
+      - '27017:27017'
+    restart: always
+    volumes:
+      - ./mongodb:/data/db
