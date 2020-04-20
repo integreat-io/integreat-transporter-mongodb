@@ -1,6 +1,6 @@
 {
   "name": "integreat-adapter-mongodb",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Integreat adapter for mongodb",
   "main": "index.js",
   "author": "Kjell-Morten Bratsberg Thorsen <post@kjellmorten.no>",
@@ -26,7 +26,10 @@
       "lib/**/*-test.js",
       "tests/**/*-test.js"
     ],
-    "ignoredByWatcher": ["mongodb/**", "**/*.md"],
+    "ignoredByWatcher": [
+      "mongodb/**",
+      "**/*.md"
+    ],
     "environmentVariables": {
       "MONGO_URI": "mongodb://localhost:27017"
     }
