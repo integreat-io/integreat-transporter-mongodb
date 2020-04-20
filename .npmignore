@@ -5,3 +5,4 @@ tests
 docker-compose.yml
 docker-compose-*.yml
 Dockerfile
+mongodb
