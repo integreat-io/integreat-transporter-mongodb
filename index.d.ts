@@ -15,12 +15,12 @@ export interface Response {
 
 export interface Adapter {
   authentication?: string
-  prepareEndpoint: (endpointOptions: object, serviceOptions: object) => object
-  connect: (options: object, connection: Connection) => Promise<Connection>
-  disconnect: (connection: Connection) => Promise<void>
-  send: (request: object, connection: Connection) => Promise<object>
-  normalize: (data: object[], request: object) => Promise<object[]>
-  serialize: (data: object[], request: object) => Promise<object[]>
+  prepareEndpoint: (endpointOptions: object, serviceOptions?: object) => object
+  connect: (options: object, auth: object | null, connection: Connection | null) => Promise<Connection>
+  disconnect: (connection: Connection | null) => Promise<void>
+  send: (request: object, connection: Connection | null) => Promise<object>
+  serialize: (request: object) => Promise<object[]>
+  normalize: (response: object, request: object) => Promise<object[]>
 }
 
 declare const _default: { adapter: Adapter }
