@@ -420,7 +420,34 @@ test('should return noaction for unknown action', async (t) => {
   t.is(status, 'noaction')
 })
 
-test('should return error when no connection', async (t) => {
+test('should return badrequest when no collection', async (t) => {
+  const find = createFind([
+    { id: 'ent1', $type: 'entry' },
+    { id: 'ent2', $type: 'entry' },
+  ])
+  const connection = createConnection({ find })
+  const exchange = {
+    ...defaultExchange,
+    type: 'GET',
+    request: {
+      type: 'entry',
+      params: {
+        typePlural: 'entries',
+      },
+    },
+    options: {
+      collection: null,
+      db: 'database',
+    },
+  }
+
+  const { status, response } = await send(exchange, connection)
+
+  t.is(status, 'error')
+  t.is(response.error, 'Could not get the collection specified in the request')
+})
+
+test('should return error when no client', async (t) => {
   const connection = { status: 'error' }
   const exchange = {
     ...defaultExchange,
@@ -435,5 +462,23 @@ test('should return error when no connection', async (t) => {
   const { status, response } = await send(exchange, connection)
 
   t.is(status, 'error')
-  t.is(response.error, 'No connection')
+  t.is(response.error, 'No valid connection')
+})
+
+test('should return error when no connection', async (t) => {
+  const connection = null
+  const exchange = {
+    ...defaultExchange,
+    type: 'GET',
+    request: { type: 'entry', data: null },
+    options: {
+      collection: 'documents',
+      db: 'database',
+    },
+  }
+
+  const { status, response } = await send(exchange, connection)
+
+  t.is(status, 'error')
+  t.is(response.error, 'No valid connection')
 })

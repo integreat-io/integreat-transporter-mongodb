@@ -51,10 +51,21 @@ const getPage = async (
 }
 
 export default async function getDocs(
-  getCollection: () => Collection,
+  getCollection: () => Collection | undefined,
   exchange: Exchange
 ): Promise<Exchange> {
   const collection = getCollection()
+  if (!collection) {
+    return {
+      ...exchange,
+      status: 'error',
+      response: {
+        ...exchange.response,
+        error: 'Could not get the collection specified in the request',
+      },
+    }
+  }
+
   const request = exchange.request
   const options: MongoOptions = exchange.options || {}
 

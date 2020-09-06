@@ -51,10 +51,21 @@ const performOnObjectOrArray = async (
 }
 
 const setOrDeleteData = async (
-  getCollection: () => Collection,
+  getCollection: () => Collection | undefined,
   exchange: Exchange
 ) => {
   const collection = getCollection()
+  if (!collection) {
+    return {
+      ...exchange,
+      status: 'error',
+      response: {
+        ...exchange.response,
+        error: 'Could not get the collection specified in the request',
+      },
+    }
+  }
+
   const {
     request: { data, params },
   } = exchange
@@ -89,18 +100,22 @@ export default async function send(
   exchange: Exchange,
   connection: MongoConnection | null
 ): Promise<Exchange> {
-  const getCollection = () => {
-    const options: MongoOptions | undefined = exchange.options
-    const db = connection.client.db(options?.db)
-    return db?.collection(options.collection)
-  }
-
-  if (connection.status !== 'ok' || !connection.client) {
+  const client = connection?.client
+  if (connection?.status !== 'ok' || !client) {
     return {
       ...exchange,
       status: 'error',
-      response: { ...exchange.response, error: 'No connection' },
+      response: { ...exchange.response, error: 'No valid connection' },
     }
+  }
+
+  const getCollection = () => {
+    const options: MongoOptions | undefined = exchange.options
+    if (!options?.collection) {
+      return undefined
+    }
+    const db = client.db(options?.db)
+    return db?.collection(options.collection)
   }
 
   switch (exchange.type) {
