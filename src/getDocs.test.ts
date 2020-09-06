@@ -2,6 +2,7 @@ import test from 'ava'
 import sinon = require('sinon')
 import { TypedData } from 'integreat'
 import { Collection } from 'mongodb'
+import defaultExchange from './tests/helpers/defaultExchange'
 
 import getDocs from './getDocs'
 
@@ -25,13 +26,6 @@ const createFind = (items: TypedData[]) => {
   }
 
   return sinon.stub().resolves(cursor)
-}
-
-const defaultExchange = {
-  status: null,
-  request: {},
-  response: {},
-  meta: {},
 }
 
 // Tests

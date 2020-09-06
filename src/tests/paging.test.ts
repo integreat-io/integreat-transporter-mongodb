@@ -1,18 +1,23 @@
-import test from 'ava'
+import ava, { TestInterface } from 'ava'
 import {
   uri,
   openMongoWithCollection,
   closeMongo,
   insertDocuments,
-  deleteDocuments
+  deleteDocuments,
+  MongoElements,
 } from './helpers/mongo'
+import defaultExchange from './helpers/defaultExchange'
+import { TypedData } from 'integreat'
 
-import mongodb from '..'
-const { adapter } = mongodb
+import adapter from '..'
+
+const test = ava as TestInterface<MongoElements>
 
 // Helpers
 
-const sourceOptions = { uri }
+const options = { uri }
+const authorization = null
 
 test.beforeEach(async (t) => {
   t.context = await openMongoWithCollection('test')
@@ -31,35 +36,35 @@ test('should get one page of documents with params for next page', async (t) => 
   await insertDocuments(collection, [
     { _id: 'entry:ent1', id: 'ent1', type: 'entry' },
     { _id: 'entry:ent2', id: 'ent2', type: 'entry' },
-    { _id: 'entry:ent3', id: 'ent2', type: 'entry' }
+    { _id: 'entry:ent3', id: 'ent2', type: 'entry' },
   ])
-  const request = {
-    action: 'GET',
-    params: {
+  const exchange = {
+    ...defaultExchange,
+    type: 'GET',
+    request: {
       type: 'entry',
-      pageSize: 2
+      pageSize: 2,
     },
-    endpoint: {
+    options: {
       collection: collectionName,
-      db: 'test'
-    }
+      db: 'test',
+    },
   }
   const expectedPaging = {
     next: {
       type: 'entry',
       query: { _id: { $gte: 'entry:ent2' } },
       pageAfter: 'entry:ent2',
-      pageSize: 2
-    }
+      pageSize: 2,
+    },
   }
 
-  const connection = await adapter.connect(sourceOptions)
-  const response = await adapter.send(request, connection)
+  const connection = await adapter.connect(options, authorization, null)
+  const { status, response } = await adapter.send(exchange, connection)
   await adapter.disconnect(connection)
 
-  t.truthy(response)
-  t.is(response.status, 'ok')
-  const { data } = response
+  t.is(status, 'ok')
+  const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
   t.is(data[1].id, 'ent2')
@@ -72,37 +77,37 @@ test('should get second page of documents', async (t) => {
     { _id: 'entry:ent1', id: 'ent1', type: 'entry' },
     { _id: 'entry:ent2', id: 'ent2', type: 'entry' },
     { _id: 'entry:ent3', id: 'ent3', type: 'entry' },
-    { _id: 'entry:ent4', id: 'ent4', type: 'entry' }
+    { _id: 'entry:ent4', id: 'ent4', type: 'entry' },
   ])
-  const request = {
-    action: 'GET',
-    params: {
+  const exchange = {
+    ...defaultExchange,
+    type: 'GET',
+    request: {
       type: 'entry',
-      query: { _id: { $gte: 'entry:ent2' } },
+      params: { query: { _id: { $gte: 'entry:ent2' } } },
       pageAfter: 'entry:ent2',
-      pageSize: 2
+      pageSize: 2,
     },
-    endpoint: {
+    options: {
       collection: collectionName,
-      db: 'test'
-    }
+      db: 'test',
+    },
   }
   const expectedPaging = {
     next: {
       type: 'entry',
       query: { _id: { $gte: 'entry:ent4' } },
       pageAfter: 'entry:ent4',
-      pageSize: 2
-    }
+      pageSize: 2,
+    },
   }
 
-  const connection = await adapter.connect(sourceOptions)
-  const response = await adapter.send(request, connection)
+  const connection = await adapter.connect(options, authorization, null)
+  const { status, response } = await adapter.send(exchange, connection)
   await adapter.disconnect(connection)
 
-  t.truthy(response)
-  t.is(response.status, 'ok')
-  const { data } = response
+  t.is(status, 'ok')
+  const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent3')
   t.is(data[1].id, 'ent4')
@@ -114,37 +119,37 @@ test('should return less than a full page at the end', async (t) => {
   await insertDocuments(collection, [
     { _id: 'entry:ent1', id: 'ent1', type: 'entry' },
     { _id: 'entry:ent2', id: 'ent2', type: 'entry' },
-    { _id: 'entry:ent3', id: 'ent3', type: 'entry' }
+    { _id: 'entry:ent3', id: 'ent3', type: 'entry' },
   ])
-  const request = {
-    action: 'GET',
-    params: {
+  const exchange = {
+    ...defaultExchange,
+    type: 'GET',
+    requset: {
       type: 'entry',
-      query: { _id: { $gte: 'entry:ent2' } },
+      params: { query: { _id: { $gte: 'entry:ent2' } } },
       pageAfter: 'entry:ent2',
-      pageSize: 2
+      pageSize: 2,
     },
-    endpoint: {
+    options: {
       collection: collectionName,
-      db: 'test'
-    }
+      db: 'test',
+    },
   }
   const expectedPaging = {
     next: {
       type: 'entry',
       query: { _id: { $gte: 'entry:ent3' } },
       pageAfter: 'entry:ent3',
-      pageSize: 2
-    }
+      pageSize: 2,
+    },
   }
 
-  const connection = await adapter.connect(sourceOptions)
-  const response = await adapter.send(request, connection)
+  const connection = await adapter.connect(options, authorization, null)
+  const { status, response } = await adapter.send(exchange, connection)
   await adapter.disconnect(connection)
 
-  t.truthy(response)
-  t.is(response.status, 'ok')
-  const { data } = response
+  t.is(status, 'ok')
+  const data = response.data as TypedData[]
   t.is(data.length, 1)
   t.is(data[0].id, 'ent3')
   t.deepEqual(response.paging, expectedPaging)
@@ -156,32 +161,32 @@ test('should return empty array when past last page', async (t) => {
     { _id: 'entry:ent1', id: 'ent1', type: 'entry' },
     { _id: 'entry:ent2', id: 'ent2', type: 'entry' },
     { _id: 'entry:ent3', id: 'ent3', type: 'entry' },
-    { _id: 'entry:ent4', id: 'ent4', type: 'entry' }
+    { _id: 'entry:ent4', id: 'ent4', type: 'entry' },
   ])
-  const request = {
-    action: 'GET',
-    params: {
+  const exchange = {
+    ...defaultExchange,
+    type: 'GET',
+    request: {
       type: 'entry',
-      query: { _id: { $gte: 'entry:ent4' } },
+      params: { query: { _id: { $gte: 'entry:ent4' } } },
       pageAfter: 'entry:ent4',
-      pageSize: 2
+      pageSize: 2,
     },
-    endpoint: {
+    options: {
       collection: collectionName,
-      db: 'test'
-    }
+      db: 'test',
+    },
   }
   const expectedPaging = {
-    next: null
+    next: undefined,
   }
 
-  const connection = await adapter.connect(sourceOptions)
-  const response = await adapter.send(request, connection)
+  const connection = await adapter.connect(options, authorization, null)
+  const { status, response } = await adapter.send(exchange, connection)
   await adapter.disconnect(connection)
 
-  t.truthy(response)
-  t.is(response.status, 'ok')
-  const { data } = response
+  t.is(status, 'ok')
+  const data = response.data as TypedData[]
   t.is(data.length, 0)
   t.deepEqual(response.paging, expectedPaging)
 })
@@ -190,32 +195,32 @@ test('should not throw when pageAfter does not exist', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
     { _id: 'entry:ent1', id: 'ent1', type: 'entry' },
-    { _id: 'entry:ent2', id: 'ent2', type: 'entry' }
+    { _id: 'entry:ent2', id: 'ent2', type: 'entry' },
   ])
-  const request = {
-    action: 'GET',
-    params: {
+  const exchange = {
+    ...defaultExchange,
+    type: 'GET',
+    request: {
       type: 'entry',
-      query: { _id: { $gte: 'entry:ent3' } },
+      params: { query: { _id: { $gte: 'entry:ent3' } } },
       pageAfter: 'entry:ent3',
-      pageSize: 2
+      pageSize: 2,
     },
-    endpoint: {
+    options: {
       collection: collectionName,
-      db: 'test'
-    }
+      db: 'test',
+    },
   }
   const expectedPaging = {
-    next: null
+    next: undefined,
   }
 
-  const connection = await adapter.connect(sourceOptions)
-  const response = await adapter.send(request, connection)
+  const connection = await adapter.connect(options, authorization, null)
+  const { status, response } = await adapter.send(exchange, connection)
   await adapter.disconnect(connection)
 
-  t.truthy(response)
-  t.is(response.status, 'ok')
-  const { data } = response
+  t.is(status, 'ok')
+  const data = response.data as TypedData[]
   t.is(data.length, 0)
   t.deepEqual(response.paging, expectedPaging)
 })
@@ -226,38 +231,38 @@ test('should get second page of documents when sorting', async (t) => {
     { _id: 'entry:ent1', id: 'ent1', type: 'entry', attributes: { index: 3 } },
     { _id: 'entry:ent2', id: 'ent2', type: 'entry', attributes: { index: 1 } },
     { _id: 'entry:ent3', id: 'ent3', type: 'entry', attributes: { index: 2 } },
-    { _id: 'entry:ent4', id: 'ent4', type: 'entry', attributes: { index: 4 } }
+    { _id: 'entry:ent4', id: 'ent4', type: 'entry', attributes: { index: 4 } },
   ])
-  const request = {
-    action: 'GET',
-    params: {
+  const exchange = {
+    ...defaultExchange,
+    type: 'GET',
+    request: {
       type: 'entry',
-      query: { 'attributes.index': { $gte: 2 } },
+      params: { query: { 'attributes.index': { $gte: 2 } } },
       pageAfter: 'entry:ent3',
-      pageSize: 2
+      pageSize: 2,
     },
-    endpoint: {
+    options: {
       collection: collectionName,
       db: 'test',
-      sort: { 'attributes.index': 1 }
-    }
+      sort: { 'attributes.index': 1 },
+    },
   }
   const expectedPaging = {
     next: {
       type: 'entry',
       query: { 'attributes.index': { $gte: 4 } },
       pageAfter: 'entry:ent4',
-      pageSize: 2
-    }
+      pageSize: 2,
+    },
   }
 
-  const connection = await adapter.connect(sourceOptions)
-  const response = await adapter.send(request, connection)
+  const connection = await adapter.connect(options, authorization, null)
+  const { status, response } = await adapter.send(exchange, connection)
   await adapter.disconnect(connection)
 
-  t.truthy(response)
-  t.is(response.status, 'ok')
-  const { data } = response
+  t.is(status, 'ok')
+  const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
   t.is(data[1].id, 'ent4')
@@ -270,38 +275,38 @@ test('should get second page of documents when sorting descending', async (t) =>
     { _id: 'entry:ent1', id: 'ent1', type: 'entry', attributes: { index: 3 } },
     { _id: 'entry:ent2', id: 'ent2', type: 'entry', attributes: { index: 1 } },
     { _id: 'entry:ent3', id: 'ent3', type: 'entry', attributes: { index: 2 } },
-    { _id: 'entry:ent4', id: 'ent4', type: 'entry', attributes: { index: 4 } }
+    { _id: 'entry:ent4', id: 'ent4', type: 'entry', attributes: { index: 4 } },
   ])
-  const request = {
-    action: 'GET',
-    params: {
+  const exchange = {
+    ...defaultExchange,
+    type: 'GET',
+    request: {
       type: 'entry',
-      query: { 'attributes.index': { $lte: 3 } },
+      params: { query: { 'attributes.index': { $lte: 3 } } },
       pageAfter: 'entry:ent1',
-      pageSize: 2
+      pageSize: 2,
     },
-    endpoint: {
+    options: {
       collection: collectionName,
       db: 'test',
-      sort: { 'attributes.index': -1 }
-    }
+      sort: { 'attributes.index': -1 },
+    },
   }
   const expectedPaging = {
     next: {
       type: 'entry',
       query: { 'attributes.index': { $lte: 1 } },
       pageAfter: 'entry:ent2',
-      pageSize: 2
-    }
+      pageSize: 2,
+    },
   }
 
-  const connection = await adapter.connect(sourceOptions)
-  const response = await adapter.send(request, connection)
+  const connection = await adapter.connect(options, authorization, null)
+  const { status, response } = await adapter.send(exchange, connection)
   await adapter.disconnect(connection)
 
-  t.truthy(response)
-  t.is(response.status, 'ok')
-  const { data } = response
+  t.is(status, 'ok')
+  const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent3')
   t.is(data[1].id, 'ent2')
@@ -314,38 +319,38 @@ test('should get second page of documents when sorting key is not unique', async
     { _id: 'entry:ent1', id: 'ent1', type: 'entry', attributes: { index: 2 } },
     { _id: 'entry:ent2', id: 'ent2', type: 'entry', attributes: { index: 1 } },
     { _id: 'entry:ent3', id: 'ent3', type: 'entry', attributes: { index: 1 } },
-    { _id: 'entry:ent4', id: 'ent4', type: 'entry', attributes: { index: 3 } }
+    { _id: 'entry:ent4', id: 'ent4', type: 'entry', attributes: { index: 3 } },
   ])
-  const request = {
-    action: 'GET',
-    params: {
+  const exchange = {
+    ...defaultExchange,
+    type: 'GET',
+    request: {
       type: 'entry',
-      query: { 'attributes.index': { $gte: 1 } },
+      paras: { query: { 'attributes.index': { $gte: 1 } } },
       pageAfter: 'entry:ent3',
-      pageSize: 2
+      pageSize: 2,
     },
-    endpoint: {
+    options: {
       collection: collectionName,
       db: 'test',
-      sort: { 'attributes.index': 1 }
-    }
+      sort: { 'attributes.index': 1 },
+    },
   }
   const expectedPaging = {
     next: {
       type: 'entry',
       query: { 'attributes.index': { $gte: 3 } },
       pageAfter: 'entry:ent4',
-      pageSize: 2
-    }
+      pageSize: 2,
+    },
   }
 
-  const connection = await adapter.connect(sourceOptions)
-  const response = await adapter.send(request, connection)
+  const connection = await adapter.connect(options, authorization, null)
+  const { status, response } = await adapter.send(exchange, connection)
   await adapter.disconnect(connection)
 
-  t.truthy(response)
-  t.is(response.status, 'ok')
-  const { data } = response
+  t.is(status, 'ok')
+  const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
   t.is(data[1].id, 'ent4')

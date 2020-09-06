@@ -2,6 +2,7 @@ import test from 'ava'
 import sinon = require('sinon')
 import { TypedData } from 'integreat'
 import { Collection, MongoClient } from 'mongodb'
+import defaultExchange from './tests/helpers/defaultExchange'
 
 import send from './send'
 
@@ -35,13 +36,6 @@ const createFind = (items: TypedData[]) => {
     // Mimick next()
     next: async () => it.next().value,
   })
-}
-
-const defaultExchange = {
-  status: null,
-  request: {},
-  response: {},
-  meta: {},
 }
 
 // Tests
