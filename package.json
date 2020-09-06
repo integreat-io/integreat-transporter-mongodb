@@ -6,39 +6,20 @@
   "author": "Kjell-Morten Bratsberg Thorsen <post@kjellmorten.no>",
   "license": "ISC",
   "scripts": {
-    "start": "node index.js",
-    "test": "nyc --reporter=text-summary ava",
+    "test": "npm run build && nyc --reporter=text-summary ava --config ./ava-dist.config.js",
+    "test:setup": "docker-compose -f docker-compose-test.yml up",
     "test:teardown": "docker-compose -f docker-compose-test.yml down",
     "test:rebuild": "docker-compose -f docker-compose-test.yml build",
     "test:local": "npm run lint && docker-compose -f docker-compose-test.yml up --abort-on-container-exit",
+    "test:inspect": "node --inspect node_modules/ava/profile.js",
     "test:watch": "npm run dev",
     "dev": "ava --watch",
     "dev:setup": "docker-compose -f docker-compose-dev.yml up",
     "dev:teardown": "docker-compose -f docker-compose-dev.yml down",
-    "prebuild": "npm run lint && npm run test",
+    "build": "tsc",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
-    "nyc:report": "nyc report",
-    "lint": "standard"
-  },
-  "ava": {
-    "babel": true,
-    "files": [
-      "lib/**/*-test.js",
-      "tests/**/*-test.js"
-    ],
-    "ignoredByWatcher": [
-      "mongodb/**",
-      "**/*.md"
-    ],
-    "environmentVariables": {
-      "MONGO_URI": "mongodb://localhost:27017"
-    }
-  },
-  "nyc": {
-    "exclude": [
-      "**/*-test.js",
-      "tests/helpers/*.js"
-    ]
+    "nyc:report": "nyc report --reporter=text --reporter=html",
+    "lint": "eslint --ext .ts src"
   },
   "repository": {
     "type": "git",
@@ -52,17 +33,15 @@
     "node": ">= 12.9"
   },
   "dependencies": {
-    "@sindresorhus/is": "^2.1.1",
-    "dot-prop": "^5.2.0",
-    "mongodb": "^3.5.6"
+    "@sindresorhus/is": "^3.1.2",
+    "@types/mongodb": "^3.5.27",
+    "dot-prop": "^5.3.0",
+    "mongodb": "^3.6.1"
   },
   "devDependencies": {
-    "@ava/babel": "^1.0.1",
-    "ava": "^3.7.1",
-    "babel-preset-env": "^1.7.0",
-    "coveralls": "^3.0.11",
-    "nyc": "^15.0.1",
-    "sinon": "^9.0.2",
-    "standard": "^14.3.3"
+    "@integreat/ts-dev-setup": "^1.2.0",
+    "@types/sinon": "^9.0.5",
+    "integreat": "0.8.0-alpha.3",
+    "sinon": "^9.0.3"
   }
 }
