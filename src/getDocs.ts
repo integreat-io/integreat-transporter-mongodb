@@ -3,6 +3,7 @@ import createPaging from './createPaging'
 import { Collection, Cursor } from 'mongodb'
 import { Exchange } from 'integreat'
 import { MongoOptions, ExchangeRequest } from '.'
+import { normalizeItem } from './escapeKeys'
 
 // Move the cursor to the first doc after the `pageAfter`
 // When no `pageAfter`, just start from the beginning
@@ -95,7 +96,7 @@ export default async function getDocs(
   const response = {
     ...exchange,
     status: 'ok',
-    response: { ...exchange.response, data },
+    response: { ...exchange.response, data: data.map(normalizeItem) },
   }
 
   if (request.pageSize) {

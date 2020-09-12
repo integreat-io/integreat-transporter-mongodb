@@ -10,7 +10,7 @@ test('should return type filter', (t) => {
     collection: 'documents',
     db: 'database',
   }
-  const expected = { type: 'entry' }
+  const expected = { '\\$type': 'entry' }
 
   const ret = prepareFilter(options, type)
 
@@ -43,8 +43,8 @@ test('should use options.query as filter', (t) => {
     ],
   }
   const expected = {
-    type: 'other',
-    'meta.parentType': 'entry',
+    '\\$type': 'other',
+    'meta\\_parentType': 'entry',
   }
 
   const ret = prepareFilter(options, type, id)
@@ -66,8 +66,8 @@ test('should add request query to options query filter', (t) => {
     ],
   }
   const expected = {
-    type: 'other',
-    'meta.parentType': 'entry',
+    '\\$type': 'other',
+    'meta\\_parentType': 'entry',
     'meta.section': 'news',
   }
 
@@ -86,7 +86,7 @@ test('should add request query to type filter', (t) => {
     db: 'database',
   }
   const expected = {
-    type: 'entry',
+    '\\$type': 'entry',
     'meta.section': 'news',
   }
 
@@ -125,7 +125,7 @@ test('should cast date strings as Date', (t) => {
     db: 'database',
   }
   const expected = {
-    type: 'entry',
+    '\\$type': 'entry',
     'meta.updatedAt': new Date('2017-11-13T18:43:01.000Z'),
   }
 
@@ -144,7 +144,7 @@ test('should cast date strings without microseconds as Date', (t) => {
     db: 'database',
   }
   const expected = {
-    type: 'entry',
+    '\\$type': 'entry',
     'meta.updatedAt': new Date('2017-11-13T18:43:01Z'),
   }
 
@@ -163,7 +163,7 @@ test('should cast date strings with other time zone as Date', (t) => {
     db: 'database',
   }
   const expected = {
-    type: 'entry',
+    '\\$type': 'entry',
     'meta.updatedAt': new Date('2017-11-13T18:43:01.000+01:00'),
   }
 
@@ -182,7 +182,7 @@ test('should cast date strings as Date on sub-objects', (t) => {
     db: 'database',
   }
   const expected = {
-    type: 'entry',
+    '\\$type': 'entry',
     'meta.updatedAt': { $lte: new Date('2017-11-13T18:43:01.000Z') },
   }
 
@@ -201,7 +201,7 @@ test('should not touch Date object when casting', (t) => {
     db: 'database',
   }
   const expected = {
-    type: 'entry',
+    '\\$type': 'entry',
     'meta.updatedAt': new Date('2017-11-13T18:43:01.000Z'),
   }
 
@@ -220,7 +220,7 @@ test('should not touch arrays when casting', (t) => {
     db: 'database',
   }
   const expected = {
-    type: 'entry',
+    '\\$type': 'entry',
     _id: { $in: ['entry:ent1', 'entry:ent2'] },
   }
 

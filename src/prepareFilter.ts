@@ -1,6 +1,7 @@
 import dotprop = require('dot-prop')
 import is from '@sindresorhus/is'
 import { MongoOptions } from '.'
+import { serializePath } from './escapeKeys'
 
 const setTypeOrId = (
   query: Record<string, unknown>,
@@ -11,7 +12,7 @@ const setTypeOrId = (
     if (id) {
       query._id = `${type}:${id}`
     } else {
-      query.type = type
+      query['\\$type'] = type
     }
   }
 }
@@ -45,8 +46,12 @@ export default function prepareFilter(
   // Create query object from array of props
   const query = queryProps.reduce(
     (filter, { param, path, value }) =>
-      // eslint-disable-next-line security/detect-object-injection
-      dotprop.set(filter, path, param ? allParams[param] : value),
+      dotprop.set(
+        filter,
+        path === 'type' ? '\\$type' : serializePath(path),
+        // eslint-disable-next-line security/detect-object-injection
+        param ? allParams[param] : value
+      ),
     {}
   )
 

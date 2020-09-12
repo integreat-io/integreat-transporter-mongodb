@@ -9,9 +9,10 @@ import getDocs from './getDocs'
 // Helpers
 
 const createFind = (items: TypedData[]) => {
-  const docs = items.map((item) => ({
+  const docs = items.map(({ $type, ...item }) => ({
     ...item,
-    _id: `${item.$type}:${item.id}`,
+    _id: `${$type}:${item.id}`,
+    '\\$type': $type,
   }))
   const it = docs[Symbol.iterator]()
 
@@ -48,6 +49,7 @@ test('should get items', async (t) => {
       db: 'database',
     },
   }
+  const expectedQuery = { '\\$type': 'entry' }
 
   const { status, response } = await getDocs(getCollection, exchange)
 
@@ -56,7 +58,7 @@ test('should get items', async (t) => {
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
   t.is(data[1].id, 'ent2')
-  t.true(find.calledWith({ type: 'entry' }))
+  t.true(find.calledWith(expectedQuery))
 })
 
 test('should get one item', async (t) => {
@@ -104,15 +106,15 @@ test('should get with query', async (t) => {
       ],
     },
   }
-  const expected = {
-    type: 'entry',
-    'personalia.age': { $gt: 18 },
+  const expectedQuery = {
+    '\\$type': 'entry',
+    'personalia\\_age': { $gt: 18 },
   }
 
   await getDocs(getCollection, exchange)
 
   const arg = find.args[0][0]
-  t.deepEqual(arg, expected)
+  t.deepEqual(arg, expectedQuery)
 })
 
 test('should get one page of items', async (t) => {
@@ -135,6 +137,7 @@ test('should get one page of items', async (t) => {
       db: 'database',
     },
   }
+  const expectedQuery = { '\\$type': 'entry' }
 
   const { status, response } = await getDocs(getCollection, exchange)
 
@@ -143,7 +146,7 @@ test('should get one page of items', async (t) => {
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
   t.is(data[1].id, 'ent2')
-  t.true(find.calledWith({ type: 'entry' }))
+  t.true(find.calledWith(expectedQuery))
 })
 
 test('should return params for next page', async (t) => {
@@ -211,10 +214,11 @@ test('should get second page of items', async (t) => {
       pageSize: 2,
     },
   }
+  const expectedQuery = { '\\$type': 'entry', _id: { $gte: 'entry:ent2' } }
 
   const { status, response } = await getDocs(getCollection, exchange)
 
-  t.deepEqual(find.args[0][0], { type: 'entry', _id: { $gte: 'entry:ent2' } })
+  t.deepEqual(find.args[0][0], expectedQuery)
   t.is(status, 'ok')
   const data = response.data as TypedData[]
   t.is(data.length, 2)
@@ -246,10 +250,11 @@ test('should get empty result when we have passed the last page', async (t) => {
   const expectedPaging = {
     next: undefined,
   }
+  const expectedQuery = { '\\$type': 'entry', _id: { $gte: 'entry:ent4' } }
 
   const { status, response } = await getDocs(getCollection, exchange)
 
-  t.deepEqual(find.args[0][0], { type: 'entry', _id: { $gte: 'entry:ent4' } })
+  t.deepEqual(find.args[0][0], expectedQuery)
   t.is(status, 'ok')
   t.is((response.data as TypedData[]).length, 0)
   t.deepEqual(response.paging, expectedPaging)
@@ -278,10 +283,11 @@ test('should get empty result when the pageAfter doc is not found', async (t) =>
   const expectedPaging = {
     next: undefined,
   }
+  const expectedQuery = { '\\$type': 'entry', _id: { $gte: 'entry:ent4' } }
 
   const { status, response } = await getDocs(getCollection, exchange)
 
-  t.deepEqual(find.args[0][0], { type: 'entry', _id: { $gte: 'entry:ent4' } })
+  t.deepEqual(find.args[0][0], expectedQuery)
   t.is(status, 'ok')
   t.is((response.data as TypedData[]).length, 0)
   t.deepEqual(response.paging, expectedPaging)
@@ -321,13 +327,11 @@ test('should get second page of items when there is documents before the pageAft
       pageSize: 2,
     },
   }
+  const expectedQuery = { '\\$type': 'entry', index: { $gte: 1 } }
 
   const { status, response } = await getDocs(getCollection, exchange)
 
-  t.deepEqual(find.args[0][0], {
-    type: 'entry',
-    index: { $gte: 1 },
-  })
+  t.deepEqual(find.args[0][0], expectedQuery)
   t.is(status, 'ok')
   const data = response.data as TypedData[]
   t.is(data.length, 2)

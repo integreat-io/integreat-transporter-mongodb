@@ -26,7 +26,7 @@ test.beforeEach(async (t) => {
 
 test.afterEach.always(async (t) => {
   const { client, collection } = t.context
-  deleteDocuments(collection, { type: 'entry' })
+  deleteDocuments(collection, { '\\$type': 'entry' })
   closeMongo(client)
 })
 
@@ -35,8 +35,8 @@ test.afterEach.always(async (t) => {
 test('should delete one document', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
-    { _id: 'entry:ent1', id: 'ent1', type: 'entry' },
-    { _id: 'entry:ent2', id: 'ent2', type: 'entry' },
+    { _id: 'entry:ent1', id: 'ent1', '\\$type': 'entry' },
+    { _id: 'entry:ent2', id: 'ent2', '\\$type': 'entry' },
   ])
   const exchange = {
     ...defaultExchange,
@@ -60,7 +60,7 @@ test('should delete one document', async (t) => {
   t.truthy(response)
   t.is(response.status, 'ok')
   const docs = (await getDocuments(collection, {
-    type: 'entry',
+    '\\$type': 'entry',
   })) as TypedData[]
   t.is(docs.length, 1)
   t.is(docs[0].id, 'ent2')
@@ -69,8 +69,8 @@ test('should delete one document', async (t) => {
 test('should delete array of documents', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
-    { _id: 'entry:ent1', id: 'ent1', type: 'entry' },
-    { _id: 'entry:ent2', id: 'ent2', type: 'entry' },
+    { _id: 'entry:ent1', id: 'ent1', '\\$type': 'entry' },
+    { _id: 'entry:ent2', id: 'ent2', '\\$type': 'entry' },
   ])
   const exchange = {
     ...defaultExchange,
@@ -93,6 +93,6 @@ test('should delete array of documents', async (t) => {
 
   t.truthy(response)
   t.is(response.status, 'ok')
-  const docs = await getDocuments(collection, { type: 'entry' })
+  const docs = await getDocuments(collection, { '\\$type': 'entry' })
   t.is(docs.length, 0)
 })

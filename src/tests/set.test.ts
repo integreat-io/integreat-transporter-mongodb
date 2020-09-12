@@ -25,7 +25,7 @@ test.beforeEach(async (t) => {
 
 test.afterEach.always(async (t) => {
   const { client, collection } = t.context
-  deleteDocuments(collection, { type: 'entry' })
+  deleteDocuments(collection, { '\\$type': 'entry' })
   closeMongo(client)
 })
 
@@ -71,7 +71,7 @@ test('should set array of documents', async (t) => {
         { $type: 'entry', id: 'ent2' },
       ],
     },
-    endpoint: {
+    options: {
       collection: collectionName,
       db: 'test',
     },
@@ -82,10 +82,9 @@ test('should set array of documents', async (t) => {
   await adapter.disconnect(connection)
 
   t.is(status, 'ok', response.error)
-  const docs = (await getDocuments(collection, { type: 'entry' })) as Record<
-    string,
-    unknown
-  >[]
+  const docs = (await getDocuments(collection, {
+    '\\$type': 'entry',
+  })) as Record<string, unknown>[]
   t.is(docs.length, 2)
   t.true(docs.some((doc) => doc._id === 'entry:ent1'))
   t.true(docs.some((doc) => doc._id === 'entry:ent2'))
@@ -96,9 +95,10 @@ test('should update existing document', async (t) => {
   await insertDocument(collection, {
     _id: 'entry:ent1',
     id: 'ent1',
-    type: 'entry',
+    '\\$type': 'entry',
     title: 'Entry 1',
     theOld: true,
+    meta: { section: 'news', 'archived\\_flag': false },
   })
   const exchange = {
     ...defaultExchange,
@@ -109,6 +109,7 @@ test('should update existing document', async (t) => {
         id: 'ent1',
         title: 'Updated entry 1',
         theNew: true,
+        meta: { section: 'oldies', 'archived.flag': true },
       },
     },
     options: {
@@ -122,13 +123,14 @@ test('should update existing document', async (t) => {
   await adapter.disconnect(connection)
 
   t.is(status, 'ok', response.error)
-  const docs = (await getDocuments(collection, { type: 'entry' })) as Record<
-    string,
-    unknown
-  >[]
+  const docs = (await getDocuments(collection, {
+    '\\$type': 'entry',
+  })) as Record<string, unknown>[]
   t.is(docs.length, 1)
   t.is(docs[0].id, 'ent1')
   t.true(docs[0].theNew)
   t.true(docs[0].theOld)
   t.is(docs[0].title, 'Updated entry 1')
+  t.is((docs[0].meta as Record<string, unknown>).section, 'oldies')
+  t.is((docs[0].meta as Record<string, unknown>)['archived\\_flag'], true)
 })

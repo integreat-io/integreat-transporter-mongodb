@@ -25,7 +25,7 @@ test.beforeEach(async (t) => {
 
 test.afterEach.always(async (t) => {
   const { client, collection } = t.context
-  deleteDocuments(collection, { type: 'entry' })
+  deleteDocuments(collection, { '\\$type': 'entry' })
   closeMongo(client)
 })
 
@@ -34,8 +34,8 @@ test.afterEach.always(async (t) => {
 test('should get a document by type and id', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
-    { _id: 'entry:ent1', id: 'ent1', type: 'entry' },
-    { _id: 'entry:ent2', id: 'ent2', type: 'entry' },
+    { _id: 'entry:ent1', id: 'ent1', '\\$type': 'entry' },
+    { _id: 'entry:ent2', id: 'ent2', '\\$type': 'entry' },
   ])
   const exchange = {
     ...defaultExchange,
@@ -64,8 +64,8 @@ test('should get a document by type and id', async (t) => {
 test('should get documents by type', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
-    { _id: 'entry:ent1', id: 'ent1', type: 'entry' },
-    { _id: 'entry:ent2', id: 'ent2', type: 'entry' },
+    { _id: 'entry:ent1', id: 'ent1', '\\$type': 'entry' },
+    { _id: 'entry:ent2', id: 'ent2', '\\$type': 'entry' },
   ])
   const exchange = {
     ...defaultExchange,
@@ -97,13 +97,13 @@ test('should get a document with endpoint query', async (t) => {
     {
       _id: 'entry:ent1',
       id: 'ent1',
-      type: 'entry',
+      '\\$type': 'entry',
       attributes: { title: 'Entry 1' },
     },
     {
       _id: 'entry:ent2',
       id: 'ent2',
-      type: 'entry',
+      '\\$type': 'entry',
       attributes: { title: 'Entry 2' },
     },
   ])
@@ -118,7 +118,7 @@ test('should get a document with endpoint query', async (t) => {
       db: 'test',
       query: [
         { path: 'type', param: 'type' },
-        { path: 'attributes\\.title', value: 'Entry 2' },
+        { path: 'attributes.title', value: 'Entry 2' },
       ],
     },
   }
@@ -137,8 +137,24 @@ test('should get a document with endpoint query', async (t) => {
 test('should sort documents', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
-    { _id: 'entry:ent1', id: 'ent1', type: 'entry', attributes: { index: 2 } },
-    { _id: 'entry:ent2', id: 'ent2', type: 'entry', attriubtes: { index: 1 } },
+    {
+      _id: 'entry:ent1',
+      id: 'ent1',
+      '\\$type': 'entry',
+      attributes: { index: 2 },
+    },
+    {
+      _id: 'entry:ent2',
+      id: 'ent2',
+      '\\$type': 'entry',
+      attributes: { index: 3 },
+    },
+    {
+      _id: 'entry:ent3',
+      id: 'ent3',
+      '\\$type': 'entry',
+      attributes: { index: 1 },
+    },
   ])
   const exchange = {
     ...defaultExchange,
@@ -162,7 +178,8 @@ test('should sort documents', async (t) => {
   t.truthy(response)
   t.is(status, 'ok')
   const data = response.data as TypedData[]
-  t.is(data.length, 2)
-  t.is(data[0].id, 'ent2')
+  t.is(data.length, 3)
+  t.is(data[0].id, 'ent3')
   t.is(data[1].id, 'ent1')
+  t.is(data[2].id, 'ent2')
 })

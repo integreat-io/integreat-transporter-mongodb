@@ -3,6 +3,7 @@ import getDocs from './getDocs'
 import { Exchange, TypedData } from 'integreat'
 import { MongoConnection, MongoOptions } from '.'
 import { Collection } from 'mongodb'
+import { serializeItem } from './escapeKeys'
 
 const createItemResponse = (
   { id, $type }: TypedData,
@@ -77,7 +78,7 @@ const setOrDeleteData = async (
       if (exchange.type === 'SET') {
         await collection.updateOne(
           filter,
-          { $set: { ...item, _id } },
+          { $set: { ...serializeItem(item), _id } },
           { upsert: true }
         )
       } else {

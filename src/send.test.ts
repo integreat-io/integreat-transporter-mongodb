@@ -22,9 +22,10 @@ const createConnection = (collection: unknown) => ({
 })
 
 const createFind = (items: TypedData[]) => {
-  const docs = items.map((item) => ({
+  const docs = items.map(({ $type, ...item }) => ({
     ...item,
-    _id: `${item.$type}:${item.id}`,
+    _id: `${$type}:${item.id}`,
+    '\\$type': $type,
   }))
   const it = docs[Symbol.iterator]()
 
@@ -67,8 +68,9 @@ test('should get items', async (t) => {
   const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
+  t.is(data[0].$type, 'entry')
   t.is(data[1].id, 'ent2')
-  t.true(find.calledWith({ type: 'entry' }))
+  t.true(find.calledWith({ '\\$type': 'entry' }))
 })
 
 test('should update one item', async (t) => {
@@ -90,6 +92,9 @@ test('should update one item', async (t) => {
   }
   const expectedData = [{ id: 'ent1', $type: 'entry', status: 'ok' }]
   const _id = 'entry:ent1'
+  const expectedSet = {
+    $set: { _id, id: 'ent1', '\\$type': 'entry', title: 'Entry 1' },
+  }
 
   const { status, response } = await send(exchange, connection)
 
@@ -97,10 +102,7 @@ test('should update one item', async (t) => {
   t.deepEqual(response.data, expectedData)
   t.is(updateOne.callCount, 1)
   t.deepEqual(updateOne.args[0][0], { _id: 'entry:ent1' })
-  t.deepEqual(updateOne.args[0][1], { $set: { ...data, _id } })
-  t.true(
-    updateOne.calledWith({ _id: 'entry:ent1' }, { $set: { ...data, _id } })
-  )
+  t.deepEqual(updateOne.args[0][1], expectedSet)
 })
 
 test('should return error when data cannot be updated', async (t) => {
@@ -153,24 +155,30 @@ test('should update items', async (t) => {
     { id: 'ent1', $type: 'entry', status: 'ok' },
     { id: 'ent2', $type: 'entry', status: 'ok' },
   ]
+  const expectedSet1 = {
+    $set: {
+      _id: 'entry:ent1',
+      id: 'ent1',
+      '\\$type': 'entry',
+      title: 'Entry 1',
+    },
+  }
+  const expectedSet2 = {
+    $set: {
+      _id: 'entry:ent2',
+      id: 'ent2',
+      '\\$type': 'entry',
+      title: 'Entry 2',
+    },
+  }
 
   const { status, response } = await send(exchange, connection)
 
   t.is(status, 'ok')
   t.deepEqual(response.data, expectedData)
   t.is(updateOne.callCount, 2)
-  t.true(
-    updateOne.calledWith(
-      { _id: 'entry:ent1' },
-      { $set: { ...data[0], _id: 'entry:ent1' } }
-    )
-  )
-  t.true(
-    updateOne.calledWith(
-      { _id: 'entry:ent2' },
-      { $set: { ...data[1], _id: 'entry:ent2' } }
-    )
-  )
+  t.true(updateOne.calledWith({ _id: 'entry:ent1' }, expectedSet1))
+  t.true(updateOne.calledWith({ _id: 'entry:ent2' }, expectedSet2))
 })
 
 test('should return error when one of the items cannot be updated', async (t) => {
@@ -199,24 +207,30 @@ test('should return error when one of the items cannot be updated', async (t) =>
     { id: 'ent1', $type: 'entry', status: 'ok' },
     { id: 'ent2', $type: 'entry', status: 'error', error: 'Mongo error' },
   ]
+  const expectedSet1 = {
+    $set: {
+      _id: 'entry:ent1',
+      id: 'ent1',
+      '\\$type': 'entry',
+      title: 'Entry 1',
+    },
+  }
+  const expectedSet2 = {
+    $set: {
+      _id: 'entry:ent2',
+      id: 'ent2',
+      '\\$type': 'entry',
+      title: 'Entry 2',
+    },
+  }
 
   const { status, response } = await send(exchange, connection)
 
   t.is(status, 'error')
   t.deepEqual(response.data, expectedData)
   t.is(updateOne.callCount, 2)
-  t.true(
-    updateOne.calledWith(
-      { _id: 'entry:ent1' },
-      { $set: { ...data[0], _id: 'entry:ent1' } }
-    )
-  )
-  t.true(
-    updateOne.calledWith(
-      { _id: 'entry:ent2' },
-      { $set: { ...data[1], _id: 'entry:ent2' } }
-    )
-  )
+  t.true(updateOne.calledWith({ _id: 'entry:ent1' }, expectedSet1))
+  t.true(updateOne.calledWith({ _id: 'entry:ent2' }, expectedSet2))
 })
 
 test('should insert one item', async (t) => {
@@ -238,19 +252,18 @@ test('should insert one item', async (t) => {
   }
   const expectedData = [{ id: 'ent3', $type: 'entry', status: 'ok' }]
   const _id = 'entry:ent3'
+  const expectedSet = {
+    $set: { _id, id: 'ent3', '\\$type': 'entry', title: 'Entry 3' },
+  }
 
   const { status, response } = await send(exchange, connection)
 
   t.is(status, 'ok')
   t.deepEqual(response.data, expectedData)
   t.is(updateOne.callCount, 1)
-  t.true(
-    updateOne.calledWith(
-      { _id: 'entry:ent3' },
-      { $set: { ...data, _id } },
-      { upsert: true }
-    )
-  )
+  t.deepEqual(updateOne.args[0][0], { _id: 'entry:ent3' })
+  t.deepEqual(updateOne.args[0][1], expectedSet)
+  t.deepEqual(updateOne.args[0][2], { upsert: true })
 })
 
 test('should return noaction when no item', async (t) => {

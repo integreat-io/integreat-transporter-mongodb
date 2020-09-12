@@ -12,7 +12,7 @@ as source.
 
 ### Prerequisits
 
-Requires node v8.6 and Integreat v0.6.
+Requires at least node v12.9, Integreat v0.8, and MongoDb 3.6.
 
 ### Installing and using
 
@@ -23,6 +23,7 @@ npm install integreat-adapter-mongodb
 ```
 
 Example of use:
+
 ```javascript
 const integreat = require('integreat')
 const mongodb = require('integreat-adapter-mongodb')
@@ -86,6 +87,7 @@ property on an attributes object, but rather setting the `attributes.status`
 property.
 
 The query object will look like this, for a request for items of type `entry`:
+
 ```javascript
 {
   type: 'entry',
@@ -106,6 +108,11 @@ the best method of doing it, so stay tuned for improvements.
 practice with MongoDB. To tell Integreat that the source is authenticated and
 make all built in security measures kick in, simply set `auth: true` on the
 source def.
+
+**Note 3:** As MongoDB does not allow keys with `.` in it or starting with `$`,
+so these characters are mapped. `.` is always mapped to `\_`, and `$` is mapped
+to `\$` when used at the beginning of a key. Consequently, `\` is mapped to
+`\\` as well.
 
 ### Running the tests
 
