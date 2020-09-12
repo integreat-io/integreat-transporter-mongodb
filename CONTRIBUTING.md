@@ -1,7 +1,7 @@
 # Contributing
 
 When contributing to this repository, please first discuss the change you wish
-to make via [issues](https://github.com/integreat-io/integreat-adapter-mongodb/issues)
+to make via [issues](https://github.com/integreat-io/integreat-transporter-mongodb/issues)
 with the owners of this repository before making a change.
 
 Please note we have a code of conduct, please follow it in all your interactions
@@ -43,7 +43,7 @@ include:
 Examples of unacceptable behavior by participants include:
 
 - The use of sexualized language or imagery and unwelcome sexual attention or
-advances
+  advances
 - Trolling, insulting/derogatory comments, and personal or political attacks
 - Public or private harassment
 - Publishing others' private information, such as a physical or electronic

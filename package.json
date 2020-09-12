@@ -1,8 +1,9 @@
 {
-  "name": "integreat-adapter-mongodb",
-  "version": "0.3.2",
-  "description": "Integreat adapter for mongodb",
-  "main": "index.js",
+  "name": "integreat-transporter-mongodb",
+  "version": "0.4.0",
+  "description": "Integreat transporter for mongodb",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "author": "Kjell-Morten Bratsberg Thorsen <post@kjellmorten.no>",
   "license": "ISC",
   "scripts": {
@@ -23,12 +24,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/integreat-io/integreat-adapter-mongodb.git"
+    "url": "git+https://github.com/integreat-io/integreat-transporter-mongodb.git"
   },
   "bugs": {
-    "url": "https://github.com/integreat-io/integreat-adapter-mongodb/issues"
+    "url": "https://github.com/integreat-io/integreat-transporter-mongodb/issues"
   },
-  "homepage": "https://github.com/integreat-io/integreat-adapter-mongodb#readme",
+  "homepage": "https://github.com/integreat-io/integreat-transporter-mongodb#readme",
   "engines": {
     "node": ">= 12.9"
   },
