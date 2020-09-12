@@ -12,7 +12,7 @@ export const uri = process.env.MONGO_URI || 'mongodb://127.0.0.1'
 let collectionCount = 1
 
 export async function openMongoWithCollection(
-  dbName = 'test'
+  dbName: string
 ): Promise<MongoElements> {
   const collectionName = `docs_${Date.now()}_${collectionCount++}`
   const client = await mongo.connect(uri, {

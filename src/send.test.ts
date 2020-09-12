@@ -119,10 +119,7 @@ test('should return error when data cannot be updated', async (t) => {
     },
   }
   const expectedResponse = {
-    error: 'Error updating item(s) in mongodb',
-    data: [
-      { id: 'ent1', $type: 'entry', status: 'error', error: 'Mongo error' },
-    ],
+    error: 'Error updating item(s) in mongodb: Mongo error',
   }
 
   const { status, response } = await send(exchange, connection)
@@ -291,6 +288,33 @@ test('should return noaction when no item', async (t) => {
   t.is(updateOne.callCount, 0)
 })
 
+test('should return badrequest when trying to set non-object', async (t) => {
+  const updateOne = sinon.stub().returns({
+    matchedCount: 1,
+    modifiedCount: 1,
+    upsertedCount: 0,
+  })
+  const connection = createConnection({ updateOne })
+  const exchange = {
+    ...defaultExchange,
+    type: 'SET',
+    request: { data: ['fisk'] },
+    options: {
+      collection: 'documents',
+      db: 'database',
+    },
+  }
+
+  const { status, response } = await send(exchange, connection)
+
+  t.is(status, 'badrequest')
+  t.is(
+    response.error,
+    'Error updating item(s) in mongodb: Only typed data may be sent to MongoDB'
+  )
+  t.is(updateOne.callCount, 0)
+})
+
 test('should delete one item', async (t) => {
   const deleteOne = sinon.stub().returns({ deletedCount: 1 })
   const connection = createConnection({ deleteOne })
@@ -334,10 +358,7 @@ test('should return error when the item cannot be deleted', async (t) => {
     },
   }
   const expectedResonse = {
-    error: 'Error deleting item(s) in mongodb',
-    data: [
-      { id: 'ent3', $type: 'entry', status: 'error', error: 'Mongo error' },
-    ],
+    error: 'Error deleting item(s) in mongodb: Mongo error',
   }
 
   const { status, response } = await send(exchange, connection)
@@ -427,7 +448,7 @@ test('should return noaction for unknown action', async (t) => {
   t.is(status, 'noaction')
 })
 
-test('should return badrequest when no collection', async (t) => {
+test('should return badrequest when GETting with no collection', async (t) => {
   const find = createFind([
     { id: 'ent1', $type: 'entry' },
     { id: 'ent2', $type: 'entry' },
@@ -442,6 +463,28 @@ test('should return badrequest when no collection', async (t) => {
         typePlural: 'entries',
       },
     },
+    options: {
+      collection: null,
+      db: 'database',
+    },
+  }
+
+  const { status, response } = await send(exchange, connection)
+
+  t.is(status, 'error')
+  t.is(response.error, 'Could not get the collection specified in the request')
+})
+
+test('should return badrequest when SETting with no collection', async (t) => {
+  const find = createFind([
+    { id: 'ent1', $type: 'entry' },
+    { id: 'ent2', $type: 'entry' },
+  ])
+  const connection = createConnection({ find })
+  const exchange = {
+    ...defaultExchange,
+    type: 'SET',
+    request: { data: { id: 'ent1', $type: 'entry' } },
     options: {
       collection: null,
       db: 'database',
@@ -488,4 +531,19 @@ test('should return error when no connection', async (t) => {
 
   t.is(status, 'error')
   t.is(response.error, 'No valid connection')
+})
+
+test('should return badrequest when no options', async (t) => {
+  const find = createFind([{ id: 'ent1', $type: 'entry' }])
+  const connection = createConnection({ find })
+  const exchange = {
+    ...defaultExchange,
+    type: 'SET',
+    request: { data: { id: 'ent1', $type: 'entry' } },
+  }
+
+  const { status, response } = await send(exchange, connection)
+
+  t.is(status, 'badrequest')
+  t.is(response.error, 'No endpoint options')
 })

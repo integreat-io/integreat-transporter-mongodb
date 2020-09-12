@@ -1,5 +1,4 @@
-export const isObject = (value: unknown): value is Record<string, unknown> =>
-  Object.prototype.toString.call(value) === '[object Object]'
+import { isObject } from './utils/is'
 
 const serializeDollarHead = (key: string) =>
   key.startsWith('$') ? `\\${key}` : key

@@ -49,3 +49,9 @@ test('disconnect should do nothing when no connection object', async (t) => {
 
   await t.notThrowsAsync(transporter.disconnect(connection))
 })
+
+test('disconnect should do nothing when no client', async (t) => {
+  const connection = { status: 'ok' }
+
+  await t.notThrowsAsync(transporter.disconnect(connection))
+})

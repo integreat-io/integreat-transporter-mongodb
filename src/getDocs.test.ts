@@ -1,7 +1,7 @@
 import test from 'ava'
 import sinon = require('sinon')
 import { TypedData } from 'integreat'
-import { Collection } from 'mongodb'
+import { Collection, MongoClient } from 'mongodb'
 import defaultExchange from './tests/helpers/defaultExchange'
 
 import getDocs from './getDocs'
@@ -29,6 +29,13 @@ const createFind = (items: TypedData[]) => {
   return sinon.stub().resolves(cursor)
 }
 
+const createClient = (collection: unknown) =>
+  (({
+    db: () => ({
+      collection: () => collection as Collection,
+    }),
+  } as unknown) as MongoClient)
+
 // Tests
 
 test('should get items', async (t) => {
@@ -36,7 +43,7 @@ test('should get items', async (t) => {
     { id: 'ent1', $type: 'entry' },
     { id: 'ent2', $type: 'entry' },
   ])
-  const getCollection = () => (({ find } as unknown) as Collection)
+  const client = createClient({ find })
   const exchange = {
     ...defaultExchange,
     type: 'GET',
@@ -51,7 +58,7 @@ test('should get items', async (t) => {
   }
   const expectedQuery = { '\\$type': 'entry' }
 
-  const { status, response } = await getDocs(getCollection, exchange)
+  const { status, response } = await getDocs(exchange, client)
 
   t.is(status, 'ok')
   const data = response.data as TypedData[]
@@ -63,7 +70,7 @@ test('should get items', async (t) => {
 
 test('should get one item', async (t) => {
   const find = createFind([{ id: 'ent1', $type: 'entry' }])
-  const getCollection = () => (({ find } as unknown) as Collection)
+  const client = createClient({ find })
   const exchange = {
     ...defaultExchange,
     type: 'GET',
@@ -78,7 +85,7 @@ test('should get one item', async (t) => {
     },
   }
 
-  const { status, response } = await getDocs(getCollection, exchange)
+  const { status, response } = await getDocs(exchange, client)
 
   t.is(status, 'ok')
   const data = response.data as TypedData[]
@@ -89,7 +96,7 @@ test('should get one item', async (t) => {
 
 test('should get with query', async (t) => {
   const find = createFind([])
-  const getCollection = () => (({ find } as unknown) as Collection)
+  const client = createClient({ find })
   const exchange = {
     ...defaultExchange,
     type: 'GET',
@@ -111,7 +118,7 @@ test('should get with query', async (t) => {
     'personalia\\_age': { $gt: 18 },
   }
 
-  await getDocs(getCollection, exchange)
+  await getDocs(exchange, client)
 
   const arg = find.args[0][0]
   t.deepEqual(arg, expectedQuery)
@@ -123,7 +130,7 @@ test('should get one page of items', async (t) => {
     { id: 'ent2', $type: 'entry' },
     { id: 'ent3', $type: 'entry' },
   ])
-  const getCollection = () => (({ find } as unknown) as Collection)
+  const client = createClient({ find })
   const exchange = {
     ...defaultExchange,
     type: 'GET',
@@ -139,7 +146,7 @@ test('should get one page of items', async (t) => {
   }
   const expectedQuery = { '\\$type': 'entry' }
 
-  const { status, response } = await getDocs(getCollection, exchange)
+  const { status, response } = await getDocs(exchange, client)
 
   t.is(status, 'ok')
   const data = response.data as TypedData[]
@@ -154,7 +161,7 @@ test('should return params for next page', async (t) => {
     { id: 'ent1', $type: 'entry' },
     { id: 'ent2', $type: 'entry' },
   ])
-  const getCollection = () => (({ find } as unknown) as Collection)
+  const client = createClient({ find })
   const exchange = {
     ...defaultExchange,
     type: 'GET',
@@ -177,7 +184,7 @@ test('should return params for next page', async (t) => {
     },
   }
 
-  const { response } = await getDocs(getCollection, exchange)
+  const { response } = await getDocs(exchange, client)
 
   t.deepEqual(response.paging, expectedPaging)
 })
@@ -188,7 +195,7 @@ test('should get second page of items', async (t) => {
     { id: 'ent3', $type: 'entry' },
     { id: 'ent4', $type: 'entry' },
   ])
-  const getCollection = () => (({ find } as unknown) as Collection)
+  const client = createClient({ find })
   const exchange = {
     ...defaultExchange,
     type: 'GET',
@@ -216,7 +223,7 @@ test('should get second page of items', async (t) => {
   }
   const expectedQuery = { '\\$type': 'entry', _id: { $gte: 'entry:ent2' } }
 
-  const { status, response } = await getDocs(getCollection, exchange)
+  const { status, response } = await getDocs(exchange, client)
 
   t.deepEqual(find.args[0][0], expectedQuery)
   t.is(status, 'ok')
@@ -229,7 +236,7 @@ test('should get second page of items', async (t) => {
 
 test('should get empty result when we have passed the last page', async (t) => {
   const find = createFind([{ id: 'ent4', $type: 'entry' }])
-  const getCollection = () => (({ find } as unknown) as Collection)
+  const client = createClient({ find })
   const exchange = {
     ...defaultExchange,
     type: 'GET',
@@ -252,7 +259,7 @@ test('should get empty result when we have passed the last page', async (t) => {
   }
   const expectedQuery = { '\\$type': 'entry', _id: { $gte: 'entry:ent4' } }
 
-  const { status, response } = await getDocs(getCollection, exchange)
+  const { status, response } = await getDocs(exchange, client)
 
   t.deepEqual(find.args[0][0], expectedQuery)
   t.is(status, 'ok')
@@ -262,7 +269,7 @@ test('should get empty result when we have passed the last page', async (t) => {
 
 test('should get empty result when the pageAfter doc is not found', async (t) => {
   const find = createFind([{ id: 'ent5', $type: 'entry' }])
-  const getCollection = () => (({ find } as unknown) as Collection)
+  const client = createClient({ find })
   const exchange = {
     ...defaultExchange,
     type: 'GET',
@@ -285,7 +292,7 @@ test('should get empty result when the pageAfter doc is not found', async (t) =>
   }
   const expectedQuery = { '\\$type': 'entry', _id: { $gte: 'entry:ent4' } }
 
-  const { status, response } = await getDocs(getCollection, exchange)
+  const { status, response } = await getDocs(exchange, client)
 
   t.deepEqual(find.args[0][0], expectedQuery)
   t.is(status, 'ok')
@@ -300,7 +307,7 @@ test('should get second page of items when there is documents before the pageAft
     { id: 'ent3', $type: 'entry', index: 2 },
     { id: 'ent4', $type: 'entry', index: 3 },
   ])
-  const getCollection = () => (({ find } as unknown) as Collection)
+  const client = createClient({ find })
   const exchange = {
     ...defaultExchange,
     type: 'GET',
@@ -329,7 +336,7 @@ test('should get second page of items when there is documents before the pageAft
   }
   const expectedQuery = { '\\$type': 'entry', index: { $gte: 1 } }
 
-  const { status, response } = await getDocs(getCollection, exchange)
+  const { status, response } = await getDocs(exchange, client)
 
   t.deepEqual(find.args[0][0], expectedQuery)
   t.is(status, 'ok')
@@ -342,7 +349,7 @@ test('should get second page of items when there is documents before the pageAft
 
 test('should return empty array when collection query comes back empty', async (t) => {
   const find = createFind([])
-  const getCollection = () => (({ find } as unknown) as Collection)
+  const client = createClient({ find })
   const exchange = {
     ...defaultExchange,
     type: 'GET',
@@ -356,7 +363,7 @@ test('should return empty array when collection query comes back empty', async (
     },
   }
 
-  const { status, response } = await getDocs(getCollection, exchange)
+  const { status, response } = await getDocs(exchange, client)
 
   t.is(status, 'ok')
   t.is((response.data as TypedData[]).length, 0)
@@ -364,7 +371,7 @@ test('should return empty array when collection query comes back empty', async (
 
 test('should return notfound when member query comes back empty', async (t) => {
   const find = createFind([])
-  const getCollection = () => (({ find } as unknown) as Collection)
+  const client = createClient({ find })
   const exchange = {
     ...defaultExchange,
     type: 'GET',
@@ -379,8 +386,26 @@ test('should return notfound when member query comes back empty', async (t) => {
     },
   }
 
-  const { status, response } = await getDocs(getCollection, exchange)
+  const { status, response } = await getDocs(exchange, client)
 
   t.is(status, 'notfound')
   t.is(response.error, "Could not find 'ent1' of type 'entry'")
+})
+
+test('should return error when missing option in exchange', async (t) => {
+  const find = createFind([])
+  const client = createClient({ find })
+  const exchange = {
+    ...defaultExchange,
+    type: 'GET',
+    request: {
+      id: 'ent1',
+      type: 'entry',
+      params: { typePlural: 'entries' },
+    },
+  }
+
+  const { status } = await getDocs(exchange, client)
+
+  t.is(status, 'error')
 })

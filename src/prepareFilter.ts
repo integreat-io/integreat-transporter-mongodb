@@ -37,7 +37,7 @@ const castValueIfDate = (value: unknown): unknown =>
  * Generate the right query object as a filter for finding docs in the database.
  */
 export default function prepareFilter(
-  { query: queryProps = [] }: MongoOptions = {},
+  { query: queryProps = [] }: MongoOptions,
   type?: string | string[],
   id?: string | string[],
   params: Record<string, unknown> = {}
@@ -59,7 +59,7 @@ export default function prepareFilter(
   setTypeOrId(query, type, id)
 
   // Add query from payload params
-  if (params?.query) {
+  if (params.query) {
     Object.assign(query, params.query)
   }
 

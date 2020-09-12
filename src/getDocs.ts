@@ -1,9 +1,10 @@
 import prepareFilter from './prepareFilter'
 import createPaging from './createPaging'
-import { Collection, Cursor } from 'mongodb'
+import { Cursor, MongoClient } from 'mongodb'
 import { Exchange, Data } from 'integreat'
 import { MongoOptions, ExchangeRequest } from '.'
 import { normalizeItem } from './escapeKeys'
+import { getCollection } from './send'
 
 // Move the cursor to the first doc after the `pageAfter`
 // When no `pageAfter`, just start from the beginning
@@ -52,10 +53,10 @@ const getPage = async (
 }
 
 export default async function getDocs(
-  getCollection: () => Collection | undefined,
-  exchange: Exchange
+  exchange: Exchange,
+  client: MongoClient
 ): Promise<Exchange> {
-  const collection = getCollection()
+  const collection = getCollection(exchange, client)
   if (!collection) {
     return {
       ...exchange,
@@ -68,7 +69,7 @@ export default async function getDocs(
   }
 
   const request = exchange.request
-  const options: MongoOptions = exchange.options || {}
+  const options = exchange.options as MongoOptions
 
   const filter = prepareFilter(
     options,

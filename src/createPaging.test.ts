@@ -152,3 +152,31 @@ test('should return paging when sorting ascending and descending', (t) => {
 
   t.deepEqual(ret, expected)
 })
+
+test('should include id when present in request', (t) => {
+  const data = prepareData([
+    { id: 'ent1', $type: 'entry' },
+    { id: 'ent2', $type: 'entry' },
+  ])
+  const request = {
+    type: 'entry',
+    id: 'ent1',
+    pageSize: 2,
+    params: { archived: true },
+    target: 'crm',
+  }
+  const expected = {
+    next: {
+      type: 'entry',
+      id: 'ent1',
+      query: { _id: { $gte: 'entry:ent2' } },
+      pageAfter: 'entry:ent2',
+      pageSize: 2,
+      archived: true,
+    },
+  }
+
+  const ret = createPaging(data, request)
+
+  t.deepEqual(ret, expected)
+})
