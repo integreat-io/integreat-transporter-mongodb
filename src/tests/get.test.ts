@@ -10,7 +10,7 @@ import {
 import defaultExchange from './helpers/defaultExchange'
 import { TypedData } from 'integreat'
 
-import adapter from '..'
+import transporter from '..'
 
 const test = ava as TestInterface<MongoElements>
 
@@ -50,9 +50,9 @@ test('should get a document by type and id', async (t) => {
     },
   }
 
-  const connection = await adapter.connect(options, authentication, null)
-  const { status, response } = await adapter.send(exchange, connection)
-  await adapter.disconnect(connection)
+  const connection = await transporter.connect(options, authentication, null)
+  const { status, response } = await transporter.send(exchange, connection)
+  await transporter.disconnect(connection)
 
   t.truthy(response)
   t.is(status, 'ok')
@@ -79,9 +79,9 @@ test('should get documents by type', async (t) => {
     },
   }
 
-  const connection = await adapter.connect(options, authentication, null)
-  const { status, response } = await adapter.send(exchange, connection)
-  await adapter.disconnect(connection)
+  const connection = await transporter.connect(options, authentication, null)
+  const { status, response } = await transporter.send(exchange, connection)
+  await transporter.disconnect(connection)
 
   t.truthy(response)
   t.is(status, 'ok')
@@ -123,9 +123,9 @@ test('should get a document with endpoint query', async (t) => {
     },
   }
 
-  const connection = await adapter.connect(options, authentication, null)
-  const { status, response } = await adapter.send(exchange, connection)
-  await adapter.disconnect(connection)
+  const connection = await transporter.connect(options, authentication, null)
+  const { status, response } = await transporter.send(exchange, connection)
+  await transporter.disconnect(connection)
 
   t.truthy(response)
   t.is(status, 'ok')
@@ -171,9 +171,9 @@ test('should sort documents', async (t) => {
     },
   }
 
-  const connection = await adapter.connect(options, authentication, null)
-  const { status, response } = await adapter.send(exchange, connection)
-  await adapter.disconnect(connection)
+  const connection = await transporter.connect(options, authentication, null)
+  const { status, response } = await transporter.send(exchange, connection)
+  await transporter.disconnect(connection)
 
   t.truthy(response)
   t.is(status, 'ok')

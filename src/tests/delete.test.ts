@@ -10,7 +10,7 @@ import {
 } from './helpers/mongo'
 import defaultExchange from './helpers/defaultExchange'
 
-import adapter from '..'
+import transporter from '..'
 import { TypedData } from 'integreat'
 
 const test = ava as TestInterface<MongoElements>
@@ -53,9 +53,9 @@ test('should delete one document', async (t) => {
     },
   }
 
-  const connection = await adapter.connect(options, authorization, null)
-  const response = await adapter.send(exchange, connection)
-  await adapter.disconnect(connection)
+  const connection = await transporter.connect(options, authorization, null)
+  const response = await transporter.send(exchange, connection)
+  await transporter.disconnect(connection)
 
   t.truthy(response)
   t.is(response.status, 'ok')
@@ -87,9 +87,9 @@ test('should delete array of documents', async (t) => {
     },
   }
 
-  const connection = await adapter.connect(options, authorization, null)
-  const response = await adapter.send(exchange, connection)
-  await adapter.disconnect(connection)
+  const connection = await transporter.connect(options, authorization, null)
+  const response = await transporter.send(exchange, connection)
+  await transporter.disconnect(connection)
 
   t.truthy(response)
   t.is(response.status, 'ok')

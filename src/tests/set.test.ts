@@ -10,7 +10,7 @@ import {
 } from './helpers/mongo'
 import defaultExchange from './helpers/defaultExchange'
 
-import adapter from '..'
+import transporter from '..'
 
 const test = ava as TestInterface<MongoElements>
 
@@ -48,9 +48,9 @@ test('should set one document', async (t) => {
     },
   }
 
-  const connection = await adapter.connect(options, authorization, null)
-  const { status, response } = await adapter.send(exchange, connection)
-  await adapter.disconnect(connection)
+  const connection = await transporter.connect(options, authorization, null)
+  const { status, response } = await transporter.send(exchange, connection)
+  await transporter.disconnect(connection)
 
   t.is(status, 'ok', response.error)
   const docs = (await getDocuments(collection, {
@@ -77,9 +77,9 @@ test('should set array of documents', async (t) => {
     },
   }
 
-  const connection = await adapter.connect(options, authorization, null)
-  const { status, response } = await adapter.send(exchange, connection)
-  await adapter.disconnect(connection)
+  const connection = await transporter.connect(options, authorization, null)
+  const { status, response } = await transporter.send(exchange, connection)
+  await transporter.disconnect(connection)
 
   t.is(status, 'ok', response.error)
   const docs = (await getDocuments(collection, {
@@ -118,9 +118,9 @@ test('should update existing document', async (t) => {
     },
   }
 
-  const connection = await adapter.connect(options, authorization, null)
-  const { status, response } = await adapter.send(exchange, connection)
-  await adapter.disconnect(connection)
+  const connection = await transporter.connect(options, authorization, null)
+  const { status, response } = await transporter.send(exchange, connection)
+  await transporter.disconnect(connection)
 
   t.is(status, 'ok', response.error)
   const docs = (await getDocuments(collection, {

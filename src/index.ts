@@ -38,11 +38,11 @@ const mongodbTransporter: Transporter = {
   },
 
   /**
-   * Connect to the source in any way relevant for this adapter, and return
-   * an object or a value that the adapter may later use when sending requests
-   * to the source and when disconnecting.
+   * Connect to the service in any way relevant for this transporter, and return
+   * an object or a value that the transporter may later use when sending
+   * requests to the service and when disconnecting.
    *
-   * The MongoDb adapter will connect to the database and return the client
+   * The MongoDb transporter will connect to the database and return the client
    * object.
    */
   async connect(options, _auth, connection: MongoConnection | null) {
@@ -54,12 +54,7 @@ const mongodbTransporter: Transporter = {
    * value from the connect method.
    */
   async disconnect(connection: MongoConnection | null) {
-    if (
-      connection &&
-      connection.status === 'ok' &&
-      connection.client &&
-      connection.client.close
-    ) {
+    if (connection && connection.status === 'ok' && connection.client?.close) {
       connection.client.close()
     }
   },

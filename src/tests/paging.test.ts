@@ -10,7 +10,7 @@ import {
 import defaultExchange from './helpers/defaultExchange'
 import { TypedData } from 'integreat'
 
-import adapter from '..'
+import transporter from '..'
 
 const test = ava as TestInterface<MongoElements>
 
@@ -59,9 +59,9 @@ test('should get one page of documents with params for next page', async (t) => 
     },
   }
 
-  const connection = await adapter.connect(options, authorization, null)
-  const { status, response } = await adapter.send(exchange, connection)
-  await adapter.disconnect(connection)
+  const connection = await transporter.connect(options, authorization, null)
+  const { status, response } = await transporter.send(exchange, connection)
+  await transporter.disconnect(connection)
 
   t.is(status, 'ok')
   const data = response.data as TypedData[]
@@ -102,9 +102,9 @@ test('should get second page of documents', async (t) => {
     },
   }
 
-  const connection = await adapter.connect(options, authorization, null)
-  const { status, response } = await adapter.send(exchange, connection)
-  await adapter.disconnect(connection)
+  const connection = await transporter.connect(options, authorization, null)
+  const { status, response } = await transporter.send(exchange, connection)
+  await transporter.disconnect(connection)
 
   t.is(status, 'ok')
   const data = response.data as TypedData[]
@@ -145,9 +145,9 @@ test('should return less than a full page at the end', async (t) => {
     },
   }
 
-  const connection = await adapter.connect(options, authorization, null)
-  const { status, response } = await adapter.send(exchange, connection)
-  await adapter.disconnect(connection)
+  const connection = await transporter.connect(options, authorization, null)
+  const { status, response } = await transporter.send(exchange, connection)
+  await transporter.disconnect(connection)
 
   t.is(status, 'ok')
   const data = response.data as TypedData[]
@@ -182,9 +182,9 @@ test('should return empty array when past last page', async (t) => {
     next: undefined,
   }
 
-  const connection = await adapter.connect(options, authorization, null)
-  const { status, response } = await adapter.send(exchange, connection)
-  await adapter.disconnect(connection)
+  const connection = await transporter.connect(options, authorization, null)
+  const { status, response } = await transporter.send(exchange, connection)
+  await transporter.disconnect(connection)
 
   t.is(status, 'ok')
   const data = response.data as TypedData[]
@@ -216,9 +216,9 @@ test('should not throw when pageAfter does not exist', async (t) => {
     next: undefined,
   }
 
-  const connection = await adapter.connect(options, authorization, null)
-  const { status, response } = await adapter.send(exchange, connection)
-  await adapter.disconnect(connection)
+  const connection = await transporter.connect(options, authorization, null)
+  const { status, response } = await transporter.send(exchange, connection)
+  await transporter.disconnect(connection)
 
   t.is(status, 'ok')
   const data = response.data as TypedData[]
@@ -278,9 +278,9 @@ test('should get second page of documents when sorting', async (t) => {
     },
   }
 
-  const connection = await adapter.connect(options, authorization, null)
-  const { status, response } = await adapter.send(exchange, connection)
-  await adapter.disconnect(connection)
+  const connection = await transporter.connect(options, authorization, null)
+  const { status, response } = await transporter.send(exchange, connection)
+  await transporter.disconnect(connection)
 
   t.is(status, 'ok')
   const data = response.data as TypedData[]
@@ -342,9 +342,9 @@ test('should get second page of documents when sorting descending', async (t) =>
     },
   }
 
-  const connection = await adapter.connect(options, authorization, null)
-  const { status, response } = await adapter.send(exchange, connection)
-  await adapter.disconnect(connection)
+  const connection = await transporter.connect(options, authorization, null)
+  const { status, response } = await transporter.send(exchange, connection)
+  await transporter.disconnect(connection)
 
   t.is(status, 'ok')
   const data = response.data as TypedData[]
@@ -406,9 +406,9 @@ test('should get second page of documents when sorting key is not unique', async
     },
   }
 
-  const connection = await adapter.connect(options, authorization, null)
-  const { status, response } = await adapter.send(exchange, connection)
-  await adapter.disconnect(connection)
+  const connection = await transporter.connect(options, authorization, null)
+  const { status, response } = await transporter.send(exchange, connection)
+  await transporter.disconnect(connection)
 
   t.is(status, 'ok')
   const data = response.data as TypedData[]
