@@ -26,7 +26,7 @@ test.beforeEach(async (t) => {
 
 test.afterEach.always(async (t) => {
   const { client, collection } = t.context
-  deleteDocuments(collection, { '\\$type': 'entry' })
+  await deleteDocuments(collection, { '\\$type': 'entry' })
   closeMongo(client)
 })
 
