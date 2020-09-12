@@ -1,7 +1,7 @@
 import prepareFilter from './prepareFilter'
 import createPaging from './createPaging'
 import { Collection, Cursor } from 'mongodb'
-import { Exchange } from 'integreat'
+import { Exchange, Data } from 'integreat'
 import { MongoOptions, ExchangeRequest } from '.'
 import { normalizeItem } from './escapeKeys'
 
@@ -93,10 +93,10 @@ export default async function getDocs(
     }
   }
 
-  const response = {
+  const response: Exchange = {
     ...exchange,
     status: 'ok',
-    response: { ...exchange.response, data: data.map(normalizeItem) },
+    response: { ...exchange.response, data: data.map(normalizeItem) as Data[] },
   }
 
   if (request.pageSize) {

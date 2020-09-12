@@ -78,7 +78,9 @@ const setOrDeleteData = async (
       if (exchange.type === 'SET') {
         await collection.updateOne(
           filter,
-          { $set: { ...serializeItem(item), _id } },
+          {
+            $set: { ...(serializeItem(item) as Record<string, unknown>), _id },
+          },
           { upsert: true }
         )
       } else {
