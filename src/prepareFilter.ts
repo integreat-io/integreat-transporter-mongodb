@@ -23,7 +23,7 @@ const castDates = (query: Record<string, unknown>) =>
     {}
   )
 
-const dateStringRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?([+-]\d{2}:\d{2}|Z)$/
+const dateStringRegex = /^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d\d\d)?([+-]\d\d:\d\d|Z)$/
 const isDateString = (value: unknown): value is string =>
   typeof value === 'string' && dateStringRegex.test(value)
 const castValueIfDate = (value: unknown): unknown =>
