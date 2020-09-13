@@ -39,12 +39,16 @@ test('should use options.query as filter', (t) => {
     db: 'database',
     query: [
       { path: 'type', value: 'other' },
-      { path: 'meta\\.parentType', param: 'type' },
+      { path: 'meta.parentType', param: 'type' },
+      { path: 'meta.views.$gt', value: 3 },
+      { path: 'escaped\\.dot', value: true },
     ],
   }
   const expected = {
     '\\$type': 'other',
-    'meta\\_parentType': 'entry',
+    'meta.parentType': 'entry',
+    'meta.views': { $gt: 3 },
+    'escaped\\_dot': true,
   }
 
   const ret = prepareFilter(options, type, id)

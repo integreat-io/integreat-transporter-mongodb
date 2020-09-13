@@ -82,7 +82,9 @@ Here's an example:
 ```
 
 The `path` property describes what property to set, and the property is set to
-the value of `value` or to the value of the request parameter in `param`.
+the value of `value` or to the value of the request parameter in `param`. You
+also include `$`-prefixed mongo operators in `path`, and it will be handled
+correctly.
 
 The query object will look like this, for a request for items of type `entry`:
 

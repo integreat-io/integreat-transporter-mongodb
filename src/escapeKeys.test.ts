@@ -77,13 +77,20 @@ test('should escape the escape character in path', (t) => {
   t.is(serializePath('escaped\\_underscore'), 'escaped\\\\_underscore')
 })
 
-test('should escape escaped dots in paths', (t) => {
+test('should escape dots in paths', (t) => {
   t.is(
-    serializePath('field\\.with.several\\.dots'),
-    'field\\_with.several\\_dots'
+    serializePath('field.with.several.dots'),
+    'field\\.with\\.several\\.dots'
   )
 })
 
-test('should not touch unescaped dots in paths', (t) => {
-  t.is(serializePath('field.with.several.dots'), 'field.with.several.dots')
+test('should no escape dots followed by dollar in paths', (t) => {
+  t.is(serializePath('meta.views.$gt'), 'meta\\.views.$gt')
+})
+
+test('should escape escaped dots in paths', (t) => {
+  t.is(
+    serializePath('field\\.with.several\\.dots'),
+    'field\\_with\\.several\\_dots'
+  )
 })

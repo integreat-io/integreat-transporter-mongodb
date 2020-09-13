@@ -9,7 +9,7 @@ export interface MongoOptions extends Record<string, unknown> {
   db?: string
   collection?: string
   sort?: Record<string, number>
-  query?: { path: string; param?: string; value?: string }[]
+  query?: { path: string; param?: string; value?: unknown }[]
 }
 
 export interface MongoConnection extends Connection {

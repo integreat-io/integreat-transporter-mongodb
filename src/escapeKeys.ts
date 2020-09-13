@@ -14,7 +14,10 @@ const normalizeKey = (key: string) =>
 
 export function serializePath(path: string): string {
   return serializeDollarHead(
-    path.replace(/\\/g, '\\\\').replace(/\\\\\./g, '\\_')
+    path
+      .replace(/\\/g, '\\\\')
+      .replace(/\\\\\./g, '\\_')
+      .replace(/\.([^\$])/g, '\\.$1')
   )
 }
 
