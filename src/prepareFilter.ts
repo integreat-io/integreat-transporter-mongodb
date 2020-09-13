@@ -1,14 +1,19 @@
 import dotprop = require('dot-prop')
 import is from '@sindresorhus/is'
-import { MongoOptions } from '.'
+import { MongoOptions, QueryObject } from '.'
 import { serializePath } from './escapeKeys'
+
+export interface Params extends Record<string, unknown> {
+  query?: Record<string, unknown>
+}
 
 const setTypeOrId = (
   query: Record<string, unknown>,
+  hasQueryProps: boolean,
   type?: string | string[],
   id?: string | string[]
 ) => {
-  if (Object.keys(query).length === 0) {
+  if (!hasQueryProps) {
     if (id) {
       query._id = `${type}:${id}`
     } else {
@@ -33,6 +38,18 @@ const castValueIfDate = (value: unknown): unknown =>
     ? castDates(value)
     : value
 
+const splitUpQueryRecord = (queryRecord?: Record<string, unknown>) =>
+  queryRecord
+    ? Object.entries(queryRecord).map(
+        ([path, value]) => ({ path, value } as QueryObject)
+      )
+    : []
+
+const mergeQueries = (
+  queryProps: QueryObject[],
+  queryRecord?: Record<string, unknown>
+) => [...queryProps, ...splitUpQueryRecord(queryRecord)]
+
 /**
  * Generate the right query object as a filter for finding docs in the database.
  */
@@ -40,11 +57,11 @@ export default function prepareFilter(
   { query: queryProps = [] }: MongoOptions,
   type?: string | string[],
   id?: string | string[],
-  params: Record<string, unknown> = {}
+  params: Params = {}
 ): Record<string, unknown> {
   const allParams: Record<string, unknown> = { type, id, ...params }
   // Create query object from array of props
-  const query = queryProps.reduce(
+  const query = mergeQueries(queryProps, params.query).reduce(
     (filter, { param, path, value }) =>
       dotprop.set(
         filter,
@@ -56,12 +73,12 @@ export default function prepareFilter(
   )
 
   // Set query props from id and type if no query was provided
-  setTypeOrId(query, type, id)
+  setTypeOrId(query, queryProps.length > 0, type, id)
 
   // Add query from payload params
-  if (params.query) {
-    Object.assign(query, params.query)
-  }
+  // if (params.query) {
+  //   Object.assign(query, params.query)
+  // }
 
   return castDates(query)
 }

@@ -40,14 +40,14 @@ test('should use options.query as filter', (t) => {
     query: [
       { path: 'type', value: 'other' },
       { path: 'meta.parentType', param: 'type' },
-      { path: 'meta.views.$gt', value: 3 },
+      { path: 'meta.views.$gt', value: 300 },
       { path: 'escaped\\.dot', value: true },
     ],
   }
   const expected = {
     '\\$type': 'other',
     'meta.parentType': 'entry',
-    'meta.views': { $gt: 3 },
+    'meta.views': { $gt: 300 },
     'escaped\\_dot': true,
   }
 
@@ -59,7 +59,7 @@ test('should use options.query as filter', (t) => {
 test('should add request query to options query filter', (t) => {
   const type = 'entry'
   const params = {
-    query: { 'meta.section': 'news' },
+    query: { 'meta.section': 'news', 'meta.views.$gt': 300 },
   }
   const options = {
     collection: 'documents',
@@ -73,6 +73,7 @@ test('should add request query to options query filter', (t) => {
     '\\$type': 'other',
     'meta\\_parentType': 'entry',
     'meta.section': 'news',
+    'meta.views': { $gt: 300 },
   }
 
   const ret = prepareFilter(options, type, undefined, params)

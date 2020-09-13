@@ -3,13 +3,19 @@ import connect from './connect'
 import send from './send'
 import { Transporter, Connection, Exchange } from 'integreat'
 
+export interface QueryObject {
+  path: string
+  param?: string
+  value?: unknown
+}
+
 export interface MongoOptions extends Record<string, unknown> {
   uri?: string
   baseUri?: string
   db?: string
   collection?: string
   sort?: Record<string, number>
-  query?: { path: string; param?: string; value?: unknown }[]
+  query?: QueryObject[]
 }
 
 export interface MongoConnection extends Connection {
