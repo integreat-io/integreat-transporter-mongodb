@@ -91,9 +91,13 @@ test('should update one item', async (t) => {
     },
   }
   const expectedData = [{ id: 'ent1', $type: 'entry', status: 'ok' }]
-  const _id = 'entry:ent1'
   const expectedSet = {
-    $set: { _id, id: 'ent1', '\\$type': 'entry', title: 'Entry 1' },
+    $set: {
+      _id: 'entry:ent1',
+      id: 'ent1',
+      '\\$type': 'entry',
+      title: 'Entry 1',
+    },
   }
 
   const { status, response } = await send(exchange, connection)
@@ -102,6 +106,37 @@ test('should update one item', async (t) => {
   t.deepEqual(response.data, expectedData)
   t.is(updateOne.callCount, 1)
   t.deepEqual(updateOne.args[0][0], { _id: 'entry:ent1' })
+  t.deepEqual(updateOne.args[0][1], expectedSet)
+})
+
+test('should update object data (not Integreat typed)', async (t) => {
+  const updateOne = sinon.stub().returns({
+    matchedCount: 1,
+    modifiedCount: 1,
+    upsertedCount: 0,
+  })
+  const connection = createConnection({ updateOne })
+  const data = { id: 'ent1', title: 'Entry 1' }
+  const exchange = {
+    ...defaultExchange,
+    type: 'SET',
+    request: { data },
+    options: {
+      collection: 'documents',
+      db: 'database',
+    },
+  }
+  const expectedData = [{ id: 'ent1', status: 'ok' }]
+  const expectedSet = {
+    $set: { _id: 'ent1', id: 'ent1', title: 'Entry 1' },
+  }
+
+  const { status, response } = await send(exchange, connection)
+
+  t.is(status, 'ok')
+  t.deepEqual(response.data, expectedData)
+  t.is(updateOne.callCount, 1)
+  t.deepEqual(updateOne.args[0][0], { _id: 'ent1' })
   t.deepEqual(updateOne.args[0][1], expectedSet)
 })
 
@@ -310,7 +345,7 @@ test('should return badrequest when trying to set non-object', async (t) => {
   t.is(status, 'badrequest')
   t.is(
     response.error,
-    'Error updating item(s) in mongodb: Only typed data may be sent to MongoDB'
+    'Error updating item(s) in mongodb: Only object data with an id may be sent to MongoDB'
   )
   t.is(updateOne.callCount, 0)
 })

@@ -1,10 +1,10 @@
 import prepareFilter from './prepareFilter'
 import getDocs from './getDocs'
-import { Exchange, TypedData, Data } from 'integreat'
+import { Exchange, Data } from 'integreat'
 import { MongoConnection, MongoOptions } from '.'
 import { Collection, MongoClient } from 'mongodb'
 import { serializeItem } from './escapeKeys'
-import { isTypedData } from './utils/is'
+import { isObjectWithId, ObjectWithId } from './utils/is'
 
 interface ItemResponse {
   status: string
@@ -26,10 +26,15 @@ export const getCollection = (
 }
 
 const createItemResponse = (
-  { id, $type }: TypedData,
+  { id, $type }: ObjectWithId,
   status = 'ok',
   error?: string
-): ItemResponse => ({ $type, id, status, ...(error ? { error } : {}) })
+): ItemResponse => ({
+  ...($type && { $type }),
+  ...(id && { id: String(id) }),
+  status,
+  ...(error ? { error } : {}),
+})
 
 const setStatusAndResponse = (
   exchange: Exchange,
@@ -72,10 +77,10 @@ const returnOkOrError = (
 const performOne = (exchange: Exchange, collection: Collection) => async (
   item: Data
 ): Promise<ItemResponse> => {
-  if (!isTypedData(item)) {
+  if (!isObjectWithId(item)) {
     return {
       status: 'badrequest',
-      error: 'Only typed data may be sent to MongoDB',
+      error: 'Only object data with an id may be sent to MongoDB',
     }
   }
   const {
@@ -89,7 +94,7 @@ const performOne = (exchange: Exchange, collection: Collection) => async (
     item.id,
     params
   )
-  const _id = `${item.$type}:${item.id}`
+  const _id = [item.$type, item.id].filter(Boolean).join(':')
   try {
     if (type === 'SET') {
       await collection.updateOne(

@@ -11,12 +11,12 @@ const setTypeOrId = (
   query: Record<string, unknown>,
   hasQueryProps: boolean,
   type?: string | string[],
-  id?: string | string[]
+  id?: string | string[] | number
 ) => {
   if (!hasQueryProps) {
     if (id) {
-      query._id = `${type}:${id}`
-    } else {
+      query._id = [type, String(id)].filter(Boolean).join(':')
+    } else if (type) {
       query['\\$type'] = type
     }
   }
@@ -56,7 +56,7 @@ const mergeQueries = (
 export default function prepareFilter(
   { query: queryProps = [] }: MongoOptions,
   type?: string | string[],
-  id?: string | string[],
+  id?: string | string[] | number,
   params: Params = {}
 ): Record<string, unknown> {
   const allParams: Record<string, unknown> = { type, id, ...params }
@@ -74,11 +74,6 @@ export default function prepareFilter(
 
   // Set query props from id and type if no query was provided
   setTypeOrId(query, queryProps.length > 0, type, id)
-
-  // Add query from payload params
-  // if (params.query) {
-  //   Object.assign(query, params.query)
-  // }
 
   return castDates(query)
 }
