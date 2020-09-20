@@ -90,7 +90,7 @@ test('should update one item', async (t) => {
       db: 'database',
     },
   }
-  const expectedData = [{ id: 'ent1', $type: 'entry', status: 'ok' }]
+  const expectedData = { modifiedCount: 1, insertedCount: 0, deletedCount: 0 }
   const expectedSet = {
     $set: {
       _id: 'entry:ent1',
@@ -109,11 +109,58 @@ test('should update one item', async (t) => {
   t.deepEqual(updateOne.args[0][1], expectedSet)
 })
 
-test('should update object data (not Integreat typed)', async (t) => {
+test('should update items', async (t) => {
   const updateOne = sinon.stub().returns({
     matchedCount: 1,
     modifiedCount: 1,
     upsertedCount: 0,
+  })
+  const connection = createConnection({ updateOne })
+  const data = [
+    { id: 'ent1', $type: 'entry', title: 'Entry 1' },
+    { id: 'ent2', $type: 'entry', title: 'Entry 2' },
+  ]
+  const exchange = {
+    ...defaultExchange,
+    type: 'SET',
+    request: { data },
+    options: {
+      collection: 'documents',
+      db: 'database',
+    },
+  }
+  const expectedData = { modifiedCount: 2, insertedCount: 0, deletedCount: 0 }
+  const expectedSet1 = {
+    $set: {
+      _id: 'entry:ent1',
+      id: 'ent1',
+      '\\$type': 'entry',
+      title: 'Entry 1',
+    },
+  }
+  const expectedSet2 = {
+    $set: {
+      _id: 'entry:ent2',
+      id: 'ent2',
+      '\\$type': 'entry',
+      title: 'Entry 2',
+    },
+  }
+
+  const { status, response } = await send(exchange, connection)
+
+  t.is(status, 'ok')
+  t.deepEqual(response.data, expectedData)
+  t.is(updateOne.callCount, 2)
+  t.true(updateOne.calledWith({ _id: 'entry:ent1' }, expectedSet1))
+  t.true(updateOne.calledWith({ _id: 'entry:ent2' }, expectedSet2))
+})
+
+test('should update object data (not Integreat typed)', async (t) => {
+  const updateOne = sinon.stub().returns({
+    matchedCount: 0,
+    modifiedCount: 0,
+    upsertedCount: 1,
   })
   const connection = createConnection({ updateOne })
   const data = { id: 'ent1', title: 'Entry 1' }
@@ -126,7 +173,7 @@ test('should update object data (not Integreat typed)', async (t) => {
       db: 'database',
     },
   }
-  const expectedData = [{ id: 'ent1', status: 'ok' }]
+  const expectedData = { modifiedCount: 0, insertedCount: 1, deletedCount: 0 }
   const expectedSet = {
     $set: { _id: 'ent1', id: 'ent1', title: 'Entry 1' },
   }
@@ -154,7 +201,12 @@ test('should return error when data cannot be updated', async (t) => {
     },
   }
   const expectedResponse = {
-    error: 'Error updating item(s) in mongodb: Mongo error',
+    data: {
+      modifiedCount: 0,
+      insertedCount: 0,
+      deletedCount: 0,
+    },
+    error: "Error updating item 'entry:ent1' in mongodb: Mongo error",
   }
 
   const { status, response } = await send(exchange, connection)
@@ -163,57 +215,7 @@ test('should return error when data cannot be updated', async (t) => {
   t.deepEqual(response, expectedResponse)
 })
 
-test('should update items', async (t) => {
-  const updateOne = sinon.stub().returns({
-    matchedCount: 1,
-    modifiedCount: 1,
-    upsertedCount: 0,
-  })
-  const connection = createConnection({ updateOne })
-  const data = [
-    { id: 'ent1', $type: 'entry', title: 'Entry 1' },
-    { id: 'ent2', $type: 'entry', title: 'Entry 2' },
-  ]
-  const exchange = {
-    ...defaultExchange,
-    type: 'SET',
-    request: { data },
-    options: {
-      collection: 'documents',
-      db: 'database',
-    },
-  }
-  const expectedData = [
-    { id: 'ent1', $type: 'entry', status: 'ok' },
-    { id: 'ent2', $type: 'entry', status: 'ok' },
-  ]
-  const expectedSet1 = {
-    $set: {
-      _id: 'entry:ent1',
-      id: 'ent1',
-      '\\$type': 'entry',
-      title: 'Entry 1',
-    },
-  }
-  const expectedSet2 = {
-    $set: {
-      _id: 'entry:ent2',
-      id: 'ent2',
-      '\\$type': 'entry',
-      title: 'Entry 2',
-    },
-  }
-
-  const { status, response } = await send(exchange, connection)
-
-  t.is(status, 'ok')
-  t.deepEqual(response.data, expectedData)
-  t.is(updateOne.callCount, 2)
-  t.true(updateOne.calledWith({ _id: 'entry:ent1' }, expectedSet1))
-  t.true(updateOne.calledWith({ _id: 'entry:ent2' }, expectedSet2))
-})
-
-test('should return error when one of the items cannot be updated', async (t) => {
+test('should return error when some of the items cannot be updated', async (t) => {
   const updateOne = sinon.stub()
   updateOne.onFirstCall().returns({
     matchedCount: 1,
@@ -221,10 +223,12 @@ test('should return error when one of the items cannot be updated', async (t) =>
     upsertedCount: 0,
   })
   updateOne.onSecondCall().throws(new Error('Mongo error'))
+  updateOne.onThirdCall().throws(new Error('Mongo error'))
   const connection = createConnection({ updateOne })
   const data = [
     { id: 'ent1', $type: 'entry', title: 'Entry 1' },
     { id: 'ent2', $type: 'entry', title: 'Entry 2' },
+    { id: 'ent3', $type: 'entry', title: 'Entry 3' },
   ]
   const exchange = {
     ...defaultExchange,
@@ -235,34 +239,17 @@ test('should return error when one of the items cannot be updated', async (t) =>
       db: 'database',
     },
   }
-  const expectedData = [
-    { id: 'ent1', $type: 'entry', status: 'ok' },
-    { id: 'ent2', $type: 'entry', status: 'error', error: 'Mongo error' },
-  ]
-  const expectedSet1 = {
-    $set: {
-      _id: 'entry:ent1',
-      id: 'ent1',
-      '\\$type': 'entry',
-      title: 'Entry 1',
-    },
-  }
-  const expectedSet2 = {
-    $set: {
-      _id: 'entry:ent2',
-      id: 'ent2',
-      '\\$type': 'entry',
-      title: 'Entry 2',
-    },
+  const expectedResponse = {
+    data: { modifiedCount: 1, insertedCount: 0, deletedCount: 0 },
+    error:
+      "Error updating items 'entry:ent2', 'entry:ent3' in mongodb: Mongo error | Mongo error",
   }
 
   const { status, response } = await send(exchange, connection)
 
   t.is(status, 'error')
-  t.deepEqual(response.data, expectedData)
-  t.is(updateOne.callCount, 2)
-  t.true(updateOne.calledWith({ _id: 'entry:ent1' }, expectedSet1))
-  t.true(updateOne.calledWith({ _id: 'entry:ent2' }, expectedSet2))
+  t.deepEqual(response, expectedResponse)
+  t.is(updateOne.callCount, 3)
 })
 
 test('should insert one item', async (t) => {
@@ -282,7 +269,7 @@ test('should insert one item', async (t) => {
       db: 'database',
     },
   }
-  const expectedData = [{ id: 'ent3', $type: 'entry', status: 'ok' }]
+  const expectedData = { modifiedCount: 0, insertedCount: 1, deletedCount: 0 }
   const _id = 'entry:ent3'
   const expectedSet = {
     $set: { _id, id: 'ent3', '\\$type': 'entry', title: 'Entry 3' },
@@ -345,7 +332,7 @@ test('should return badrequest when trying to set non-object', async (t) => {
   t.is(status, 'badrequest')
   t.is(
     response.error,
-    'Error updating item(s) in mongodb: Only object data with an id may be sent to MongoDB'
+    "Error updating item '<no id>' in mongodb: Only object data with an id may be sent to MongoDB"
   )
   t.is(updateOne.callCount, 0)
 })
@@ -366,7 +353,7 @@ test('should delete one item', async (t) => {
       db: 'database',
     },
   }
-  const expectedData = [{ id: 'ent1', $type: 'entry', status: 'ok' }]
+  const expectedData = { modifiedCount: 0, insertedCount: 0, deletedCount: 1 }
 
   const { status, response } = await send(exchange, connection)
 
@@ -393,7 +380,12 @@ test('should return error when the item cannot be deleted', async (t) => {
     },
   }
   const expectedResonse = {
-    error: 'Error deleting item(s) in mongodb: Mongo error',
+    data: {
+      modifiedCount: 0,
+      insertedCount: 0,
+      deletedCount: 0,
+    },
+    error: "Error deleting item 'entry:ent3' in mongodb: Mongo error",
   }
 
   const { status, response } = await send(exchange, connection)
@@ -419,10 +411,7 @@ test('should delete items', async (t) => {
       db: 'database',
     },
   }
-  const expectedData = [
-    { id: 'ent1', $type: 'entry', status: 'ok' },
-    { id: 'ent2', $type: 'entry', status: 'ok' },
-  ]
+  const expectedData = { modifiedCount: 0, insertedCount: 0, deletedCount: 2 }
 
   const { status, response } = await send(exchange, connection)
 
@@ -453,11 +442,8 @@ test('should return error when one of the items cannot be deleted', async (t) =>
     },
   }
   const expectedResponse = {
-    error: 'Error deleting item(s) in mongodb',
-    data: [
-      { id: 'ent3', $type: 'entry', status: 'ok' },
-      { id: 'ent4', $type: 'entry', status: 'error', error: 'Mongo error' },
-    ],
+    data: { modifiedCount: 0, insertedCount: 0, deletedCount: 1 },
+    error: "Error deleting item 'entry:ent4' in mongodb: Mongo error",
   }
 
   const { status, response } = await send(exchange, connection)

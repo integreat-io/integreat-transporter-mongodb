@@ -36,7 +36,11 @@ const great = Integreat.create(defs, resources)
 // ... and then dispatch actions as usual
 ```
 
-After includin the `mongodb` transporter in your resources object, you still
+The data returns from `GET` actions will be the retrieved documents, while for
+`SET` and `DELETE` actions the data will be result stats in the form of
+`{ modifiedCount: 1, insertedCount: 2, deletedCount: 0 }`.
+
+After including the `mongodb` transporter in your resources object, you still
 need to configure your service to use it.
 
 Example service configuration:
