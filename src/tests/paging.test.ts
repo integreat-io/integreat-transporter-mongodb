@@ -354,6 +354,73 @@ test('should get second page of documents when sorting descending', async (t) =>
   t.deepEqual(response.paging, expectedPaging)
 })
 
+test('should return page params when sorting by two dimensions', async (t) => {
+  const { collection, collectionName } = t.context
+  await insertDocuments(collection, [
+    {
+      _id: 'entry:ent1',
+      id: 'ent1',
+      '\\$type': 'entry',
+      attributes: { timestamp: 1584211391000, index: 3 }, // 3
+    },
+    {
+      _id: 'entry:ent2',
+      id: 'ent2',
+      '\\$type': 'entry',
+      attributes: { timestamp: 1584211391000, index: 1 }, // 2
+    },
+    {
+      _id: 'entry:ent3',
+      id: 'ent3',
+      '\\$type': 'entry',
+      attributes: { timestamp: 1584211390083, index: 2 }, // 4
+    },
+    {
+      _id: 'entry:ent4',
+      id: 'ent4',
+      '\\$type': 'entry',
+      attributes: { timestamp: 1584211393300, index: 4 }, // 1
+    },
+  ])
+  const exchange = {
+    ...defaultExchange,
+    type: 'GET',
+    request: {
+      type: 'entry',
+      params: {},
+      pageAfter: undefined,
+      pageSize: 2,
+    },
+    options: {
+      collection: collectionName,
+      db: 'test',
+      sort: { 'attributes.timestamp': -1, 'attributes.index': 1 },
+    },
+  }
+  const expectedPaging = {
+    next: {
+      type: 'entry',
+      query: {
+        'attributes.timestamp': { $lte: 1584211391000 },
+        'attributes.index': { $gte: 1 },
+      },
+      pageAfter: 'entry:ent2',
+      pageSize: 2,
+    },
+  }
+
+  const connection = await transporter.connect(options, authorization, null)
+  const { status, response } = await transporter.send(exchange, connection)
+  await transporter.disconnect(connection)
+
+  t.is(status, 'ok')
+  const data = response.data as TypedData[]
+  t.is(data.length, 2)
+  t.is(data[0].id, 'ent4')
+  t.is(data[1].id, 'ent2')
+  t.deepEqual(response.paging, expectedPaging)
+})
+
 test('should get second page of documents when sorting key is not unique', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
@@ -415,5 +482,76 @@ test('should get second page of documents when sorting key is not unique', async
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
   t.is(data[1].id, 'ent4')
+  t.deepEqual(response.paging, expectedPaging)
+})
+
+test('should combine paging query with existing queries', async (t) => {
+  const { collection, collectionName } = t.context
+  await insertDocuments(collection, [
+    {
+      _id: 'entry:ent1',
+      id: 'ent1',
+      '\\$type': 'entry',
+      attributes: { timestamp: 1584211391000, index: 3 }, // 3
+    },
+    {
+      _id: 'entry:ent2',
+      id: 'ent2',
+      '\\$type': 'entry',
+      attributes: { timestamp: 1584211391000, index: 1 }, // 2
+    },
+    {
+      _id: 'entry:ent3',
+      id: 'ent3',
+      '\\$type': 'entry',
+      attributes: { timestamp: 1584211390083, index: 2 }, // 4
+    },
+    {
+      _id: 'entry:ent4',
+      id: 'ent4',
+      '\\$type': 'entry',
+      attributes: { timestamp: 1584211393300, index: 4 }, // 1
+    },
+  ])
+  const exchange = {
+    ...defaultExchange,
+    type: 'GET',
+    request: {
+      type: 'entry',
+      params: {
+        query: {
+          'attributes.index': { $lt: 3 },
+        },
+      },
+      pageAfter: undefined,
+      pageSize: 2,
+    },
+    options: {
+      collection: collectionName,
+      db: 'test',
+      sort: { 'attributes.timestamp': -1, 'attributes.index': 1 },
+    },
+  }
+  const expectedPaging = {
+    next: {
+      type: 'entry',
+      query: {
+        'attributes.timestamp': { $lte: 1584211390083 },
+        'attributes.index': { $gte: 2, $lt: 3 },
+      },
+      pageAfter: 'entry:ent3',
+      pageSize: 2,
+    },
+  }
+
+  const connection = await transporter.connect(options, authorization, null)
+  const { status, response } = await transporter.send(exchange, connection)
+  await transporter.disconnect(connection)
+
+  t.is(status, 'ok')
+  const data = response.data as TypedData[]
+  t.is(data.length, 2)
+  t.is(data[0].id, 'ent2')
+  t.is(data[1].id, 'ent3')
   t.deepEqual(response.paging, expectedPaging)
 })
