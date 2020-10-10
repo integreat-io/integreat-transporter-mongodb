@@ -6,13 +6,10 @@ import prepareFilter from './prepareFilter'
 
 test('should return type filter', (t) => {
   const type = 'entry'
-  const options = {
-    collection: 'documents',
-    db: 'database',
-  }
+  const query = undefined
   const expected = { '\\$type': 'entry' }
 
-  const ret = prepareFilter(options, type)
+  const ret = prepareFilter(query, type)
 
   t.deepEqual(ret, expected)
 })
@@ -20,13 +17,10 @@ test('should return type filter', (t) => {
 test('should return _id filter', (t) => {
   const type = 'entry'
   const id = 'ent1'
-  const options = {
-    collection: 'documents',
-    db: 'database',
-  }
+  const query = undefined
   const expected = { _id: 'entry:ent1' }
 
-  const ret = prepareFilter(options, type, id)
+  const ret = prepareFilter(query, type, id)
 
   t.deepEqual(ret, expected)
 })
@@ -34,16 +28,12 @@ test('should return _id filter', (t) => {
 test('should use options.query as filter', (t) => {
   const type = 'entry'
   const id = 'ent1'
-  const options = {
-    collection: 'documents',
-    db: 'database',
-    query: [
-      { path: 'type', value: 'other' },
-      { path: 'meta.parentType', param: 'type' },
-      { path: 'meta.views.$gt', value: 300 },
-      { path: 'escaped\\.dot', value: true },
-    ],
-  }
+  const query = [
+    { path: 'type', value: 'other' },
+    { path: 'meta.parentType', param: 'type' },
+    { path: 'meta.views', op: 'gt', value: 300 },
+    { path: 'escaped\\.dot', value: true },
+  ]
   const expected = {
     '\\$type': 'other',
     'meta.parentType': 'entry',
@@ -51,7 +41,7 @@ test('should use options.query as filter', (t) => {
     'escaped\\_dot': true,
   }
 
-  const ret = prepareFilter(options, type, id)
+  const ret = prepareFilter(query, type, id)
 
   t.deepEqual(ret, expected)
 })
@@ -59,16 +49,15 @@ test('should use options.query as filter', (t) => {
 test('should add request query to options query filter', (t) => {
   const type = 'entry'
   const params = {
-    query: { 'meta.section': 'news', 'meta.views.$gt': 300 },
-  }
-  const options = {
-    collection: 'documents',
-    db: 'database',
     query: [
-      { path: 'type', value: 'other' },
-      { path: 'meta\\.parentType', param: 'type' },
+      { path: 'meta.section', value: 'news' },
+      { path: 'meta.views', op: 'gt', value: 300 },
     ],
   }
+  const query = [
+    { path: 'type', value: 'other' },
+    { path: 'meta\\.parentType', param: 'type' },
+  ]
   const expected = {
     '\\$type': 'other',
     'meta\\_parentType': 'entry',
@@ -76,7 +65,31 @@ test('should add request query to options query filter', (t) => {
     'meta.views': { $gt: 300 },
   }
 
-  const ret = prepareFilter(options, type, undefined, params)
+  const ret = prepareFilter(query, type, undefined, params)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should add request query object to options query filter', (t) => {
+  const type = 'entry'
+  const params = {
+    query: [
+      { path: 'meta.section', value: 'news' },
+      { path: 'meta.views', op: 'gt', value: 300 },
+    ],
+  }
+  const query = [
+    { path: 'type', value: 'other' },
+    { path: 'meta\\.parentType', param: 'type' },
+  ]
+  const expected = {
+    '\\$type': 'other',
+    'meta\\_parentType': 'entry',
+    'meta.section': 'news',
+    'meta.views': { $gt: 300 },
+  }
+
+  const ret = prepareFilter(query, type, undefined, params)
 
   t.deepEqual(ret, expected)
 })
@@ -84,18 +97,15 @@ test('should add request query to options query filter', (t) => {
 test('should add request query to type filter', (t) => {
   const type = 'entry'
   const params = {
-    query: { 'meta.section': 'news' },
+    query: [{ path: 'meta.section', value: 'news' }],
   }
-  const options = {
-    collection: 'documents',
-    db: 'database',
-  }
+  const query = undefined
   const expected = {
     '\\$type': 'entry',
     'meta.section': 'news',
   }
 
-  const ret = prepareFilter(options, type, undefined, params)
+  const ret = prepareFilter(query, type, undefined, params)
 
   t.deepEqual(ret, expected)
 })
@@ -104,18 +114,37 @@ test('should add request query to id filter', (t) => {
   const id = 'ent1'
   const type = 'entry'
   const params = {
-    query: { 'meta.section': 'news' },
+    query: [{ path: 'meta.section', value: 'news' }],
   }
-  const options = {
-    collection: 'documents',
-    db: 'database',
-  }
+  const query = undefined
   const expected = {
     _id: 'entry:ent1',
     'meta.section': 'news',
   }
 
-  const ret = prepareFilter(options, type, id, params)
+  const ret = prepareFilter(query, type, id, params)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should skip query objects with non-primitive values', (t) => {
+  const type = 'entry'
+  const id = 'ent1'
+  const query = [
+    { path: 'meta.views', op: 'gt', value: 300 },
+    { path: 'archived', value: true },
+    { path: 'meta.author', op: 'in', value: ['johnf', 'lucyk'] },
+    { path: 'meta.updatedAt', value: new Date('2017-11-13T18:43:01.000Z') },
+    { path: 'meta.secret', value: { $exists: true } }, // Should skip this
+  ]
+  const expected = {
+    'meta.views': { $gt: 300 },
+    archived: true,
+    'meta.author': { $in: ['johnf', 'lucyk'] },
+    'meta.updatedAt': new Date('2017-11-13T18:43:01.000Z'),
+  }
+
+  const ret = prepareFilter(query, type, id)
 
   t.deepEqual(ret, expected)
 })
@@ -123,18 +152,15 @@ test('should add request query to id filter', (t) => {
 test('should cast date strings as Date', (t) => {
   const type = 'entry'
   const params = {
-    query: { 'meta.updatedAt': '2017-11-13T18:43:01.000Z' },
+    query: [{ path: 'meta.updatedAt', value: '2017-11-13T18:43:01.000Z' }],
   }
-  const options = {
-    collection: 'documents',
-    db: 'database',
-  }
+  const query = undefined
   const expected = {
     '\\$type': 'entry',
     'meta.updatedAt': new Date('2017-11-13T18:43:01.000Z'),
   }
 
-  const ret = prepareFilter(options, type, undefined, params)
+  const ret = prepareFilter(query, type, undefined, params)
 
   t.deepEqual(ret, expected)
 })
@@ -142,18 +168,15 @@ test('should cast date strings as Date', (t) => {
 test('should cast date strings without microseconds as Date', (t) => {
   const type = 'entry'
   const params = {
-    query: { 'meta.updatedAt': '2017-11-13T18:43:01Z' },
+    query: [{ path: 'meta.updatedAt', value: '2017-11-13T18:43:01Z' }],
   }
-  const options = {
-    collection: 'documents',
-    db: 'database',
-  }
+  const query = undefined
   const expected = {
     '\\$type': 'entry',
     'meta.updatedAt': new Date('2017-11-13T18:43:01Z'),
   }
 
-  const ret = prepareFilter(options, type, undefined, params)
+  const ret = prepareFilter(query, type, undefined, params)
 
   t.deepEqual(ret, expected)
 })
@@ -161,37 +184,15 @@ test('should cast date strings without microseconds as Date', (t) => {
 test('should cast date strings with other time zone as Date', (t) => {
   const type = 'entry'
   const params = {
-    query: { 'meta.updatedAt': '2017-11-13T18:43:01.000+01:00' },
+    query: [{ path: 'meta.updatedAt', value: '2017-11-13T18:43:01.000+01:00' }],
   }
-  const options = {
-    collection: 'documents',
-    db: 'database',
-  }
+  const query = undefined
   const expected = {
     '\\$type': 'entry',
     'meta.updatedAt': new Date('2017-11-13T18:43:01.000+01:00'),
   }
 
-  const ret = prepareFilter(options, type, undefined, params)
-
-  t.deepEqual(ret, expected)
-})
-
-test('should cast date strings as Date on sub-objects', (t) => {
-  const type = 'entry'
-  const params = {
-    query: { 'meta.updatedAt': { $lte: '2017-11-13T18:43:01.000Z' } },
-  }
-  const options = {
-    collection: 'documents',
-    db: 'database',
-  }
-  const expected = {
-    '\\$type': 'entry',
-    'meta.updatedAt': { $lte: new Date('2017-11-13T18:43:01.000Z') },
-  }
-
-  const ret = prepareFilter(options, type, undefined, params)
+  const ret = prepareFilter(query, type, undefined, params)
 
   t.deepEqual(ret, expected)
 })
@@ -199,18 +200,17 @@ test('should cast date strings as Date on sub-objects', (t) => {
 test('should not touch Date object when casting', (t) => {
   const type = 'entry'
   const params = {
-    query: { 'meta.updatedAt': new Date('2017-11-13T18:43:01.000Z') },
+    query: [
+      { path: 'meta.updatedAt', value: new Date('2017-11-13T18:43:01.000Z') },
+    ],
   }
-  const options = {
-    collection: 'documents',
-    db: 'database',
-  }
+  const query = undefined
   const expected = {
     '\\$type': 'entry',
     'meta.updatedAt': new Date('2017-11-13T18:43:01.000Z'),
   }
 
-  const ret = prepareFilter(options, type, undefined, params)
+  const ret = prepareFilter(query, type, undefined, params)
 
   t.deepEqual(ret, expected)
 })
@@ -218,18 +218,143 @@ test('should not touch Date object when casting', (t) => {
 test('should not touch arrays when casting', (t) => {
   const type = 'entry'
   const params = {
-    query: { _id: { $in: ['entry:ent1', 'entry:ent2'] } },
+    query: [{ path: '_id', op: 'in', value: ['entry:ent1', 'entry:ent2'] }],
   }
-  const options = {
-    collection: 'documents',
-    db: 'database',
-  }
+  const query = undefined
   const expected = {
     '\\$type': 'entry',
     _id: { $in: ['entry:ent1', 'entry:ent2'] },
   }
 
-  const ret = prepareFilter(options, type, undefined, params)
+  const ret = prepareFilter(query, type, undefined, params)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should only allow certain query selectors', (t) => {
+  const type = 'entry'
+  const params = {}
+  const query = [
+    { path: 'meta.section', value: 'news' }, // default: eq
+    { path: 'meta.views', op: 'gt', value: 300 },
+    { path: 'meta.views', op: 'lt', value: 1800 },
+    { path: 'createdAt', op: 'gte', value: '2020-08-11T18:43:11Z' },
+    { path: 'createdAt', op: 'lte', value: '2020-08-15T00:00:00Z' },
+    { path: 'meta.author', op: 'in', value: ['johnf', 'lucyk'] },
+    { path: 'title', op: 'text', value: 'search phrase' },
+    { path: 'abstract', op: 'unknown', value: 'something odd' },
+  ]
+  const expected = {
+    'meta.section': 'news',
+    'meta.views': { $gt: 300, $lt: 1800 },
+    createdAt: {
+      $gte: new Date('2020-08-11T18:43:11Z'),
+      $lte: new Date('2020-08-15T00:00:00Z'),
+    },
+    'meta.author': { $in: ['johnf', 'lucyk'] },
+  }
+
+  const ret = prepareFilter(query, type, undefined, params)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should expand pageId to queries', (t) => {
+  const type = 'entry'
+  const id = 'ent1'
+  const query = [{ path: 'meta.views', op: 'gt', value: 300 }]
+  const params = {
+    pageId: 'ZW50cnk6ZW50Mnw+', // entry:ent2|>
+    query: [{ path: 'meta.section', value: 'news' }],
+  }
+  const expected = {
+    'meta.views': { $gt: 300 },
+    'meta.section': 'news',
+    _id: { $gte: 'entry:ent2' },
+  }
+
+  const ret = prepareFilter(query, type, id, params)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should expand pageId with removed padding to queries', (t) => {
+  const type = 'entry'
+  const id = 'ent1'
+  const query = [{ path: 'meta.views', op: 'gt', value: 300 }]
+  const params = {
+    pageId:
+      'ZW50cnk6ZW50MnxhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkxMDAwfGF0dHJpYnV0ZXMuaW5kZXg+MQ', // entry:ent2|attributes.timestamp<1584211391000|attributes.index>1
+    query: [{ path: 'meta.section', value: 'news' }],
+  }
+  const expected = {
+    'meta.views': { $gt: 300 },
+    'meta.section': 'news',
+    'attributes.timestamp': { $lte: 1584211391000 },
+    'attributes.index': { $gte: 1 },
+  }
+
+  const ret = prepareFilter(query, type, id, params)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should expand pageId with sort filter to queries', (t) => {
+  const type = 'entry'
+  const id = 'ent1'
+  const query = [{ path: 'meta.views', op: 'gt', value: 300 }]
+  const params = {
+    pageId: 'ZW50cnk6ZW50MnxpbmRleDwxfGlkPiJlbnQyIg', // entry:ent2|index<1|id>"ent2"
+    query: [{ path: 'meta.section', value: 'news' }],
+  }
+  const expected = {
+    'meta.views': { $gt: 300 },
+    'meta.section': 'news',
+    index: { $lte: 1 },
+    id: { $gte: 'ent2' },
+  }
+
+  const ret = prepareFilter(query, type, id, params)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should expand pageId with encoded string', (t) => {
+  const type = 'entry'
+  const id = 'ent1'
+  const query = [{ path: 'meta.views', op: 'gt', value: 300 }]
+  const params = {
+    pageId: 'ZW50cnk6ZW50MnxpbmRleDwxfG1lc3NhZ2U8IkVzY2FwZSUyMCUyMm1lJTIyIg', // entry:ent2|index<1|message<"Escape%20%22me%22"
+    query: [{ path: 'meta.section', value: 'news' }],
+  }
+  const expected = {
+    'meta.views': { $gt: 300 },
+    'meta.section': 'news',
+    index: { $lte: 1 },
+    message: { $lte: 'Escape "me"' },
+  }
+
+  const ret = prepareFilter(query, type, id, params)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should expand pageId with unencoded string', (t) => {
+  const type = 'entry'
+  const id = 'ent1'
+  const query = [{ path: 'meta.views', op: 'gt', value: 300 }]
+  const params = {
+    pageId: 'ZW50cnk6ZW50MnxpbmRleDwxfGlkPmVudDI', // entry:ent2|index<1|id>ent2
+    query: [{ path: 'meta.section', value: 'news' }],
+  }
+  const expected = {
+    'meta.views': { $gt: 300 },
+    'meta.section': 'news',
+    index: { $lte: 1 },
+    id: { $gte: 'ent2' },
+  }
+
+  const ret = prepareFilter(query, type, id, params)
 
   t.deepEqual(ret, expected)
 })

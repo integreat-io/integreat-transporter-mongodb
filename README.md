@@ -78,6 +78,7 @@ Here's an example:
         query: [
           { path: 'type', param: 'type' },
           { path: 'meta.status', value: 'draft' }
+          { path: 'meta.views', op: 'gt', value: 1000 }
         ]
       }
     }
@@ -86,16 +87,16 @@ Here's an example:
 ```
 
 The `path` property describes what property to set, and the property is set to
-the value of `value` or to the value of the request parameter in `param`. You
-also include `$`-prefixed mongo operators in `path`, and it will be handled
-correctly.
+the value of `value` or to the value of the request parameter in `param`. The
+default operand is `eq`, but you may also use `gt`, `gte`, `lt`, `lte`, or `in`.
 
 The query object will look like this, for a request for items of type `entry`:
 
 ```javascript
 {
   $type: 'entry',
-  meta: { status: 'draft' }
+  'meta.status': 'draft',
+  'meta.views': { $gt: 1000 }
 }
 ```
 

@@ -5,6 +5,7 @@ import { Transporter, Connection, Exchange } from 'integreat'
 
 export interface QueryObject {
   path: string
+  op?: string
   param?: string
   value?: unknown
 }
@@ -27,6 +28,7 @@ export interface ExchangeRequest {
   id?: string | string[]
   pageSize?: number
   pageAfter?: string
+  pageId?: string
   params?: Record<string, unknown>
 }
 

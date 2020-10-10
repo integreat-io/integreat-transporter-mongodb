@@ -117,7 +117,7 @@ test('should get a document with endpoint query', async (t) => {
       collection: collectionName,
       db: 'test',
       query: [
-        { path: 'type', param: 'type' },
+        { path: 'type', op: 'eq', param: 'type' },
         { path: 'attributes.title', value: 'Entry 2' },
       ],
     },

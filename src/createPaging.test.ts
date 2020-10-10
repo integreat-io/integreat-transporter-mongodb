@@ -34,8 +34,7 @@ test('should return paging for first page', (t) => {
   const expected = {
     next: {
       type: 'entry',
-      query: { _id: { $gte: 'entry:ent2' } },
-      pageAfter: 'entry:ent2',
+      pageId: 'ZW50cnk6ZW50Mnw+', // entry:ent2|>
       pageSize: 2,
       archived: true,
     },
@@ -53,15 +52,13 @@ test('should return paging for second page', (t) => {
   ])
   const request = {
     type: 'entry',
-    query: { _id: { $gte: 'entry:ent2' } },
-    pageAfter: 'entry:ent2',
+    pageId: 'ZW50cnk6ZW50NHw+', // entry:ent2|>
     pageSize: 2,
   }
   const expected = {
     next: {
       type: 'entry',
-      query: { _id: { $gte: 'entry:ent4' } },
-      pageAfter: 'entry:ent4',
+      pageId: 'ZW50cnk6ZW50NHw+', // entry:ent4|>
       pageSize: 2,
     },
   }
@@ -86,8 +83,7 @@ test('should return paging when sorting', (t) => {
   const expected = {
     next: {
       type: 'entry',
-      query: { index: { $gte: 2 } },
-      pageAfter: 'entry:ent3',
+      pageId: 'ZW50cnk6ZW50M3xpbmRleD4y', // entry:ent3|index>2
       pageSize: 2,
     },
   }
@@ -112,8 +108,7 @@ test('should return paging when sorting descending', (t) => {
   const expected = {
     next: {
       type: 'entry',
-      query: { index: { $lte: 1 } },
-      pageAfter: 'entry:ent2',
+      pageId: 'ZW50cnk6ZW50MnxpbmRleDwx', //entry:ent2|index<1
       pageSize: 2,
     },
   }
@@ -139,11 +134,32 @@ test('should return paging when sorting ascending and descending', (t) => {
   const expected = {
     next: {
       type: 'entry',
-      query: {
-        index: { $lte: 1 },
-        id: { $gte: 'ent2' },
-      },
-      pageAfter: 'entry:ent2',
+      pageId: 'ZW50cnk6ZW50MnxpbmRleDwxfGlkPiJlbnQyIg', // entry:ent2|index<1|id>"ent2"
+      pageSize: 2,
+    },
+  }
+
+  const ret = createPaging(data, request, sort)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should return paging with encoded string', (t) => {
+  const data = prepareData([
+    { id: 'ent3', $type: 'entry', message: 'I will not be included' },
+    { id: 'ent2', $type: 'entry', message: 'Escape "me"' },
+  ])
+  const request = {
+    type: 'entry',
+    pageSize: 2,
+  }
+  const sort = {
+    message: -1,
+  }
+  const expected = {
+    next: {
+      type: 'entry',
+      pageId: 'ZW50cnk6ZW50MnxtZXNzYWdlPCJFc2NhcGUlMjAlMjJtZSUyMiI', // entry:ent2|message<"Escape%20%22me%22"
       pageSize: 2,
     },
   }
@@ -169,8 +185,7 @@ test('should include id and other params when present in request', (t) => {
     next: {
       type: 'entry',
       id: 'ent1',
-      query: { _id: { $gte: 'entry:ent2' } },
-      pageAfter: 'entry:ent2',
+      pageId: 'ZW50cnk6ZW50Mnw+', // entry:ent2|>
       pageSize: 2,
       archived: true,
     },
@@ -181,7 +196,7 @@ test('should include id and other params when present in request', (t) => {
   t.deepEqual(ret, expected)
 })
 
-test('should merge provided query param with _id query', (t) => {
+test('should not touch existing query', (t) => {
   const data = prepareData([
     { id: 'ent2', $type: 'entry', index: 2 },
     { id: 'ent3', $type: 'entry', index: 3 },
@@ -189,100 +204,19 @@ test('should merge provided query param with _id query', (t) => {
   const request = {
     type: 'entry',
     pageSize: 2,
-    params: { query: { index: { $gt: 1 } } },
+    params: { query: [{ path: 'index', op: 'gt', value: 1 }] },
     target: 'crm',
   }
   const expected = {
     next: {
       type: 'entry',
-      query: { _id: { $gte: 'entry:ent3' }, index: { $gt: 1 } },
-      pageAfter: 'entry:ent3',
+      query: [{ path: 'index', op: 'gt', value: 1 }],
+      pageId: 'ZW50cnk6ZW50M3w+', // entry:ent3|>
       pageSize: 2,
     },
   }
 
   const ret = createPaging(data, request)
-
-  t.deepEqual(ret, expected)
-})
-
-test('should merge provided query param with page query', (t) => {
-  const data = prepareData([
-    { id: 'ent2', $type: 'entry', index: 1 },
-    { id: 'ent3', $type: 'entry', index: 2 },
-  ])
-  const request = {
-    type: 'entry',
-    pageSize: 2,
-    params: { query: { id: { $lt: 'ent16' } } },
-  }
-  const sort = {
-    index: 1,
-  }
-  const expected = {
-    next: {
-      type: 'entry',
-      query: { id: { $lt: 'ent16' }, index: { $gte: 2 } },
-      pageAfter: 'entry:ent3',
-      pageSize: 2,
-    },
-  }
-
-  const ret = createPaging(data, request, sort)
-
-  t.deepEqual(ret, expected)
-})
-
-test('should combine provided query param with page query on same field', (t) => {
-  const data = prepareData([
-    { id: 'ent2', $type: 'entry', index: 1 },
-    { id: 'ent3', $type: 'entry', index: 2 },
-  ])
-  const request = {
-    type: 'entry',
-    pageSize: 2,
-    params: { query: { id: { $lt: 'ent16' }, index: { $lt: 5 } } },
-  }
-  const sort = {
-    index: 1,
-  }
-  const expected = {
-    next: {
-      type: 'entry',
-      query: { id: { $lt: 'ent16' }, index: { $gte: 2, $lt: 5 } },
-      pageAfter: 'entry:ent3',
-      pageSize: 2,
-    },
-  }
-
-  const ret = createPaging(data, request, sort)
-
-  t.deepEqual(ret, expected)
-})
-
-test('should combine provided query param with page query on same field and same selector', (t) => {
-  const data = prepareData([
-    { id: 'ent2', $type: 'entry', index: 1 },
-    { id: 'ent3', $type: 'entry', index: 2 },
-  ])
-  const request = {
-    type: 'entry',
-    pageSize: 2,
-    params: { query: { id: { $lt: 'ent16' }, index: { $gte: 0 } } },
-  }
-  const sort = {
-    index: 1,
-  }
-  const expected = {
-    next: {
-      type: 'entry',
-      query: { id: { $lt: 'ent16' }, index: { $gte: 2 } },
-      pageAfter: 'entry:ent3',
-      pageSize: 2,
-    },
-  }
-
-  const ret = createPaging(data, request, sort)
 
   t.deepEqual(ret, expected)
 })

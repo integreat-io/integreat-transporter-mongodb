@@ -109,7 +109,7 @@ test('should get with query', async (t) => {
       db: 'database',
       query: [
         { path: 'type', param: 'type' },
-        { path: 'personalia\\.age.$gt', value: 18 },
+        { path: 'personalia\\.age', op: 'gt', value: 18 },
       ],
     },
   }
@@ -178,8 +178,7 @@ test('should return params for next page', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      query: { _id: { $gte: 'entry:ent2' } },
-      pageAfter: 'entry:ent2',
+      pageId: 'ZW50cnk6ZW50Mnw+', // entry:ent2|>
       pageSize: 2,
     },
   }
@@ -205,7 +204,7 @@ test('should get second page of items', async (t) => {
       pageAfter: 'entry:ent2',
       params: {
         typePlural: 'entries',
-        query: { _id: { $gte: 'entry:ent2' } },
+        pageId: 'ZW50cnk6ZW50Mnw+', // entry:ent2|>
       },
     },
     options: {
@@ -216,8 +215,7 @@ test('should get second page of items', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      query: { _id: { $gte: 'entry:ent4' } },
-      pageAfter: 'entry:ent4',
+      pageId: 'ZW50cnk6ZW50NHw+', // entry:ent4|>
       pageSize: 2,
     },
   }
@@ -246,7 +244,7 @@ test('should get empty result when we have passed the last page', async (t) => {
       pageAfter: 'entry:ent4',
       params: {
         typePlural: 'entries',
-        query: { _id: { $gte: 'entry:ent4' } },
+        query: [{ path: '_id', op: 'gte', value: 'entry:ent4' }],
       },
     },
     options: {
@@ -279,7 +277,7 @@ test('should get empty result when the pageAfter doc is not found', async (t) =>
       pageAfter: 'entry:ent4',
       params: {
         typePlural: 'entries',
-        query: { _id: { $gte: 'entry:ent4' } },
+        query: [{ path: '_id', op: 'gte', value: 'entry:ent4' }],
       },
     },
     options: {
@@ -314,10 +312,9 @@ test('should get second page of items when there is documents before the pageAft
     request: {
       type: 'entry',
       pageSize: 2,
-      pageAfter: 'entry:ent2',
+      pageId: 'ZW50cnk6ZW50MnxpbmRleD4x', // entry:ent2|index>1
       params: {
         typePlural: 'entries',
-        query: { index: { $gte: 1 } },
       },
     },
     options: {
@@ -329,12 +326,11 @@ test('should get second page of items when there is documents before the pageAft
   const expectedPaging = {
     next: {
       type: 'entry',
-      query: { index: { $gte: 3 } },
-      pageAfter: 'entry:ent4',
+      pageId: 'ZW50cnk6ZW50NHxpbmRleD4z', // entry:ent4|index>3
       pageSize: 2,
     },
   }
-  const expectedQuery = { '\\$type': 'entry', index: { $gte: 1 } }
+  const expectedQuery = { '\\$type': 'entry' }
 
   const { status, response } = await getDocs(exchange, client)
 

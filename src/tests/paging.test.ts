@@ -53,8 +53,7 @@ test('should get one page of documents with params for next page', async (t) => 
   const expectedPaging = {
     next: {
       type: 'entry',
-      query: { _id: { $gte: 'entry:ent2' } },
-      pageAfter: 'entry:ent2',
+      pageId: 'ZW50cnk6ZW50Mnw+',
       pageSize: 2,
     },
   }
@@ -84,8 +83,7 @@ test('should get second page of documents', async (t) => {
     type: 'GET',
     request: {
       type: 'entry',
-      params: { query: { _id: { $gte: 'entry:ent2' } } },
-      pageAfter: 'entry:ent2',
+      pageId: 'ZW50cnk6ZW50Mnw+',
       pageSize: 2,
     },
     options: {
@@ -96,8 +94,7 @@ test('should get second page of documents', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      query: { _id: { $gte: 'entry:ent4' } },
-      pageAfter: 'entry:ent4',
+      pageId: 'ZW50cnk6ZW50NHw+',
       pageSize: 2,
     },
   }
@@ -127,8 +124,7 @@ test('should return less than a full page at the end', async (t) => {
     type: 'GET',
     request: {
       type: 'entry',
-      params: { query: { _id: { $gte: 'entry:ent2' } } },
-      pageAfter: 'entry:ent2',
+      pageId: 'ZW50cnk6ZW50Mnw+',
       pageSize: 2,
     },
     options: {
@@ -139,8 +135,7 @@ test('should return less than a full page at the end', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      query: { _id: { $gte: 'entry:ent3' } },
-      pageAfter: 'entry:ent3',
+      pageId: 'ZW50cnk6ZW50M3w+',
       pageSize: 2,
     },
   }
@@ -169,8 +164,8 @@ test('should return empty array when past last page', async (t) => {
     type: 'GET',
     request: {
       type: 'entry',
-      params: { query: { _id: { $gte: 'entry:ent4' } } },
-      pageAfter: 'entry:ent4',
+      params: { query: [{ path: '_id', op: 'gte', value: 'entry:ent4' }] },
+      pageId: 'ZW50cnk6ZW50NHw+',
       pageSize: 2,
     },
     options: {
@@ -192,7 +187,7 @@ test('should return empty array when past last page', async (t) => {
   t.deepEqual(response.paging, expectedPaging)
 })
 
-test('should not throw when pageAfter does not exist', async (t) => {
+test('should not throw when pageId does not exist', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
     { _id: 'entry:ent1', id: 'ent1', '\\$type': 'entry' },
@@ -203,8 +198,7 @@ test('should not throw when pageAfter does not exist', async (t) => {
     type: 'GET',
     request: {
       type: 'entry',
-      params: { query: { _id: { $gte: 'entry:ent3' } } },
-      pageAfter: 'entry:ent3',
+      params: { query: [{ path: '_id', op: 'gte', value: 'entry:ent3' }] },
       pageSize: 2,
     },
     options: {
@@ -259,8 +253,7 @@ test('should get second page of documents when sorting', async (t) => {
     type: 'GET',
     request: {
       type: 'entry',
-      params: { query: { 'attributes.index': { $gte: 2 } } },
-      pageAfter: 'entry:ent3',
+      pageId: 'ZW50cnk6ZW50M3xhdHRyaWJ1dGVzLmluZGV4PjI',
       pageSize: 2,
     },
     options: {
@@ -272,8 +265,7 @@ test('should get second page of documents when sorting', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      query: { 'attributes.index': { $gte: 4 } },
-      pageAfter: 'entry:ent4',
+      pageId: 'ZW50cnk6ZW50NHxhdHRyaWJ1dGVzLmluZGV4PjQ',
       pageSize: 2,
     },
   }
@@ -323,8 +315,7 @@ test('should get second page of documents when sorting descending', async (t) =>
     type: 'GET',
     request: {
       type: 'entry',
-      params: { query: { 'attributes.index': { $lte: 3 } } },
-      pageAfter: 'entry:ent1',
+      pageId: 'ZW50cnk6ZW50MXxhdHRyaWJ1dGVzLmluZGV4PDM',
       pageSize: 2,
     },
     options: {
@@ -336,8 +327,7 @@ test('should get second page of documents when sorting descending', async (t) =>
   const expectedPaging = {
     next: {
       type: 'entry',
-      query: { 'attributes.index': { $lte: 1 } },
-      pageAfter: 'entry:ent2',
+      pageId: 'ZW50cnk6ZW50MnxhdHRyaWJ1dGVzLmluZGV4PDE',
       pageSize: 2,
     },
   }
@@ -388,7 +378,7 @@ test('should return page params when sorting by two dimensions', async (t) => {
     request: {
       type: 'entry',
       params: {},
-      pageAfter: undefined,
+      pageId: undefined,
       pageSize: 2,
     },
     options: {
@@ -400,11 +390,8 @@ test('should return page params when sorting by two dimensions', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      query: {
-        'attributes.timestamp': { $lte: 1584211391000 },
-        'attributes.index': { $gte: 1 },
-      },
-      pageAfter: 'entry:ent2',
+      pageId:
+        'ZW50cnk6ZW50MnxhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkxMDAwfGF0dHJpYnV0ZXMuaW5kZXg+MQ',
       pageSize: 2,
     },
   }
@@ -454,8 +441,7 @@ test('should get second page of documents when sorting key is not unique', async
     type: 'GET',
     request: {
       type: 'entry',
-      paras: { query: { 'attributes.index': { $gte: 1 } } },
-      pageAfter: 'entry:ent3',
+      pageId: 'ZW50cnk6ZW50M3xhdHRyaWJ1dGVzLmluZGV4PjE',
       pageSize: 2,
     },
     options: {
@@ -467,8 +453,7 @@ test('should get second page of documents when sorting key is not unique', async
   const expectedPaging = {
     next: {
       type: 'entry',
-      query: { 'attributes.index': { $gte: 3 } },
-      pageAfter: 'entry:ent4',
+      pageId: 'ZW50cnk6ZW50NHxhdHRyaWJ1dGVzLmluZGV4PjM',
       pageSize: 2,
     },
   }
@@ -485,7 +470,7 @@ test('should get second page of documents when sorting key is not unique', async
   t.deepEqual(response.paging, expectedPaging)
 })
 
-test('should combine paging query with existing queries', async (t) => {
+test('should keep existing queries', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
     {
@@ -519,11 +504,9 @@ test('should combine paging query with existing queries', async (t) => {
     request: {
       type: 'entry',
       params: {
-        query: {
-          'attributes.index': { $lt: 3 },
-        },
+        query: [{ path: 'attributes.index', op: 'lt', value: 3 }],
       },
-      pageAfter: undefined,
+      pageId: undefined,
       pageSize: 2,
     },
     options: {
@@ -535,11 +518,9 @@ test('should combine paging query with existing queries', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      query: {
-        'attributes.timestamp': { $lte: 1584211390083 },
-        'attributes.index': { $gte: 2, $lt: 3 },
-      },
-      pageAfter: 'entry:ent3',
+      query: [{ path: 'attributes.index', op: 'lt', value: 3 }],
+      pageId:
+        'ZW50cnk6ZW50M3xhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkwMDgzfGF0dHJpYnV0ZXMuaW5kZXg+Mg',
       pageSize: 2,
     },
   }

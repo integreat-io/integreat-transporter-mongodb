@@ -5,6 +5,7 @@ import { Exchange, Data } from 'integreat'
 import { MongoOptions, ExchangeRequest } from '.'
 import { normalizeItem } from './escapeKeys'
 import { getCollection } from './send'
+import { atob } from './utils/base64'
 
 // Move the cursor to the first doc after the `pageAfter`
 // When no `pageAfter`, just start from the beginning
@@ -36,13 +37,16 @@ const getData = async (cursor: Cursor, pageSize: number) => {
 
   return data
 }
+const pageAfterFromPageId = (pageId?: string) =>
+  typeof pageId === 'string' ? pageId.split('|')[0] : undefined
 
 const getPage = async (
   cursor: Cursor,
-  { pageSize = Infinity, pageAfter }: ExchangeRequest
+  { pageSize = Infinity, pageAfter, pageId }: ExchangeRequest
 ) => {
+  const after = pageAfter || pageAfterFromPageId(atob(pageId))
   // When pageAfter is set – loop until we find the doc with that _id
-  const foundFirst = await moveToData(cursor, pageAfter)
+  const foundFirst = await moveToData(cursor, after)
 
   // Get the number of docs specified with pageSize - or the rest of the docs
   if (foundFirst) {
@@ -72,7 +76,7 @@ export default async function getDocs(
   const options = exchange.options as MongoOptions
 
   const filter = prepareFilter(
-    options,
+    options.query,
     request.type,
     request.id,
     request.params

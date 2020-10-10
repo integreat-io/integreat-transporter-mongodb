@@ -4,6 +4,7 @@ import { Collection, MongoClient } from 'mongodb'
 import { serializeItem } from './escapeKeys'
 import { isObjectWithId } from './utils/is'
 import { getCollection } from './send'
+import { MongoOptions } from '.'
 
 interface ItemResponse {
   id?: string
@@ -92,14 +93,9 @@ const performOne = (exchange: Exchange, collection: Collection) => async (
   const {
     type,
     request: { params },
-    options,
   } = exchange
-  const filter = prepareFilter(
-    options as Record<string, unknown>,
-    item.$type,
-    item.id,
-    params
-  )
+  const options = exchange.options as MongoOptions
+  const filter = prepareFilter(options.query, item.$type, item.id, params)
   const _id = [item.$type, item.id].filter(Boolean).join(':')
   try {
     if (type === 'SET') {
