@@ -1,6 +1,6 @@
 {
   "name": "integreat-transporter-mongodb",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "Integreat transporter for mongodb",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -34,7 +34,6 @@
     "node": ">= 12.9"
   },
   "dependencies": {
-    "@sindresorhus/is": "^3.1.2",
     "@types/mongodb": "^3.5.27",
     "dot-prop": "^5.3.0",
     "mongodb": "^3.6.2"
