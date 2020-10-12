@@ -3,8 +3,10 @@ import { QueryObject } from '.'
 import { serializePath } from './escapeKeys'
 import { atob } from './utils/base64'
 
+type QueryArray = (QueryObject | QueryArray)[]
+
 export interface Params extends Record<string, unknown> {
-  query?: QueryObject[]
+  query?: QueryArray
   pageId?: string
 }
 
@@ -42,9 +44,8 @@ const castDates = (query: Record<string, unknown>) =>
     {}
   )
 
-const mergeQueries = (
-  ...queries: ((QueryObject | undefined)[] | undefined)[]
-) => queries.flat().filter(Boolean) as QueryObject[]
+const mergeQueries = (...queries: (QueryArray | QueryObject | undefined)[]) =>
+  queries.flat().filter(Boolean) as QueryObject[]
 
 const validOps = ['eq', 'lt', 'gt', 'lte', 'gte', 'in']
 const validValueTypes = ['string', 'number', 'boolean']
@@ -56,27 +57,48 @@ const isValidValue = (value: unknown): boolean =>
     : validValueTypes.includes(typeof value) || value instanceof Date
 const mapOp = (op: string) => (op === 'eq' ? undefined : `$${op}`)
 
-const setMongoSelectorFromQueryProp = (allParams: Record<string, unknown>) =>
-  function (
-    filter: Record<string, unknown>,
-    { path, op = 'eq', value, param }: QueryObject
-  ) {
-    if (isOpValid(op)) {
-      // eslint-disable-next-line security/detect-object-injection
-      const comparee = param ? allParams[param] : value
-      if (isValidValue(comparee)) {
-        return dotprop.set(
-          filter,
-          [path === 'type' ? '\\$type' : serializePath(path), mapOp(op)]
-            .filter(Boolean)
-            .join('.'),
-          comparee
-        )
-      }
+function setMongoSelectorFromQueryObj(
+  allParams: Record<string, unknown>,
+  { path, op = 'eq', value, param }: QueryObject,
+  filter = {}
+) {
+  if (isOpValid(op)) {
+    // eslint-disable-next-line security/detect-object-injection
+    const comparee = param ? allParams[param] : value
+    if (isValidValue(comparee)) {
+      return dotprop.set(
+        filter,
+        [path === 'type' ? '\\$type' : serializePath(path), mapOp(op)]
+          .filter(Boolean)
+          .join('.'),
+        comparee
+      )
     }
-
-    return filter
   }
+
+  return filter
+}
+
+const setMongoSelectorFromQuery = (allParams: Record<string, unknown>) => (
+  filter: Record<string, unknown>,
+  query: QueryObject | QueryObject[]
+) =>
+  Array.isArray(query)
+    ? {
+        ...filter,
+        $or: query.map((queryObj) =>
+          mongoSelectorFromQuery(allParams, queryObj)
+        ),
+      }
+    : setMongoSelectorFromQueryObj(allParams, query, filter)
+
+const mongoSelectorFromQuery = (
+  allParams: Record<string, unknown>,
+  query: QueryObject | QueryObject[]
+): Record<string, unknown> =>
+  ([] as QueryObject[])
+    .concat(query)
+    .reduce(setMongoSelectorFromQuery(allParams), {})
 
 const partRegex = /^(.+)([\<\>])(.+)$/
 
@@ -109,7 +131,10 @@ function expandPageIdAsQuery(pageId?: string) {
     if (parts.length === 2 && parts[1] === '>') {
       return [{ path: '_id', op: 'gte', value: parts[0] }]
     } else {
-      return parts.slice(1).map(createQueryObjectFromPageIdPart)
+      return parts
+        .slice(1)
+        .map(createQueryObjectFromPageIdPart)
+        .filter(Boolean) as QueryObject[]
     }
   }
   return undefined
@@ -119,20 +144,20 @@ function expandPageIdAsQuery(pageId?: string) {
  * Generate the right query object as a filter for finding docs in the database.
  */
 export default function prepareFilter(
-  queryProps: QueryObject[] = [],
+  queryArray: QueryArray = [],
   type?: string | string[],
   id?: string | string[] | number,
   params: Params = {}
 ): Record<string, unknown> {
   // Create query object from array of props
   const pageQuery = expandPageIdAsQuery(atob(params.pageId))
-  const query = mergeQueries(queryProps, params.query, pageQuery).reduce(
-    setMongoSelectorFromQueryProp({ type, id, ...params }),
-    {}
+  const query = mongoSelectorFromQuery(
+    { type, id, ...params },
+    mergeQueries(queryArray, params.query, pageQuery)
   )
 
   // Set query props from id and type if no query was provided
-  setTypeOrId(query, queryProps.length > 0, type, id)
+  setTypeOrId(query, queryArray.length > 0, type, id)
 
   return castDates(query)
 }

@@ -149,6 +149,52 @@ test('should skip query objects with non-primitive values', (t) => {
   t.deepEqual(ret, expected)
 })
 
+test('should accept queries with or logic', (t) => {
+  const type = 'entry'
+  const id = 'ent1'
+  const query = [
+    { path: 'meta.views', op: 'gt', value: 300 },
+    [
+      { path: 'meta.author', value: 'johnf' },
+      { path: 'meta.author', value: 'lucyk' },
+    ],
+  ]
+  const expected = {
+    'meta.views': { $gt: 300 },
+    $or: [{ 'meta.author': 'johnf' }, { 'meta.author': 'lucyk' }],
+  }
+
+  const ret = prepareFilter(query, type, id)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should accept queries with and logic wihin or logic', (t) => {
+  const type = 'entry'
+  const id = 'ent1'
+  const query = [
+    { path: 'meta.views', op: 'gt', value: 300 },
+    [
+      { path: 'meta.author', value: 'johnf' },
+      [
+        { path: 'meta.author', value: 'lucyk' },
+        { path: 'meta.views', op: 'gt', value: 500 },
+      ],
+    ],
+  ]
+  const expected = {
+    'meta.views': { $gt: 300 },
+    $or: [
+      { 'meta.author': 'johnf' },
+      { 'meta.author': 'lucyk', 'meta.views': { $gt: 500 } },
+    ],
+  }
+
+  const ret = prepareFilter(query, type, id)
+
+  t.deepEqual(ret, expected)
+})
+
 test('should cast date strings as Date', (t) => {
   const type = 'entry'
   const params = {

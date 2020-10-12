@@ -100,6 +100,42 @@ The query object will look like this, for a request for items of type `entry`:
 }
 ```
 
+To specify or logic, you put several queries in an array. To have and logic
+within an or array, you again use an array.
+
+To query for type _and_ a `meta.status` of `draft` _or_ `published`:
+
+```javascript
+// ...
+query: [
+  { path: 'type', param: 'type' },
+  [
+    // or
+    { path: 'meta.status', value: 'draft' },
+    { path: 'meta.status', value: 'published' },
+  ],
+]
+```
+
+To query for type _and_ a `meta.status` of `draft` _or_ `published`, with
+`draft` having an _and_ logic with `meta.author.role`:
+
+```javascript
+// ...
+query: [
+  { path: 'type', param: 'type' },
+  [
+    // or
+    [
+      // and
+      { path: 'meta.status', value: 'draft' },
+      { path: 'meta.author.role', value: 'author' },
+    ],
+    { path: 'meta.status', value: 'published' },
+  ],
+]
+```
+
 When the `pageSize` param is set in a request, it is taken as the max number of
 documents to return in the response. When nothing else is specified, the first
 page of documents is returned, and the `paging.next` prop on the response will
