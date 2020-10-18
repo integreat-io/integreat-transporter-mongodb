@@ -1,3 +1,4 @@
+import debug = require('debug')
 import prepareFilter from './prepareFilter'
 import createPaging from './createPaging'
 import { Cursor, MongoClient } from 'mongodb'
@@ -6,6 +7,8 @@ import { MongoOptions, ExchangeRequest } from '.'
 import { normalizeItem } from './escapeKeys'
 import { getCollection } from './send'
 import { atob } from './utils/base64'
+
+const debugMongo = debug('great:transporter:mongo')
 
 // Move the cursor to the first doc after the `pageAfter`
 // When no `pageAfter`, just start from the beginning
@@ -62,6 +65,7 @@ export default async function getDocs(
 ): Promise<Exchange> {
   const collection = getCollection(exchange, client)
   if (!collection) {
+    debugMongo('Trying to get docs from unknown collection')
     return {
       ...exchange,
       status: 'error',
@@ -81,11 +85,15 @@ export default async function getDocs(
     request.id,
     request.params
   )
+  debugMongo('Starting query with filter %o', filter)
   let cursor = await collection.find(filter)
   if (options.sort) {
+    debugMongo('Sorting with %o', options.sort)
     cursor = cursor.sort(options.sort)
   }
+  debugMongo('Getting page', filter)
   const data = await getPage(cursor, request)
+  debugMongo('Got result page with %s items', data.length)
 
   if (data.length === 0 && request.id) {
     return {
