@@ -40,7 +40,7 @@ export default function createPaging(
   }: ExchangeRequest,
   sort?: Record<string, number>
 ): Paging {
-  if (data.length === 0) {
+  if (data.length === 0 || pageSize === undefined || data.length < pageSize) {
     return { next: undefined }
   }
   const lastItem = data[data.length - 1]

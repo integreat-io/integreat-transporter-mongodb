@@ -133,11 +133,7 @@ test('should return less than a full page at the end', async (t) => {
     },
   }
   const expectedPaging = {
-    next: {
-      type: 'entry',
-      pageId: 'ZW50cnk6ZW50M3w+',
-      pageSize: 2,
-    },
+    next: undefined,
   }
 
   const connection = await transporter.connect(options, authorization, null)

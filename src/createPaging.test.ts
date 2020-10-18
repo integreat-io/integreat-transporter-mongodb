@@ -68,6 +68,36 @@ test('should return paging for second page', (t) => {
   t.deepEqual(ret, expected)
 })
 
+test('should not return paging next when data size is smaller than page size', (t) => {
+  const data = prepareData([{ id: 'ent3', $type: 'entry' }])
+  const request = {
+    type: 'entry',
+    pageId: 'ZW50cnk6ZW50NHw+', // entry:ent2|>
+    pageSize: 2,
+  }
+  const expected = {
+    next: undefined,
+  }
+
+  const ret = createPaging(data, request)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should not return paging next when no page size', (t) => {
+  const data = prepareData([{ id: 'ent3', $type: 'entry' }])
+  const request = {
+    type: 'entry',
+  }
+  const expected = {
+    next: undefined,
+  }
+
+  const ret = createPaging(data, request)
+
+  t.deepEqual(ret, expected)
+})
+
 test('should return paging when sorting', (t) => {
   const data = prepareData([
     { id: 'ent2', $type: 'entry', index: 1 },
