@@ -10,13 +10,37 @@ export interface QueryObject {
   value?: unknown
 }
 
+export interface AggregationObjectSort {
+  type: 'sort'
+  sortBy: Record<string, 1 | -1>
+}
+
+export type GroupMethod = 'first' | 'last' | 'sum' | 'avg' | 'max' | 'min'
+
+export interface AggregationObjectGroup {
+  type: 'group'
+  id: string[]
+  groupBy: Record<string, GroupMethod>
+}
+
+export interface AggregationObjectQuery {
+  type: 'query'
+  query: QueryObject[]
+}
+
+export type AggregationObject =
+  | AggregationObjectSort
+  | AggregationObjectGroup
+  | AggregationObjectQuery
+
 export interface MongoOptions extends Record<string, unknown> {
   uri?: string
   baseUri?: string
   db?: string
   collection?: string
-  sort?: Record<string, number>
+  sort?: Record<string, 1 | -1>
   query?: QueryObject[]
+  aggregation?: AggregationObject[]
 }
 
 export interface MongoConnection extends Connection {

@@ -1,9 +1,15 @@
 import debug = require('debug')
 import prepareFilter from './prepareFilter'
+import prepareAggregation from './prepareAggregation'
 import createPaging from './createPaging'
-import { Cursor, MongoClient } from 'mongodb'
+import { AggregationCursor, Cursor, MongoClient } from 'mongodb'
 import { Exchange, Data } from 'integreat'
-import { MongoOptions, ExchangeRequest } from '.'
+import {
+  MongoOptions,
+  ExchangeRequest,
+  AggregationObject,
+  QueryObject,
+} from '.'
 import { normalizeItem } from './escapeKeys'
 import { getCollection } from './send'
 import { atob } from './utils/base64'
@@ -12,7 +18,10 @@ const debugMongo = debug('great:transporter:mongo')
 
 // Move the cursor to the first doc after the `pageAfter`
 // When no `pageAfter`, just start from the beginning
-const moveToData = async (cursor: Cursor, pageAfter?: string) => {
+const moveToData = async (
+  cursor: Cursor | AggregationCursor,
+  pageAfter?: string
+) => {
   if (!pageAfter) {
     // Start from the beginning
     return true
@@ -27,7 +36,10 @@ const moveToData = async (cursor: Cursor, pageAfter?: string) => {
 }
 
 // Get one page of docs from where the cursor is
-const getData = async (cursor: Cursor, pageSize: number) => {
+const getData = async (
+  cursor: Cursor | AggregationCursor,
+  pageSize: number
+) => {
   const data = []
 
   while (data.length < pageSize) {
@@ -44,7 +56,7 @@ const pageAfterFromPageId = (pageId?: string) =>
   typeof pageId === 'string' ? pageId.split('|')[0] : undefined
 
 const getPage = async (
-  cursor: Cursor,
+  cursor: Cursor | AggregationCursor,
   { pageSize = Infinity, pageAfter, pageId }: ExchangeRequest
 ) => {
   const after = pageAfter || pageAfterFromPageId(atob(pageId))
@@ -58,6 +70,17 @@ const getPage = async (
 
   return []
 }
+
+const appendToAggregation = (
+  aggregation: AggregationObject[],
+  query?: QueryObject[],
+  sort?: Record<string, 1 | -1>
+) =>
+  [
+    query ? { type: 'query', query } : undefined,
+    sort ? { type: 'sort', sortBy: sort } : undefined,
+    ...aggregation,
+  ].filter(Boolean) as AggregationObject[]
 
 export default async function getDocs(
   exchange: Exchange,
@@ -78,20 +101,42 @@ export default async function getDocs(
 
   const request = exchange.request
   const options = exchange.options as MongoOptions
+  const params = { ...request.params, type: request.type, id: request.id }
 
-  const filter = prepareFilter(
-    options.query,
-    request.type,
-    request.id,
-    request.params
-  )
-  debugMongo('Starting query with filter %o', filter)
-  let cursor = await collection.find(filter)
-  if (options.sort) {
-    debugMongo('Sorting with %o', options.sort)
-    cursor = cursor.sort(options.sort)
+  const filter = prepareFilter(options.query, params)
+  const sort = options.sort
+
+  const aggregation = options.aggregation
+    ? prepareAggregation(
+        appendToAggregation(options.aggregation, options.query, options.sort),
+        params
+      )
+    : undefined
+
+  let cursor
+  if (aggregation) {
+    if (typeof request.pageSize === 'number') {
+      return {
+        ...exchange,
+        status: 'badrequest',
+        response: {
+          ...exchange.response,
+          error: 'Paging is not allowed with aggregations',
+        },
+      }
+    }
+    debugMongo('Starting query with aggregation %o', aggregation)
+    cursor = await collection.aggregate(aggregation)
+  } else {
+    debugMongo('Starting query with filter %o', filter)
+    cursor = await collection.find(filter)
+    if (sort) {
+      debugMongo('Sorting with %o', sort)
+      cursor = cursor.sort(sort)
+    }
   }
-  debugMongo('Getting page', filter)
+
+  debugMongo('Getting page')
   const data = await getPage(cursor, request)
   debugMongo('Got result page with %s items', data.length)
 

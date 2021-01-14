@@ -95,7 +95,11 @@ const performOne = (exchange: Exchange, collection: Collection) => async (
     request: { params },
   } = exchange
   const options = exchange.options as MongoOptions
-  const filter = prepareFilter(options.query, item.$type, item.id, params)
+  const filter = prepareFilter(options.query, {
+    ...params,
+    type: item.$type,
+    id: item.id,
+  })
   const _id = [item.$type, item.id].filter(Boolean).join(':')
   try {
     if (type === 'SET') {

@@ -6,6 +6,8 @@ import { atob } from './utils/base64'
 type QueryArray = (QueryObject | QueryArray)[]
 
 export interface Params extends Record<string, unknown> {
+  id?: string | string[] | number
+  type?: string | string[]
   query?: QueryArray
   pageId?: string
 }
@@ -15,16 +17,13 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 
 const setTypeOrId = (
   query: Record<string, unknown>,
-  hasQueryProps: boolean,
   type?: string | string[],
   id?: string | string[] | number
 ) => {
-  if (!hasQueryProps) {
-    if (id) {
-      query._id = [type, String(id)].filter(Boolean).join(':')
-    } else if (type) {
-      query['\\$type'] = type
-    }
+  if (id) {
+    query._id = [type, String(id)].filter(Boolean).join(':')
+  } else if (type) {
+    query['\\$type'] = type
   }
 }
 
@@ -145,19 +144,20 @@ function expandPageIdAsQuery(pageId?: string) {
  */
 export default function prepareFilter(
   queryArray: QueryArray = [],
-  type?: string | string[],
-  id?: string | string[] | number,
   params: Params = {}
 ): Record<string, unknown> {
+  const { type, id } = params
   // Create query object from array of props
   const pageQuery = expandPageIdAsQuery(atob(params.pageId))
   const query = mongoSelectorFromQuery(
-    { type, id, ...params },
+    params,
     mergeQueries(queryArray, params.query, pageQuery)
   )
 
   // Set query props from id and type if no query was provided
-  setTypeOrId(query, queryArray.length > 0, type, id)
+  if (queryArray.length === 0) {
+    setTypeOrId(query, type, id)
+  }
 
   return castDates(query)
 }

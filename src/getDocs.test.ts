@@ -8,7 +8,7 @@ import getDocs from './getDocs'
 
 // Helpers
 
-const createFind = (items: TypedData[]) => {
+const createCollectionMethod = (items: TypedData[]) => {
   const docs = items.map(({ $type, ...item }) => ({
     ...item,
     _id: `${$type}:${item.id}`,
@@ -39,7 +39,7 @@ const createClient = (collection: unknown) =>
 // Tests
 
 test('should get items', async (t) => {
-  const find = createFind([
+  const find = createCollectionMethod([
     { id: 'ent1', $type: 'entry' },
     { id: 'ent2', $type: 'entry' },
   ])
@@ -69,7 +69,7 @@ test('should get items', async (t) => {
 })
 
 test('should get one item', async (t) => {
-  const find = createFind([{ id: 'ent1', $type: 'entry' }])
+  const find = createCollectionMethod([{ id: 'ent1', $type: 'entry' }])
   const client = createClient({ find })
   const exchange = {
     ...defaultExchange,
@@ -95,7 +95,7 @@ test('should get one item', async (t) => {
 })
 
 test('should get with query', async (t) => {
-  const find = createFind([])
+  const find = createCollectionMethod([])
   const client = createClient({ find })
   const exchange = {
     ...defaultExchange,
@@ -124,8 +124,156 @@ test('should get with query', async (t) => {
   t.deepEqual(arg, expectedQuery)
 })
 
+test('should get with aggregation', async (t) => {
+  const find = createCollectionMethod([])
+  const aggregate = createCollectionMethod([{ id: 'entry1', $type: 'entry' }])
+  const client = createClient({ find, aggregate })
+  const exchange = {
+    ...defaultExchange,
+    type: 'GET',
+    request: {
+      type: 'entry',
+      params: { typePlural: 'entries' },
+    },
+    options: {
+      collection: 'documents',
+      db: 'database',
+      aggregation: [
+        { type: 'sort', sortBy: { updatedAt: -1 } },
+        {
+          type: 'group',
+          id: ['account', 'id'],
+          groupBy: { updatedAt: 'first', status: 'first' },
+        },
+        {
+          type: 'query',
+          query: [
+            { path: 'type', param: 'type' },
+            { path: 'personalia\\.age', op: 'gt', value: 18 },
+          ],
+        },
+      ],
+    },
+  }
+  const expectedPipeline = [
+    { $sort: { updatedAt: -1 } },
+    {
+      $group: {
+        _id: { account: '$account', id: '$id' },
+        updatedAt: { $first: '$updatedAt' },
+        status: { $first: '$status' },
+      },
+    },
+    {
+      $match: {
+        '\\$type': 'entry',
+        'personalia\\_age': { $gt: 18 },
+      },
+    },
+  ]
+  const expectedData = [{ _id: 'entry:entry1', id: 'entry1', $type: 'entry' }]
+
+  const ret = await getDocs(exchange, client)
+
+  t.is(find.callCount, 0)
+  t.is(aggregate.callCount, 1)
+  const arg = aggregate.args[0][0]
+  t.deepEqual(arg, expectedPipeline)
+  t.is(ret.status, 'ok')
+  t.deepEqual(ret.response.data, expectedData)
+})
+
+test('should get put query and sort first in aggregation pipeline', async (t) => {
+  const find = createCollectionMethod([])
+  const aggregate = createCollectionMethod([])
+  const client = createClient({ find, aggregate })
+  const exchange = {
+    ...defaultExchange,
+    type: 'GET',
+    request: {
+      type: 'entry',
+      params: { typePlural: 'entries' },
+    },
+    options: {
+      collection: 'documents',
+      db: 'database',
+      query: [
+        { path: 'type', param: 'type' },
+        { path: 'personalia\\.age', op: 'gt', value: 18 },
+      ],
+      sort: { updatedAt: -1 },
+      aggregation: [
+        {
+          type: 'group',
+          id: ['account', 'id'],
+          groupBy: { updatedAt: 'first', status: 'first' },
+        },
+      ],
+    },
+  }
+  const expectedPipeline = [
+    {
+      $match: {
+        '\\$type': 'entry',
+        'personalia\\_age': { $gt: 18 },
+      },
+    },
+    { $sort: { updatedAt: -1 } },
+    {
+      $group: {
+        _id: { account: '$account', id: '$id' },
+        updatedAt: { $first: '$updatedAt' },
+        status: { $first: '$status' },
+      },
+    },
+  ]
+
+  await getDocs(exchange, client)
+
+  t.is(find.callCount, 0)
+  t.is(aggregate.callCount, 1)
+  const arg = aggregate.args[0][0]
+  t.deepEqual(arg, expectedPipeline)
+})
+
+test('should return badrequest when combining aggregation and paging', async (t) => {
+  const find = createCollectionMethod([])
+  const aggregate = createCollectionMethod([])
+  const client = createClient({ find, aggregate })
+  const exchange = {
+    ...defaultExchange,
+    type: 'GET',
+    request: {
+      type: 'entry',
+      pageSize: 100,
+      params: { typePlural: 'entries' },
+    },
+    options: {
+      collection: 'documents',
+      db: 'database',
+      query: [
+        { path: 'type', param: 'type' },
+        { path: 'personalia\\.age', op: 'gt', value: 18 },
+      ],
+      sort: { updatedAt: -1 },
+      aggregation: [
+        {
+          type: 'group',
+          id: ['account', 'id'],
+          groupBy: { updatedAt: 'first', status: 'first' },
+        },
+      ],
+    },
+  }
+
+  const ret = await getDocs(exchange, client)
+
+  t.is(ret.status, 'badrequest')
+  t.is(typeof ret.response.error, 'string')
+})
+
 test('should get one page of items', async (t) => {
-  const find = createFind([
+  const find = createCollectionMethod([
     { id: 'ent1', $type: 'entry' },
     { id: 'ent2', $type: 'entry' },
     { id: 'ent3', $type: 'entry' },
@@ -157,7 +305,7 @@ test('should get one page of items', async (t) => {
 })
 
 test('should return params for next page', async (t) => {
-  const find = createFind([
+  const find = createCollectionMethod([
     { id: 'ent1', $type: 'entry' },
     { id: 'ent2', $type: 'entry' },
   ])
@@ -189,7 +337,7 @@ test('should return params for next page', async (t) => {
 })
 
 test('should get second page of items', async (t) => {
-  const find = createFind([
+  const find = createCollectionMethod([
     { id: 'ent2', $type: 'entry' },
     { id: 'ent3', $type: 'entry' },
     { id: 'ent4', $type: 'entry' },
@@ -233,7 +381,7 @@ test('should get second page of items', async (t) => {
 })
 
 test('should get empty result when we have passed the last page', async (t) => {
-  const find = createFind([{ id: 'ent4', $type: 'entry' }])
+  const find = createCollectionMethod([{ id: 'ent4', $type: 'entry' }])
   const client = createClient({ find })
   const exchange = {
     ...defaultExchange,
@@ -266,7 +414,7 @@ test('should get empty result when we have passed the last page', async (t) => {
 })
 
 test('should get empty result when the pageAfter doc is not found', async (t) => {
-  const find = createFind([{ id: 'ent5', $type: 'entry' }])
+  const find = createCollectionMethod([{ id: 'ent5', $type: 'entry' }])
   const client = createClient({ find })
   const exchange = {
     ...defaultExchange,
@@ -299,7 +447,7 @@ test('should get empty result when the pageAfter doc is not found', async (t) =>
 })
 
 test('should get second page of items when there is documents before the pageAfter', async (t) => {
-  const find = createFind([
+  const find = createCollectionMethod([
     { id: 'ent1', $type: 'entry', index: 1 },
     { id: 'ent2', $type: 'entry', index: 1 },
     { id: 'ent3', $type: 'entry', index: 2 },
@@ -344,7 +492,7 @@ test('should get second page of items when there is documents before the pageAft
 })
 
 test('should return empty array when collection query comes back empty', async (t) => {
-  const find = createFind([])
+  const find = createCollectionMethod([])
   const client = createClient({ find })
   const exchange = {
     ...defaultExchange,
@@ -366,7 +514,7 @@ test('should return empty array when collection query comes back empty', async (
 })
 
 test('should return notfound when member query comes back empty', async (t) => {
-  const find = createFind([])
+  const find = createCollectionMethod([])
   const client = createClient({ find })
   const exchange = {
     ...defaultExchange,
@@ -389,7 +537,7 @@ test('should return notfound when member query comes back empty', async (t) => {
 })
 
 test('should return error when missing option in exchange', async (t) => {
-  const find = createFind([])
+  const find = createCollectionMethod([])
   const client = createClient({ find })
   const exchange = {
     ...defaultExchange,

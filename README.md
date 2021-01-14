@@ -141,6 +141,43 @@ documents to return in the response. When nothing else is specified, the first
 page of documents is returned, and the `paging.next` prop on the response will
 hold a params object that may be used to get the next page.
 
+Aggregation is supported by specifying a pipeline on the `aggregation` property
+on the `options` object. If a query or a sort order is specified, they are put
+first in the aggregation pipeline, query first, then sorting. Aggregations don't
+support paging, and combining `pageSize` with `aggragation` will give a
+`badrequest` error.
+
+Example of an aggregation pipeline:
+
+```javascript
+{
+  ...
+  endpoints: [
+    {
+      id: 'getNewestVersion',
+      options: {
+        db: 'store',
+        collection: 'documents',
+        aggregation: [
+          { type: 'sort', sortBy: { updatedAt: -1 } },
+          {
+            type: 'group',
+            id: ['account', 'id'],
+            groupBy: { updatedAt: 'first', status: 'first' },
+          },
+          {
+            type: 'query',
+            query: [
+              { path: 'updatedAt', op: 'gt', param: 'updatedAfter' },
+            ],
+          },
+        ]
+      }
+    }
+  ]
+}
+```
+
 **Note 1:** This transporter is currently updating and deleting arrays of documents
 by calling `updateOne` and `deleteOne` for every item in the array. This is not
 the best method of doing it, so stay tuned for improvements.
