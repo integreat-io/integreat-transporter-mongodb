@@ -1,7 +1,7 @@
 import mongodb = require('mongodb')
 import connect from './connect'
 import send from './send'
-import { Transporter, Connection, Exchange } from 'integreat'
+import { Transporter, Connection } from 'integreat'
 
 export interface QueryObject {
   path: string
@@ -100,7 +100,7 @@ const mongodbTransporter: Transporter = {
    * authenticated, and a successfull authentication is required before sending
    * the data with auth headers from the auth strategy.
    */
-  async send(exchange: Exchange, connection) {
+  async send(exchange, connection) {
     return send(exchange, connection)
   },
 }

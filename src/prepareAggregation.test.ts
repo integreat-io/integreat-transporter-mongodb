@@ -1,4 +1,5 @@
 import test from 'ava'
+import { AggregationObject } from '.'
 
 import prepareAggregation from './prepareAggregation'
 
@@ -68,6 +69,49 @@ test('should skip empty sort and query', (t) => {
   const ret = prepareAggregation(aggregation, { type: 'entry' })
 
   t.deepEqual(ret, expected)
+})
+
+test('should skip aggregation objects with missing properties', (t) => {
+  const aggregation = [
+    {
+      type: 'query' as const,
+      query: [{ path: 'something', value: 'otherthing' }],
+    },
+    { type: 'sort' as const },
+    {
+      type: 'group' as const,
+    },
+    {
+      type: 'query' as const,
+    },
+  ] as AggregationObject[]
+  const expected = [
+    {
+      $match: {
+        something: 'otherthing',
+      },
+    },
+  ]
+
+  const ret = prepareAggregation(aggregation, { type: 'entry' })
+
+  t.deepEqual(ret, expected)
+})
+
+test('should return undefined when entire pipeline is skipped', (t) => {
+  const aggregation = [
+    { type: 'sort' as const },
+    {
+      type: 'group' as const,
+    },
+    {
+      type: 'query' as const,
+    },
+  ] as AggregationObject[]
+
+  const ret = prepareAggregation(aggregation, { type: 'entry' })
+
+  t.is(ret, undefined)
 })
 
 test('should return undefined when no aggregation', (t) => {

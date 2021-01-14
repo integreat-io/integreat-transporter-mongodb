@@ -6,6 +6,7 @@ import {
   AggregationObjectQuery,
   GroupMethod,
 } from '.'
+import { isObject } from './utils/is'
 import prepareFilter from './prepareFilter'
 
 const prepareGroupId = (fields: string[]) =>
@@ -20,21 +21,26 @@ const prepareGroupFields = (fields: Record<string, GroupMethod>) =>
     {}
   )
 
-const groupToMongo = ({ id, groupBy }: AggregationObjectGroup) => ({
-  $group: {
-    _id: prepareGroupId(id),
-    ...prepareGroupFields(groupBy),
-  },
-})
+const groupToMongo = ({ id, groupBy }: AggregationObjectGroup) =>
+  isObject(groupBy)
+    ? {
+        $group: {
+          _id: prepareGroupId(id),
+          ...prepareGroupFields(groupBy),
+        },
+      }
+    : undefined
 
 const sortToMongo = ({ sortBy }: AggregationObjectSort) =>
-  Object.keys(sortBy).length > 0 ? { $sort: sortBy } : undefined
+  isObject(sortBy) && Object.keys(sortBy).length > 0
+    ? { $sort: sortBy }
+    : undefined
 
 const queryToMongo = (
   { query }: AggregationObjectQuery,
   params: Record<string, unknown>
 ) =>
-  query.length > 0
+  Array.isArray(query) && query.length > 0
     ? {
         $match: prepareFilter(query, params),
       }
@@ -58,7 +64,10 @@ export default function prepareAggregation(
   aggregation?: AggregationObject[],
   params: Record<string, unknown> = {}
 ): object[] | undefined {
-  return Array.isArray(aggregation) && aggregation.length > 0
-    ? (aggregation.map(toMongo(params)).filter(Boolean) as object[])
-    : undefined
+  if (!Array.isArray(aggregation) || aggregation.length === 0) {
+    return undefined
+  }
+
+  const pipeline = aggregation.map(toMongo(params)).filter(Boolean) as object[]
+  return pipeline.length > 0 ? pipeline : undefined
 }
