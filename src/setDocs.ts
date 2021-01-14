@@ -1,5 +1,5 @@
 import prepareFilter from './prepareFilter'
-import { Exchange, Data } from 'integreat'
+import { Exchange } from 'integreat'
 import { Collection, MongoClient } from 'mongodb'
 import { serializeItem } from './escapeKeys'
 import { isObjectWithId } from './utils/is'
@@ -82,7 +82,7 @@ const createErrorResponse = (status: string, error: string, id?: string) => ({
 })
 
 const performOne = (exchange: Exchange, collection: Collection) => async (
-  item: Data
+  item: unknown
 ): Promise<ItemResponse> => {
   if (!isObjectWithId(item)) {
     return createErrorResponse(
