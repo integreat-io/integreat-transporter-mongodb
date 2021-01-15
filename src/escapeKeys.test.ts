@@ -13,6 +13,11 @@ test('should escape reserved characters on serialization', (t) => {
       $type: 'author',
       'authored\\.entries': ['ent1', 'ent3'],
     },
+    items: [
+      {
+        $iterate: true,
+      },
+    ],
     'field.with.several.dots': false,
     'escaped\\_underscore': 'why?',
   }
@@ -26,6 +31,11 @@ test('should escape reserved characters on serialization', (t) => {
       '\\$type': 'author',
       'authored\\\\\\_entries': ['ent1', 'ent3'],
     },
+    items: [
+      {
+        '\\$iterate': true,
+      },
+    ],
     'field\\_with\\_several\\_dots': false,
     'escaped\\\\_underscore': 'why?',
   }
@@ -46,6 +56,11 @@ test('should remove escape characters on normalization', (t) => {
       '\\$type': 'author',
       'authored\\\\\\_entries': ['ent1', 'ent3'],
     },
+    items: [
+      {
+        '\\$iterate': true,
+      },
+    ],
     'field\\_with\\_several\\_dots': false,
     'escaped\\\\_underscore': 'why?',
   }
@@ -59,6 +74,11 @@ test('should remove escape characters on normalization', (t) => {
       $type: 'author',
       'authored\\.entries': ['ent1', 'ent3'],
     },
+    items: [
+      {
+        $iterate: true,
+      },
+    ],
     'field.with.several.dots': false,
     'escaped\\_underscore': 'why?',
   }

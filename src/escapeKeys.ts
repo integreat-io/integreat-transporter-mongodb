@@ -22,7 +22,9 @@ export function serializePath(path: string): string {
 }
 
 export function serializeItem(item: unknown): unknown {
-  if (!isObject(item)) {
+  if (Array.isArray(item)) {
+    return item.map(serializeItem)
+  } else if (!isObject(item)) {
     return item
   }
   return Object.entries(item).reduce(
@@ -35,7 +37,9 @@ export function serializeItem(item: unknown): unknown {
 }
 
 export function normalizeItem(item: unknown): unknown {
-  if (!isObject(item)) {
+  if (Array.isArray(item)) {
+    return item.map(normalizeItem)
+  } else if (!isObject(item)) {
     return item
   }
   return Object.entries(item).reduce(
