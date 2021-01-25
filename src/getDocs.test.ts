@@ -8,12 +8,17 @@ import getDocs from './getDocs'
 
 // Helpers
 
-const createCollectionMethod = (items: TypedData[]) => {
-  const docs = items.map(({ $type, ...item }) => ({
-    ...item,
-    _id: `${$type}:${item.id}`,
-    '\\$type': $type,
-  }))
+const createCollectionMethod = (
+  items: Record<string, unknown>[],
+  isAggregation = false
+) => {
+  const docs = isAggregation
+    ? items
+    : items.map(({ $type, ...item }) => ({
+        ...item,
+        _id: `${$type}:${item.id}`,
+        '\\$type': $type,
+      }))
   const it = docs[Symbol.iterator]()
 
   const cursor = {
@@ -126,7 +131,16 @@ test('should get with query', async (t) => {
 
 test('should get with aggregation', async (t) => {
   const find = createCollectionMethod([])
-  const aggregate = createCollectionMethod([{ id: 'entry1', $type: 'entry' }])
+  const aggregate = createCollectionMethod(
+    [
+      {
+        _id: { 'values\\_account': '1501', id: 'ent1' },
+        updatedAt: '2021-01-18T00:00:00Z',
+        'values.status': 'inactive',
+      },
+    ],
+    true
+  )
   const client = createClient({ find, aggregate })
   const exchange = {
     ...defaultExchange,
@@ -142,8 +156,8 @@ test('should get with aggregation', async (t) => {
         { type: 'sort', sortBy: { updatedAt: -1 } },
         {
           type: 'group',
-          id: ['account', 'id'],
-          groupBy: { updatedAt: 'first', status: 'first' },
+          id: ['values.account', 'id'],
+          groupBy: { updatedAt: 'first', 'values.status': 'first' },
         },
         {
           type: 'query',
@@ -159,9 +173,9 @@ test('should get with aggregation', async (t) => {
     { $sort: { updatedAt: -1 } },
     {
       $group: {
-        _id: { account: '$account', id: '$id' },
+        _id: { 'values\\_account': '$values.account', id: '$id' },
         updatedAt: { $first: '$updatedAt' },
-        status: { $first: '$status' },
+        'values\\_status': { $first: '$values.status' },
       },
     },
     {
@@ -171,7 +185,14 @@ test('should get with aggregation', async (t) => {
       },
     },
   ]
-  const expectedData = [{ _id: 'entry:entry1', id: 'entry1', $type: 'entry' }]
+  const expectedData = [
+    {
+      'values.account': '1501',
+      id: 'ent1',
+      updatedAt: '2021-01-18T00:00:00Z',
+      'values.status': 'inactive',
+    },
+  ]
 
   const ret = await getDocs(exchange, client)
 

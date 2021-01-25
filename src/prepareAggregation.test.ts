@@ -43,6 +43,50 @@ test('should return mongo aggregation pipeline', (t) => {
   t.deepEqual(ret, expected)
 })
 
+test('should escape paths used as props', (t) => {
+  const aggregation = [
+    { type: 'sort' as const, sortBy: { 'values.updatedAt': -1 as const } },
+    {
+      type: 'group' as const,
+      id: ['values.account', 'values.id'],
+      groupBy: {
+        'values.updatedAt': 'first' as const,
+        'values.status': 'first' as const,
+      },
+    },
+    {
+      type: 'query' as const,
+      query: [
+        { path: 'type', param: 'type' },
+        { path: 'values.age', op: 'gt', value: 18 },
+      ],
+    },
+  ]
+  const expected = [
+    { $sort: { 'values.updatedAt': -1 } },
+    {
+      $group: {
+        _id: {
+          'values\\_account': '$values.account',
+          'values\\_id': '$values.id',
+        },
+        'values\\_updatedAt': { $first: '$values.updatedAt' },
+        'values\\_status': { $first: '$values.status' },
+      },
+    },
+    {
+      $match: {
+        '\\$type': 'entry',
+        'values.age': { $gt: 18 },
+      },
+    },
+  ]
+
+  const ret = prepareAggregation(aggregation, { type: 'entry' })
+
+  t.deepEqual(ret, expected)
+})
+
 test('should skip empty sort and query', (t) => {
   const aggregation = [
     { type: 'sort' as const, sortBy: {} },

@@ -2,11 +2,16 @@ import dotprop = require('dot-prop')
 import { TypedData, Data } from 'integreat'
 import { ExchangeRequest } from '.'
 import { btoa, removePadding } from './utils/base64'
+import { isObject } from './utils/is'
 
 export interface Paging {
   next?: Record<string, Data> // TODO: Update when typing in Integreat changes
   prev?: Record<string, Data>
 }
+
+const isDataWithMongoId = (
+  value: unknown
+): value is TypedData => isObject(value) && typeof value._id === 'string' // Not quite right typing
 
 const encodeValue = (value: unknown) =>
   typeof value === 'string' ? `"${encodeURIComponent(value)}"` : value
@@ -31,7 +36,7 @@ const createPageId = (
   ].join('|')
 
 export default function createPaging(
-  data: TypedData[],
+  data: unknown[],
   {
     type,
     id,
@@ -44,7 +49,9 @@ export default function createPaging(
     return { next: undefined }
   }
   const lastItem = data[data.length - 1]
-  const pageId = removePadding(btoa(createPageId(lastItem, sort)))
+  const pageId = isDataWithMongoId(lastItem)
+    ? removePadding(btoa(createPageId(lastItem, sort)))
+    : undefined
 
   return {
     next: {

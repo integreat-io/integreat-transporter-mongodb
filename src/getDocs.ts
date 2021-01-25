@@ -13,8 +13,13 @@ import {
 import { normalizeItem } from './escapeKeys'
 import { getCollection } from './send'
 import { atob } from './utils/base64'
+import { isObject } from './utils/is'
 
 const debugMongo = debug('great:transporter:mongo')
+
+interface ItemWithIdObject extends Record<string, unknown> {
+  _id: Record<string, unknown>
+}
 
 // Move the cursor to the first doc after the `pageAfter`
 // When no `pageAfter`, just start from the beginning
@@ -35,6 +40,13 @@ const moveToData = async (
   return !!doc // false if the doc to start after is not found
 }
 
+const explodeId = ({ _id, ...item }: ItemWithIdObject) => ({ ...item, ..._id })
+
+const mutateItem = (item: unknown) =>
+  isObject(item) && isObject(item._id)
+    ? explodeId(item as ItemWithIdObject)
+    : item
+
 // Get one page of docs from where the cursor is
 const getData = async (
   cursor: Cursor | AggregationCursor,
@@ -47,7 +59,7 @@ const getData = async (
     if (!doc) {
       break
     }
-    data.push(doc)
+    data.push(mutateItem(doc))
   }
 
   return data

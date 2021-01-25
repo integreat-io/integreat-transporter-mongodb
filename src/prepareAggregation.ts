@@ -9,14 +9,19 @@ import {
 import { isObject } from './utils/is'
 import prepareFilter from './prepareFilter'
 
+const serializeFieldKey = (key: string) => key.replace('.', '\\_')
+
 const prepareGroupId = (fields: string[]) =>
-  fields.reduce((obj, field) => ({ ...obj, [field]: `$${field}` }), {})
+  fields.reduce(
+    (obj, field) => ({ ...obj, [serializeFieldKey(field)]: `$${field}` }),
+    {}
+  )
 
 const prepareGroupFields = (fields: Record<string, GroupMethod>) =>
   Object.entries(fields).reduce(
     (obj, [field, method]) => ({
       ...obj,
-      [field]: { [`$${method}`]: `$${field}` },
+      [serializeFieldKey(field)]: { [`$${method}`]: `$${field}` },
     }),
     {}
   )

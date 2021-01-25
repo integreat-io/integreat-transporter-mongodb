@@ -144,7 +144,7 @@ hold a params object that may be used to get the next page.
 Aggregation is supported by specifying a pipeline on the `aggregation` property
 on the `options` object. If a query or a sort order is specified, they are put
 first in the aggregation pipeline, query first, then sorting. Aggregations don't
-support paging, and combining `pageSize` with `aggragation` will give a
+support paging, and combining `pageSize` with `aggregation` will give a
 `badrequest` error.
 
 Example of an aggregation pipeline:

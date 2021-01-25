@@ -250,3 +250,27 @@ test('should not touch existing query', (t) => {
 
   t.deepEqual(ret, expected)
 })
+
+test('should not touch when not typed data', (t) => {
+  const data = [
+    { accountId: '1505', amount: 159 },
+    { accountId: '1506', amount: 209 },
+  ]
+  const request = {
+    type: 'entry',
+    pageSize: 2,
+    params: {},
+    target: 'crm',
+  }
+  const expected = {
+    next: {
+      type: 'entry',
+      pageId: undefined,
+      pageSize: 2,
+    },
+  }
+
+  const ret = createPaging(data, request)
+
+  t.deepEqual(ret, expected)
+})
