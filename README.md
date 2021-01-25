@@ -162,8 +162,8 @@ Example of an aggregation pipeline:
           { type: 'sort', sortBy: { updatedAt: -1 } },
           {
             type: 'group',
-            id: ['account', 'id'],
-            groupBy: { updatedAt: 'first', status: 'first' },
+            groupBy: ['account', 'id'],
+            values: { updatedAt: 'first', status: 'first' },
           },
           {
             type: 'query',

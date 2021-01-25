@@ -19,8 +19,8 @@ export type GroupMethod = 'first' | 'last' | 'sum' | 'avg' | 'max' | 'min'
 
 export interface AggregationObjectGroup {
   type: 'group'
-  id: string[]
-  groupBy: Record<string, GroupMethod>
+  groupBy: string[]
+  values: Record<string, GroupMethod>
 }
 
 export interface AggregationObjectQuery {

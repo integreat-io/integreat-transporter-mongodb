@@ -10,8 +10,8 @@ test('should return mongo aggregation pipeline', (t) => {
     { type: 'sort' as const, sortBy: { updatedAt: -1 as const } },
     {
       type: 'group' as const,
-      id: ['account', 'id'],
-      groupBy: { updatedAt: 'first' as const, status: 'first' as const },
+      groupBy: ['account', 'id'],
+      values: { updatedAt: 'first' as const, status: 'first' as const },
     },
     {
       type: 'query' as const,
@@ -48,8 +48,8 @@ test('should escape paths used as props', (t) => {
     { type: 'sort' as const, sortBy: { 'values.updatedAt': -1 as const } },
     {
       type: 'group' as const,
-      id: ['values.account', 'values.id'],
-      groupBy: {
+      groupBy: ['values.account', 'values.id'],
+      values: {
         'values.updatedAt': 'first' as const,
         'values.status': 'first' as const,
       },
@@ -92,8 +92,8 @@ test('should skip empty sort and query', (t) => {
     { type: 'sort' as const, sortBy: {} },
     {
       type: 'group' as const,
-      id: ['account', 'id'],
-      groupBy: { updatedAt: 'first' as const, status: 'first' as const },
+      groupBy: ['account', 'id'],
+      values: { updatedAt: 'first' as const, status: 'first' as const },
     },
     {
       type: 'query' as const,

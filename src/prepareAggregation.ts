@@ -26,12 +26,12 @@ const prepareGroupFields = (fields: Record<string, GroupMethod>) =>
     {}
   )
 
-const groupToMongo = ({ id, groupBy }: AggregationObjectGroup) =>
-  isObject(groupBy)
+const groupToMongo = ({ groupBy, values }: AggregationObjectGroup) =>
+  isObject(values)
     ? {
         $group: {
-          _id: prepareGroupId(id),
-          ...prepareGroupFields(groupBy),
+          _id: prepareGroupId(groupBy),
+          ...prepareGroupFields(values),
         },
       }
     : undefined

@@ -156,8 +156,8 @@ test('should get with aggregation', async (t) => {
         { type: 'sort', sortBy: { updatedAt: -1 } },
         {
           type: 'group',
-          id: ['values.account', 'id'],
-          groupBy: { updatedAt: 'first', 'values.status': 'first' },
+          groupBy: ['values.account', 'id'],
+          values: { updatedAt: 'first', 'values.status': 'first' },
         },
         {
           type: 'query',
@@ -226,8 +226,8 @@ test('should get put query and sort first in aggregation pipeline', async (t) =>
       aggregation: [
         {
           type: 'group',
-          id: ['account', 'id'],
-          groupBy: { updatedAt: 'first', status: 'first' },
+          groupBy: ['account', 'id'],
+          values: { updatedAt: 'first', status: 'first' },
         },
       ],
     },
@@ -280,8 +280,8 @@ test('should return badrequest when combining aggregation and paging', async (t)
       aggregation: [
         {
           type: 'group',
-          id: ['account', 'id'],
-          groupBy: { updatedAt: 'first', status: 'first' },
+          groupBy: ['account', 'id'],
+          values: { updatedAt: 'first', status: 'first' },
         },
       ],
     },

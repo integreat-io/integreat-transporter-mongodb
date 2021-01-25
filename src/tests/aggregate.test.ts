@@ -64,8 +64,8 @@ test('should get a document by type and id', async (t) => {
       aggregation: [
         {
           type: 'group',
-          id: ['values.category'],
-          groupBy: { 'values.count': 'sum', id: 'first' },
+          groupBy: ['values.category'],
+          values: { 'values.count': 'sum', id: 'first' },
         },
         {
           type: 'sort',
