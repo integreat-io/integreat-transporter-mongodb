@@ -75,14 +75,14 @@ test('should get a document by type and id', async (t) => {
     },
   }
   const expectedData1 = {
-    'values.category': 'news',
+    'values\\.category': 'news',
     id: 'ent1',
-    'values.count': 11,
+    'values\\.count': 11,
   }
   const expectedData2 = {
-    'values.category': 'sports',
+    'values\\.category': 'sports',
     id: 'ent2',
-    'values.count': 2,
+    'values\\.count': 2,
   }
 
   const connection = await transporter.connect(options, authentication, null)

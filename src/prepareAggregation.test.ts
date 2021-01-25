@@ -67,11 +67,11 @@ test('should escape paths used as props', (t) => {
     {
       $group: {
         _id: {
-          'values\\_account': '$values.account',
-          'values\\_id': '$values.id',
+          'values\\\\\\_account': '$values.account',
+          'values\\\\\\_id': '$values.id',
         },
-        'values\\_updatedAt': { $first: '$values.updatedAt' },
-        'values\\_status': { $first: '$values.status' },
+        'values\\\\\\_updatedAt': { $first: '$values.updatedAt' },
+        'values\\\\\\_status': { $first: '$values.status' },
       },
     },
     {
