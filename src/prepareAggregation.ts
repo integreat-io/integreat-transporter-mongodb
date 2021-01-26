@@ -9,7 +9,7 @@ import {
 import { isObject } from './utils/is'
 import prepareFilter from './prepareFilter'
 
-const serializeFieldKey = (key: string) => key.replace('.', '\\\\\\_')
+const serializeFieldKey = (key: string) => key.replace('.', '\\\\_')
 
 const prepareGroupId = (fields: string[]) =>
   fields.reduce(

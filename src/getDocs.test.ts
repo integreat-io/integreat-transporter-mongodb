@@ -173,9 +173,9 @@ test('should get with aggregation', async (t) => {
     { $sort: { updatedAt: -1 } },
     {
       $group: {
-        _id: { 'values\\\\\\_account': '$values.account', id: '$id' },
+        _id: { 'values\\\\_account': '$values.account', id: '$id' },
         updatedAt: { $first: '$updatedAt' },
-        'values\\\\\\_status': { $first: '$values.status' },
+        'values\\\\_status': { $first: '$values.status' },
       },
     },
     {
