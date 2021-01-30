@@ -9,12 +9,15 @@ export interface Paging {
   prev?: Record<string, Data>
 }
 
-const isDataWithMongoId = (
-  value: unknown
-): value is TypedData => isObject(value) && typeof value._id === 'string' // Not quite right typing
+const isDataWithMongoId = (value: unknown): value is TypedData =>
+  isObject(value) && typeof value._id === 'string' // Not quite right typing
 
 const encodeValue = (value: unknown) =>
-  typeof value === 'string' ? `"${encodeURIComponent(value)}"` : value
+  typeof value === 'string'
+    ? `"${encodeURIComponent(value)}"`
+    : value instanceof Date
+    ? value.getTime()
+    : value
 
 const createSortString = (lastItem: TypedData) => ([path, direction]: [
   string,

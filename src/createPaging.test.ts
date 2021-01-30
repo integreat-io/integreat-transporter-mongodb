@@ -174,6 +174,31 @@ test('should return paging when sorting ascending and descending', (t) => {
   t.deepEqual(ret, expected)
 })
 
+test('should return paging when sorting on a date field', (t) => {
+  const data = prepareData([
+    { id: 'ent2', $type: 'entry', date: new Date('2021-01-18T10:44:39Z') },
+    { id: 'ent3', $type: 'entry', date: new Date('2021-01-18T12:05:11Z') },
+  ])
+  const request = {
+    type: 'entry',
+    pageSize: 2,
+  }
+  const sort = {
+    date: 1,
+  }
+  const expected = {
+    next: {
+      type: 'entry',
+      pageId: 'ZW50cnk6ZW50M3xkYXRlPjE2MTA5NzE1MTEwMDA', // entry:ent3|date>1610971511000
+      pageSize: 2,
+    },
+  }
+
+  const ret = createPaging(data, request, sort)
+
+  t.deepEqual(ret, expected)
+})
+
 test('should return paging with encoded string', (t) => {
   const data = prepareData([
     { id: 'ent3', $type: 'entry', message: 'I will not be included' },

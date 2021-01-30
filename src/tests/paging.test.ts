@@ -112,6 +112,56 @@ test('should get second page of documents', async (t) => {
   t.deepEqual(response.paging, expectedPaging)
 })
 
+test('should get second page of documents using date index', async (t) => {
+  const { collection, collectionName } = t.context
+  await insertDocuments(collection, [
+    {
+      _id: 'entry:ent1',
+      id: 'ent1',
+      '\\$type': 'entry',
+      date: new Date('2021-01-18T10:44:07Z'),
+    },
+    {
+      _id: 'entry:ent2',
+      id: 'ent2',
+      '\\$type': 'entry',
+      date: new Date('2021-01-18T11:05:16Z'),
+    },
+  ])
+  const exchange = {
+    ...defaultExchange,
+    type: 'GET',
+    request: {
+      type: 'entry',
+      pageId: 'ZW50cnk6ZW50MXxkYXRlPjE2MTA5NjY2NDcwMDA+',
+      pageSize: 1,
+    },
+    options: {
+      collection: collectionName,
+      db: 'test',
+      sort: { date: 1 },
+    },
+  }
+  const expectedPaging = {
+    next: {
+      type: 'entry',
+      pageId: 'ZW50cnk6ZW50MnxkYXRlPjE2MTA5Njc5MTYwMDA',
+      pageSize: 1,
+    },
+  }
+
+  const connection = await transporter.connect(options, authorization, null)
+  const { status, response } = await transporter.send(exchange, connection)
+  await transporter.disconnect(connection)
+
+  t.is(status, 'ok')
+  const data = response.data as TypedData[]
+  t.is(data.length, 1)
+  t.is(data[0].id, 'ent2')
+  t.is(data[0].$type, 'entry')
+  t.deepEqual(response.paging, expectedPaging)
+})
+
 test('should return less than a full page at the end', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
