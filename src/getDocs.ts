@@ -115,6 +115,9 @@ export default async function getDocs(
   const options = exchange.options as MongoOptions
   const params = { ...request.params, type: request.type, id: request.id }
 
+  debugMongo('Incoming options %o', options)
+  debugMongo('Incoming params %o', params)
+
   const filter = prepareFilter(options.query, params)
   const sort = options.sort
 
