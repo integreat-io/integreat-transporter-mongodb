@@ -1,6 +1,6 @@
 {
   "name": "integreat-transporter-mongodb",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "Integreat transporter for mongodb",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -42,7 +42,7 @@
   "devDependencies": {
     "@integreat/ts-dev-setup": "^1.2.1",
     "@types/sinon": "^9.0.10",
-    "integreat": "0.8.0-alpha.13",
-    "sinon": "^9.2.3"
+    "integreat": "0.8.0-alpha.16",
+    "sinon": "^9.2.4"
   }
 }
