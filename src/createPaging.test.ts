@@ -189,7 +189,7 @@ test('should return paging when sorting on a date field', (t) => {
   const expected = {
     next: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50M3xkYXRlPjE2MTA5NzE1MTEwMDA', // entry:ent3|date>1610971511000
+      pageId: 'ZW50cnk6ZW50M3xkYXRlPjIwMjEtMDEtMThUMTI6MDU6MTEuMDAwWg', // entry:ent3|date>2021-01-18T12:05:11.000Z
       pageSize: 2,
     },
   }

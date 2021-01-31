@@ -403,3 +403,22 @@ test('should expand pageId with unencoded string', (t) => {
 
   t.deepEqual(ret, expected)
 })
+
+test('should expand pageId with date string', (t) => {
+  const query = [{ path: 'meta.views', op: 'gt', value: 300 }]
+  const params = {
+    type: 'entry',
+    id: 'ent1',
+    pageId: 'ZW50cnk6ZW50M3xkYXRlPjIwMjEtMDEtMThUMTI6MDU6MTEuMDAwWg', // entry:ent3|date>2021-01-18T12:05:11.000Z
+    query: [{ path: 'meta.section', value: 'news' }],
+  }
+  const expected = {
+    'meta.views': { $gt: 300 },
+    'meta.section': 'news',
+    date: { $gte: new Date('2021-01-18T12:05:11.000Z') },
+  }
+
+  const ret = prepareFilter(query, params)
+
+  t.deepEqual(ret, expected)
+})

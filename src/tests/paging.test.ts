@@ -133,7 +133,7 @@ test('should get second page of documents using date index', async (t) => {
     type: 'GET',
     request: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50MXxkYXRlPjE2MTA5NjY2NDcwMDA+',
+      pageId: 'ZW50cnk6ZW50MXxkYXRlPjIwMjEtMDEtMThUMTA6NDQ6MDcuMDAwWg',
       pageSize: 1,
     },
     options: {
@@ -145,7 +145,7 @@ test('should get second page of documents using date index', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50MnxkYXRlPjE2MTA5Njc5MTYwMDA',
+      pageId: 'ZW50cnk6ZW50MnxkYXRlPjIwMjEtMDEtMThUMTE6MDU6MTYuMDAwWg',
       pageSize: 1,
     },
   }

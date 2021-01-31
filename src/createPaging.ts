@@ -16,7 +16,7 @@ const encodeValue = (value: unknown) =>
   typeof value === 'string'
     ? `"${encodeURIComponent(value)}"`
     : value instanceof Date
-    ? value.getTime()
+    ? value.toISOString()
     : value
 
 const createSortString = (lastItem: TypedData) => ([path, direction]: [
