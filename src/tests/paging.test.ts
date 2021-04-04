@@ -7,7 +7,6 @@ import {
   deleteDocuments,
   MongoElements,
 } from './helpers/mongo'
-import defaultExchange from './helpers/defaultExchange'
 import { TypedData } from 'integreat'
 
 import transporter from '..'
@@ -38,16 +37,17 @@ test('should get one page of documents with params for next page', async (t) => 
     { _id: 'entry:ent2', id: 'ent2', '\\$type': 'entry' },
     { _id: 'entry:ent3', id: 'ent2', '\\$type': 'entry' },
   ])
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'GET',
-    request: {
+    payload: {
       type: 'entry',
       pageSize: 2,
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+      },
     },
   }
   const expectedPaging = {
@@ -59,10 +59,10 @@ test('should get one page of documents with params for next page', async (t) => 
   }
 
   const connection = await transporter.connect(options, authorization, null)
-  const { status, response } = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(status, 'ok')
+  t.is(response.status, 'ok')
   const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
@@ -78,17 +78,18 @@ test('should get second page of documents', async (t) => {
     { _id: 'entry:ent3', id: 'ent3', '\\$type': 'entry' },
     { _id: 'entry:ent4', id: 'ent4', '\\$type': 'entry' },
   ])
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'GET',
-    request: {
+    payload: {
       type: 'entry',
       pageId: 'ZW50cnk6ZW50Mnw+',
       pageSize: 2,
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+      },
     },
   }
   const expectedPaging = {
@@ -100,10 +101,10 @@ test('should get second page of documents', async (t) => {
   }
 
   const connection = await transporter.connect(options, authorization, null)
-  const { status, response } = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(status, 'ok')
+  t.is(response.status, 'ok')
   const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent3')
@@ -128,18 +129,19 @@ test('should get second page of documents using date index', async (t) => {
       date: new Date('2021-01-18T11:05:16Z'),
     },
   ])
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'GET',
-    request: {
+    payload: {
       type: 'entry',
       pageId: 'ZW50cnk6ZW50MXxkYXRlPjIwMjEtMDEtMThUMTA6NDQ6MDcuMDAwWg',
       pageSize: 1,
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
-      sort: { date: 1 },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        sort: { date: 1 },
+      },
     },
   }
   const expectedPaging = {
@@ -151,10 +153,10 @@ test('should get second page of documents using date index', async (t) => {
   }
 
   const connection = await transporter.connect(options, authorization, null)
-  const { status, response } = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(status, 'ok')
+  t.is(response.status, 'ok')
   const data = response.data as TypedData[]
   t.is(data.length, 1)
   t.is(data[0].id, 'ent2')
@@ -169,17 +171,18 @@ test('should return less than a full page at the end', async (t) => {
     { _id: 'entry:ent2', id: 'ent2', '\\$type': 'entry' },
     { _id: 'entry:ent3', id: 'ent3', '\\$type': 'entry' },
   ])
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'GET',
-    request: {
+    payload: {
       type: 'entry',
       pageId: 'ZW50cnk6ZW50Mnw+',
       pageSize: 2,
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+      },
     },
   }
   const expectedPaging = {
@@ -187,10 +190,10 @@ test('should return less than a full page at the end', async (t) => {
   }
 
   const connection = await transporter.connect(options, authorization, null)
-  const { status, response } = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(status, 'ok')
+  t.is(response.status, 'ok')
   const data = response.data as TypedData[]
   t.is(data.length, 1)
   t.is(data[0].id, 'ent3')
@@ -205,18 +208,19 @@ test('should return empty array when past last page', async (t) => {
     { _id: 'entry:ent3', id: 'ent3', '\\$type': 'entry' },
     { _id: 'entry:ent4', id: 'ent4', '\\$type': 'entry' },
   ])
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'GET',
-    request: {
+    payload: {
       type: 'entry',
       params: { query: [{ path: '_id', op: 'gte', value: 'entry:ent4' }] },
       pageId: 'ZW50cnk6ZW50NHw+',
       pageSize: 2,
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+      },
     },
   }
   const expectedPaging = {
@@ -224,10 +228,10 @@ test('should return empty array when past last page', async (t) => {
   }
 
   const connection = await transporter.connect(options, authorization, null)
-  const { status, response } = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(status, 'ok')
+  t.is(response.status, 'ok')
   const data = response.data as TypedData[]
   t.is(data.length, 0)
   t.deepEqual(response.paging, expectedPaging)
@@ -239,17 +243,18 @@ test('should not throw when pageId does not exist', async (t) => {
     { _id: 'entry:ent1', id: 'ent1', '\\$type': 'entry' },
     { _id: 'entry:ent2', id: 'ent2', '\\$type': 'entry' },
   ])
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'GET',
-    request: {
+    payload: {
       type: 'entry',
       params: { query: [{ path: '_id', op: 'gte', value: 'entry:ent3' }] },
       pageSize: 2,
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+      },
     },
   }
   const expectedPaging = {
@@ -257,10 +262,10 @@ test('should not throw when pageId does not exist', async (t) => {
   }
 
   const connection = await transporter.connect(options, authorization, null)
-  const { status, response } = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(status, 'ok')
+  t.is(response.status, 'ok')
   const data = response.data as TypedData[]
   t.is(data.length, 0)
   t.deepEqual(response.paging, expectedPaging)
@@ -294,18 +299,19 @@ test('should get second page of documents when sorting', async (t) => {
       attributes: { index: 4 },
     },
   ])
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'GET',
-    request: {
+    payload: {
       type: 'entry',
       pageId: 'ZW50cnk6ZW50M3xhdHRyaWJ1dGVzLmluZGV4PjI',
       pageSize: 2,
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
-      sort: { 'attributes.index': 1 },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        sort: { 'attributes.index': 1 },
+      },
     },
   }
   const expectedPaging = {
@@ -317,10 +323,10 @@ test('should get second page of documents when sorting', async (t) => {
   }
 
   const connection = await transporter.connect(options, authorization, null)
-  const { status, response } = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(status, 'ok')
+  t.is(response.status, 'ok')
   const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
@@ -356,18 +362,19 @@ test('should get second page of documents when sorting descending', async (t) =>
       attributes: { index: 4 },
     },
   ])
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'GET',
-    request: {
+    payload: {
       type: 'entry',
       pageId: 'ZW50cnk6ZW50MXxhdHRyaWJ1dGVzLmluZGV4PDM',
       pageSize: 2,
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
-      sort: { 'attributes.index': -1 },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        sort: { 'attributes.index': -1 },
+      },
     },
   }
   const expectedPaging = {
@@ -379,10 +386,10 @@ test('should get second page of documents when sorting descending', async (t) =>
   }
 
   const connection = await transporter.connect(options, authorization, null)
-  const { status, response } = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(status, 'ok')
+  t.is(response.status, 'ok')
   const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent3')
@@ -418,19 +425,20 @@ test('should return page params when sorting by two dimensions', async (t) => {
       attributes: { timestamp: 1584211393300, index: 4 }, // 1
     },
   ])
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'GET',
-    request: {
+    payload: {
       type: 'entry',
       params: {},
       pageId: undefined,
       pageSize: 2,
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
-      sort: { 'attributes.timestamp': -1, 'attributes.index': 1 },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        sort: { 'attributes.timestamp': -1, 'attributes.index': 1 },
+      },
     },
   }
   const expectedPaging = {
@@ -443,10 +451,10 @@ test('should return page params when sorting by two dimensions', async (t) => {
   }
 
   const connection = await transporter.connect(options, authorization, null)
-  const { status, response } = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(status, 'ok')
+  t.is(response.status, 'ok')
   const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent4')
@@ -482,18 +490,19 @@ test('should get second page of documents when sorting key is not unique', async
       attributes: { index: 3 },
     },
   ])
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'GET',
-    request: {
+    payload: {
       type: 'entry',
       pageId: 'ZW50cnk6ZW50M3xhdHRyaWJ1dGVzLmluZGV4PjE',
       pageSize: 2,
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
-      sort: { 'attributes.index': 1 },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        sort: { 'attributes.index': 1 },
+      },
     },
   }
   const expectedPaging = {
@@ -505,10 +514,10 @@ test('should get second page of documents when sorting key is not unique', async
   }
 
   const connection = await transporter.connect(options, authorization, null)
-  const { status, response } = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(status, 'ok')
+  t.is(response.status, 'ok')
   const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
@@ -544,10 +553,9 @@ test('should keep existing queries', async (t) => {
       attributes: { timestamp: 1584211393300, index: 4 }, // 1
     },
   ])
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'GET',
-    request: {
+    payload: {
       type: 'entry',
       params: {
         query: [{ path: 'attributes.index', op: 'lt', value: 3 }],
@@ -555,10 +563,12 @@ test('should keep existing queries', async (t) => {
       pageId: undefined,
       pageSize: 2,
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
-      sort: { 'attributes.timestamp': -1, 'attributes.index': 1 },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        sort: { 'attributes.timestamp': -1, 'attributes.index': 1 },
+      },
     },
   }
   const expectedPaging = {
@@ -572,10 +582,10 @@ test('should keep existing queries', async (t) => {
   }
 
   const connection = await transporter.connect(options, authorization, null)
-  const { status, response } = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(status, 'ok')
+  t.is(response.status, 'ok')
   const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent2')

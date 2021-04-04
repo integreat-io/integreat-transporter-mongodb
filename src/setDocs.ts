@@ -1,5 +1,5 @@
 import prepareFilter from './prepareFilter'
-import { Exchange } from 'integreat'
+import { Action, Response } from 'integreat'
 import { Collection, MongoClient } from 'mongodb'
 import { serializeItem } from './escapeKeys'
 import { isObjectWithId } from './utils/is'
@@ -33,29 +33,26 @@ const createErrorFromIds = (
     .map(([id]) => `'${id ?? '<no id>'}'`)
     .join(', ')} in mongodb: ${errors.map(([_id, error]) => error).join(' | ')}`
 
-const createReturnExchange = (
+const createResponse = (
   responses: ItemResponse[],
-  exchange: Exchange,
+  action: Action,
   actionName: string
-): Exchange => {
+): Response => {
   const errors = responses
     .filter((item) => item.status !== 'ok')
     .map((item) => [item.id, item.error] as const)
   return {
-    ...exchange,
+    ...action.response,
     status:
       errors.length === 0
         ? 'ok'
         : responses.length === 1
         ? responses[0].status
         : 'error',
-    response: {
-      ...exchange.response,
-      ...(responses && { data: summarizeResponses(responses) }),
-      ...(errors.length > 0
-        ? { error: createErrorFromIds(errors, actionName) }
-        : {}),
-    },
+    ...(responses && { data: summarizeResponses(responses) }),
+    ...(errors.length > 0
+      ? { error: createErrorFromIds(errors, actionName) }
+      : {}),
   }
 }
 
@@ -81,7 +78,7 @@ const createErrorResponse = (status: string, error: string, id?: string) => ({
   error,
 })
 
-const performOne = (exchange: Exchange, collection: Collection) => async (
+const performOne = (action: Action, collection: Collection) => async (
   item: unknown
 ): Promise<ItemResponse> => {
   if (!isObjectWithId(item)) {
@@ -92,10 +89,10 @@ const performOne = (exchange: Exchange, collection: Collection) => async (
   }
   const {
     type,
-    request: { params },
-  } = exchange
-  const options = exchange.options as MongoOptions
-  const filter = prepareFilter(options.query, {
+    payload: { params },
+  } = action
+  const options = action.meta?.options as MongoOptions | undefined
+  const filter = prepareFilter(options?.query, {
     ...params,
     type: item.$type,
     id: item.id,
@@ -121,44 +118,42 @@ const performOne = (exchange: Exchange, collection: Collection) => async (
 }
 
 const performOnObjectOrArray = async (
-  exchange: Exchange,
+  action: Action,
   collection: Collection
-) => {
+): Promise<Response> => {
   const {
-    request: { data },
-  } = exchange
-  const fn = performOne(exchange, collection)
-  const actionName = exchange.type === 'SET' ? 'updating' : 'deleting'
+    payload: { data },
+  } = action
+  const fn = performOne(action, collection)
+  const actionName = action.type === 'SET' ? 'updating' : 'deleting'
   if (Array.isArray(data)) {
     const responses = await Promise.all(data.map(fn))
-    return createReturnExchange(responses, exchange, actionName)
+    return createResponse(responses, action, actionName)
   } else if (typeof data === 'object' && data !== null) {
     const response = await fn(data)
-    return createReturnExchange([response], exchange, actionName)
+    return createResponse([response], action, actionName)
   } else {
     return {
-      ...exchange,
+      ...action.response,
       status: 'noaction',
-      response: { ...exchange.response, error: 'No items to update', data: [] },
+      error: 'No items to update',
+      data: [],
     }
   }
 }
 
 export default async function setDocs(
-  exchange: Exchange,
+  action: Action,
   client: MongoClient
-): Promise<Exchange> {
-  const collection = getCollection(exchange, client)
+): Promise<Response> {
+  const collection = getCollection(action, client)
   if (!collection) {
     return {
-      ...exchange,
+      ...action.response,
       status: 'error',
-      response: {
-        ...exchange.response,
-        error: 'Could not get the collection specified in the request',
-      },
+      error: 'Could not get the collection specified in the request',
     }
   }
 
-  return performOnObjectOrArray(exchange, collection)
+  return performOnObjectOrArray(action, collection)
 }

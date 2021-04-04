@@ -2,7 +2,6 @@ import test from 'ava'
 import sinon = require('sinon')
 import { TypedData } from 'integreat'
 import { Collection, MongoClient } from 'mongodb'
-import defaultExchange from './tests/helpers/defaultExchange'
 
 import send from './send'
 
@@ -47,25 +46,26 @@ test('should get items', async (t) => {
     { id: 'ent2', $type: 'entry' },
   ])
   const connection = createConnection({ find })
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'GET',
-    request: {
+    payload: {
       type: 'entry',
       params: {
         typePlural: 'entries',
       },
     },
-    options: {
-      collection: 'documents',
-      db: 'database',
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
     },
   }
 
-  const { status, response } = await send(exchange, connection)
+  const response = await send(action, connection)
 
-  t.is(status, 'ok')
-  const data = response.data as TypedData[]
+  t.is(response?.status, 'ok')
+  const data = response?.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
   t.is(data[0].$type, 'entry')
@@ -81,13 +81,14 @@ test('should update one item', async (t) => {
   })
   const connection = createConnection({ updateOne })
   const data = { id: 'ent1', $type: 'entry', title: 'Entry 1' }
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'SET',
-    request: { data },
-    options: {
-      collection: 'documents',
-      db: 'database',
+    payload: { data },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
     },
   }
   const expectedData = { modifiedCount: 1, insertedCount: 0, deletedCount: 0 }
@@ -100,10 +101,10 @@ test('should update one item', async (t) => {
     },
   }
 
-  const { status, response } = await send(exchange, connection)
+  const response = await send(action, connection)
 
-  t.is(status, 'ok')
-  t.deepEqual(response.data, expectedData)
+  t.is(response?.status, 'ok')
+  t.deepEqual(response?.data, expectedData)
   t.is(updateOne.callCount, 1)
   t.deepEqual(updateOne.args[0][0], { _id: 'entry:ent1' })
   t.deepEqual(updateOne.args[0][1], expectedSet)
@@ -120,13 +121,14 @@ test('should update items', async (t) => {
     { id: 'ent1', $type: 'entry', title: 'Entry 1' },
     { id: 'ent2', $type: 'entry', title: 'Entry 2' },
   ]
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'SET',
-    request: { data },
-    options: {
-      collection: 'documents',
-      db: 'database',
+    payload: { data },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
     },
   }
   const expectedData = { modifiedCount: 2, insertedCount: 0, deletedCount: 0 }
@@ -147,10 +149,10 @@ test('should update items', async (t) => {
     },
   }
 
-  const { status, response } = await send(exchange, connection)
+  const response = await send(action, connection)
 
-  t.is(status, 'ok')
-  t.deepEqual(response.data, expectedData)
+  t.is(response?.status, 'ok')
+  t.deepEqual(response?.data, expectedData)
   t.is(updateOne.callCount, 2)
   t.true(updateOne.calledWith({ _id: 'entry:ent1' }, expectedSet1))
   t.true(updateOne.calledWith({ _id: 'entry:ent2' }, expectedSet2))
@@ -164,13 +166,14 @@ test('should update object data (not Integreat typed)', async (t) => {
   })
   const connection = createConnection({ updateOne })
   const data = { id: 'ent1', title: 'Entry 1' }
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'SET',
-    request: { data },
-    options: {
-      collection: 'documents',
-      db: 'database',
+    payload: { data },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
     },
   }
   const expectedData = { modifiedCount: 0, insertedCount: 1, deletedCount: 0 }
@@ -178,10 +181,10 @@ test('should update object data (not Integreat typed)', async (t) => {
     $set: { _id: 'ent1', id: 'ent1', title: 'Entry 1' },
   }
 
-  const { status, response } = await send(exchange, connection)
+  const response = await send(action, connection)
 
-  t.is(status, 'ok')
-  t.deepEqual(response.data, expectedData)
+  t.is(response?.status, 'ok')
+  t.deepEqual(response?.data, expectedData)
   t.is(updateOne.callCount, 1)
   t.deepEqual(updateOne.args[0][0], { _id: 'ent1' })
   t.deepEqual(updateOne.args[0][1], expectedSet)
@@ -191,16 +194,18 @@ test('should return error when data cannot be updated', async (t) => {
   const updateOne = sinon.stub().throws(new Error('Mongo error'))
   const connection = createConnection({ updateOne })
   const data = { id: 'ent1', $type: 'entry', title: 'Entry 1' }
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'SET',
-    request: { data },
-    options: {
-      collection: 'documents',
-      db: 'database',
+    payload: { data },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
     },
   }
   const expectedResponse = {
+    status: 'error',
     data: {
       modifiedCount: 0,
       insertedCount: 0,
@@ -209,9 +214,8 @@ test('should return error when data cannot be updated', async (t) => {
     error: "Error updating item 'entry:ent1' in mongodb: Mongo error",
   }
 
-  const { status, response } = await send(exchange, connection)
+  const response = await send(action, connection)
 
-  t.is(status, 'error')
   t.deepEqual(response, expectedResponse)
 })
 
@@ -230,24 +234,25 @@ test('should return error when some of the items cannot be updated', async (t) =
     { id: 'ent2', $type: 'entry', title: 'Entry 2' },
     { id: 'ent3', $type: 'entry', title: 'Entry 3' },
   ]
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'SET',
-    request: { data },
-    options: {
-      collection: 'documents',
-      db: 'database',
+    payload: { data },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
     },
   }
   const expectedResponse = {
+    status: 'error',
     data: { modifiedCount: 1, insertedCount: 0, deletedCount: 0 },
     error:
       "Error updating items 'entry:ent2', 'entry:ent3' in mongodb: Mongo error | Mongo error",
   }
 
-  const { status, response } = await send(exchange, connection)
+  const response = await send(action, connection)
 
-  t.is(status, 'error')
   t.deepEqual(response, expectedResponse)
   t.is(updateOne.callCount, 3)
 })
@@ -260,13 +265,14 @@ test('should insert one item', async (t) => {
   })
   const connection = createConnection({ updateOne })
   const data = { id: 'ent3', $type: 'entry', title: 'Entry 3' }
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'SET',
-    request: { data },
-    options: {
-      collection: 'documents',
-      db: 'database',
+    payload: { data },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
     },
   }
   const expectedData = { modifiedCount: 0, insertedCount: 1, deletedCount: 0 }
@@ -275,10 +281,10 @@ test('should insert one item', async (t) => {
     $set: { _id, id: 'ent3', '\\$type': 'entry', title: 'Entry 3' },
   }
 
-  const { status, response } = await send(exchange, connection)
+  const response = await send(action, connection)
 
-  t.is(status, 'ok')
-  t.deepEqual(response.data, expectedData)
+  t.is(response?.status, 'ok')
+  t.deepEqual(response?.data, expectedData)
   t.is(updateOne.callCount, 1)
   t.deepEqual(updateOne.args[0][0], { _id: 'entry:ent3' })
   t.deepEqual(updateOne.args[0][1], expectedSet)
@@ -292,21 +298,22 @@ test('should return noaction when no item', async (t) => {
     upsertedCount: 0,
   })
   const connection = createConnection({ updateOne })
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'SET',
-    requtest: { data: undefined },
-    options: {
-      collection: 'documents',
-      db: 'database',
+    payload: { data: undefined },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
     },
   }
 
-  const { status, response } = await send(exchange, connection)
+  const response = await send(action, connection)
 
-  t.is(status, 'noaction')
-  t.is(response.error, 'No items to update')
-  t.deepEqual(response.data, [])
+  t.is(response?.status, 'noaction')
+  t.is(response?.error, 'No items to update')
+  t.deepEqual(response?.data, [])
   t.is(updateOne.callCount, 0)
 })
 
@@ -317,21 +324,22 @@ test('should return badrequest when trying to set non-object', async (t) => {
     upsertedCount: 0,
   })
   const connection = createConnection({ updateOne })
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'SET',
-    request: { data: ['fisk'] },
-    options: {
-      collection: 'documents',
-      db: 'database',
+    payload: { data: ['fisk'] },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
     },
   }
 
-  const { status, response } = await send(exchange, connection)
+  const response = await send(action, connection)
 
-  t.is(status, 'badrequest')
+  t.is(response?.status, 'badrequest')
   t.is(
-    response.error,
+    response?.error,
     "Error updating item '<no id>' in mongodb: Only object data with an id may be sent to MongoDB"
   )
   t.is(updateOne.callCount, 0)
@@ -340,25 +348,26 @@ test('should return badrequest when trying to set non-object', async (t) => {
 test('should delete one item', async (t) => {
   const deleteOne = sinon.stub().returns({ deletedCount: 1 })
   const connection = createConnection({ deleteOne })
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'DELETE',
-    request: {
+    payload: {
       id: 'ent1',
       type: 'entry',
       data: { id: 'ent1', $type: 'entry' },
     },
-    options: {
-      collection: 'documents',
-      db: 'database',
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
     },
   }
   const expectedData = { modifiedCount: 0, insertedCount: 0, deletedCount: 1 }
 
-  const { status, response } = await send(exchange, connection)
+  const response = await send(action, connection)
 
-  t.is(status, 'ok')
-  t.deepEqual(response.data, expectedData)
+  t.is(response?.status, 'ok')
+  t.deepEqual(response?.data, expectedData)
   t.is(deleteOne.callCount, 1)
   t.true(deleteOne.calledWith({ _id: 'entry:ent1' }))
 })
@@ -366,20 +375,22 @@ test('should delete one item', async (t) => {
 test('should return error when the item cannot be deleted', async (t) => {
   const deleteOne = sinon.stub().throws(new Error('Mongo error'))
   const connection = createConnection({ deleteOne })
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'DELETE',
-    request: {
+    payload: {
       id: 'ent3',
       type: 'entry',
       data: { id: 'ent3', $type: 'entry' },
     },
-    options: {
-      collection: 'documents',
-      db: 'database',
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
     },
   }
   const expectedResonse = {
+    status: 'error',
     data: {
       modifiedCount: 0,
       insertedCount: 0,
@@ -388,35 +399,35 @@ test('should return error when the item cannot be deleted', async (t) => {
     error: "Error deleting item 'entry:ent3' in mongodb: Mongo error",
   }
 
-  const { status, response } = await send(exchange, connection)
+  const response = await send(action, connection)
 
-  t.is(status, 'error')
   t.deepEqual(response, expectedResonse)
 })
 
 test('should delete items', async (t) => {
   const deleteOne = sinon.stub().returns({ deletedCount: 1 })
   const connection = createConnection({ deleteOne })
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'DELETE',
-    request: {
+    payload: {
       data: [
         { id: 'ent1', $type: 'entry' },
         { id: 'ent2', $type: 'entry' },
       ],
     },
-    options: {
-      collection: 'documents',
-      db: 'database',
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
     },
   }
   const expectedData = { modifiedCount: 0, insertedCount: 0, deletedCount: 2 }
 
-  const { status, response } = await send(exchange, connection)
+  const response = await send(action, connection)
 
-  t.is(status, 'ok')
-  t.deepEqual(response.data, expectedData)
+  t.is(response?.status, 'ok')
+  t.deepEqual(response?.data, expectedData)
   t.is(deleteOne.callCount, 2)
   t.true(deleteOne.calledWith({ _id: 'entry:ent1' }))
   t.true(deleteOne.calledWith({ _id: 'entry:ent2' }))
@@ -427,46 +438,48 @@ test('should return error when one of the items cannot be deleted', async (t) =>
   deleteOne.onFirstCall().returns({ deletedCount: 1 })
   deleteOne.onSecondCall().throws(new Error('Mongo error'))
   const connection = createConnection({ deleteOne })
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'DELETE',
-    request: {
+    payload: {
       data: [
         { id: 'ent3', $type: 'entry' },
         { id: 'ent4', $type: 'entry' },
       ],
     },
-    options: {
-      collection: 'documents',
-      db: 'database',
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
     },
   }
   const expectedResponse = {
+    status: 'error',
     data: { modifiedCount: 0, insertedCount: 0, deletedCount: 1 },
     error: "Error deleting item 'entry:ent4' in mongodb: Mongo error",
   }
 
-  const { status, response } = await send(exchange, connection)
+  const response = await send(action, connection)
 
-  t.is(status, 'error')
   t.deepEqual(response, expectedResponse)
 })
 
 test('should return noaction for unknown action', async (t) => {
   const connection = createConnection({})
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'UNKNOWN',
-    request: { type: 'entry', data: null },
-    options: {
-      collection: 'documents',
-      db: 'database',
+    payload: { type: 'entry', data: null },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
     },
   }
 
-  const { status } = await send(exchange, connection)
+  const response = await send(action, connection)
 
-  t.is(status, 'noaction')
+  t.is(response?.status, 'noaction')
 })
 
 test('should return badrequest when GETting with no collection', async (t) => {
@@ -475,25 +488,26 @@ test('should return badrequest when GETting with no collection', async (t) => {
     { id: 'ent2', $type: 'entry' },
   ])
   const connection = createConnection({ find })
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'GET',
-    request: {
+    payload: {
       type: 'entry',
       params: {
         typePlural: 'entries',
       },
     },
-    options: {
-      collection: null,
-      db: 'database',
+    meta: {
+      options: {
+        collection: null,
+        db: 'database',
+      },
     },
   }
 
-  const { status, response } = await send(exchange, connection)
+  const response = await send(action, connection)
 
-  t.is(status, 'error')
-  t.is(response.error, 'Could not get the collection specified in the request')
+  t.is(response?.status, 'error')
+  t.is(response?.error, 'Could not get the collection specified in the request')
 })
 
 test('should return badrequest when SETting with no collection', async (t) => {
@@ -502,69 +516,71 @@ test('should return badrequest when SETting with no collection', async (t) => {
     { id: 'ent2', $type: 'entry' },
   ])
   const connection = createConnection({ find })
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'SET',
-    request: { data: { id: 'ent1', $type: 'entry' } },
-    options: {
-      collection: null,
-      db: 'database',
+    payload: { data: { id: 'ent1', $type: 'entry' } },
+    meta: {
+      options: {
+        collection: null,
+        db: 'database',
+      },
     },
   }
 
-  const { status, response } = await send(exchange, connection)
+  const response = await send(action, connection)
 
-  t.is(status, 'error')
-  t.is(response.error, 'Could not get the collection specified in the request')
+  t.is(response?.status, 'error')
+  t.is(response?.error, 'Could not get the collection specified in the request')
 })
 
 test('should return error when no client', async (t) => {
   const connection = { status: 'error' }
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'GET',
-    request: { type: 'entry', data: null },
-    options: {
-      collection: 'documents',
-      db: 'database',
+    payload: { type: 'entry', data: null },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
     },
   }
 
-  const { status, response } = await send(exchange, connection)
+  const response = await send(action, connection)
 
-  t.is(status, 'error')
-  t.is(response.error, 'No valid connection')
+  t.is(response?.status, 'error')
+  t.is(response?.error, 'No valid connection')
 })
 
 test('should return error when no connection', async (t) => {
   const connection = null
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'GET',
-    request: { type: 'entry', data: null },
-    options: {
-      collection: 'documents',
-      db: 'database',
+    payload: { type: 'entry', data: null },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
     },
   }
 
-  const { status, response } = await send(exchange, connection)
+  const response = await send(action, connection)
 
-  t.is(status, 'error')
-  t.is(response.error, 'No valid connection')
+  t.is(response?.status, 'error')
+  t.is(response?.error, 'No valid connection')
 })
 
 test('should return badrequest when no options', async (t) => {
   const find = createFind([{ id: 'ent1', $type: 'entry' }])
   const connection = createConnection({ find })
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'SET',
-    request: { data: { id: 'ent1', $type: 'entry' } },
+    payload: { data: { id: 'ent1', $type: 'entry' } },
   }
 
-  const { status, response } = await send(exchange, connection)
+  const response = await send(action, connection)
 
-  t.is(status, 'badrequest')
-  t.is(response.error, 'No endpoint options')
+  t.is(response?.status, 'badrequest')
+  t.is(response?.error, 'No endpoint options')
 })

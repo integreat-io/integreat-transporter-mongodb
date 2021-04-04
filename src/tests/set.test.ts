@@ -8,7 +8,6 @@ import {
   deleteDocuments,
   MongoElements,
 } from './helpers/mongo'
-import defaultExchange from './helpers/defaultExchange'
 
 import transporter from '..'
 
@@ -33,26 +32,27 @@ test.afterEach.always(async (t) => {
 
 test('should set one document', async (t) => {
   const { collection, collectionName } = t.context
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'SET',
-    request: {
+    payload: {
       data: {
         $type: 'entry',
         id: 'ent1',
       },
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+      },
     },
   }
 
   const connection = await transporter.connect(options, authorization, null)
-  const { status, response } = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(status, 'ok', response.error)
+  t.is(response.status, 'ok', response.error)
   const docs = (await getDocuments(collection, {
     _id: 'entry:ent1',
   })) as Record<string, unknown>[]
@@ -62,26 +62,27 @@ test('should set one document', async (t) => {
 
 test('should set array of documents', async (t) => {
   const { collection, collectionName } = t.context
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'SET',
-    request: {
+    payload: {
       data: [
         { $type: 'entry', id: 'ent1' },
         { $type: 'entry', id: 'ent2' },
       ],
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+      },
     },
   }
 
   const connection = await transporter.connect(options, authorization, null)
-  const { status, response } = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(status, 'ok', response.error)
+  t.is(response.status, 'ok', response.error)
   const docs = (await getDocuments(collection, {
     '\\$type': 'entry',
   })) as Record<string, unknown>[]
@@ -100,10 +101,9 @@ test('should update existing document', async (t) => {
     theOld: true,
     meta: { section: 'news', 'archived\\_flag': false },
   })
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'SET',
-    request: {
+    payload: {
       data: {
         $type: 'entry',
         id: 'ent1',
@@ -112,17 +112,19 @@ test('should update existing document', async (t) => {
         meta: { section: 'oldies', 'archived.flag': true },
       },
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+      },
     },
   }
 
   const connection = await transporter.connect(options, authorization, null)
-  const { status, response } = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(status, 'ok', response.error)
+  t.is(response.status, 'ok', response.error)
   const docs = (await getDocuments(collection, {
     '\\$type': 'entry',
   })) as Record<string, unknown>[]

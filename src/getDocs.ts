@@ -3,7 +3,7 @@ import prepareFilter from './prepareFilter'
 import prepareAggregation from './prepareAggregation'
 import createPaging from './createPaging'
 import { AggregationCursor, Cursor, MongoClient } from 'mongodb'
-import { Exchange, Data } from 'integreat'
+import { Action, Response, Data } from 'integreat'
 import {
   MongoOptions,
   ExchangeRequest,
@@ -95,24 +95,21 @@ const appendToAggregation = (
   ].filter(Boolean) as AggregationObject[]
 
 export default async function getDocs(
-  exchange: Exchange,
+  action: Action,
   client: MongoClient
-): Promise<Exchange> {
-  const collection = getCollection(exchange, client)
+): Promise<Response> {
+  const collection = getCollection(action, client)
   if (!collection) {
     debugMongo('Trying to get docs from unknown collection')
     return {
-      ...exchange,
+      ...action.response,
       status: 'error',
-      response: {
-        ...exchange.response,
-        error: 'Could not get the collection specified in the request',
-      },
+      error: 'Could not get the collection specified in the request',
     }
   }
 
-  const request = exchange.request
-  const options = exchange.options as MongoOptions
+  const request = action.payload
+  const options = action.meta?.options as MongoOptions
   const params = { ...request.params, type: request.type, id: request.id }
 
   debugMongo('Incoming options %o', options)
@@ -132,12 +129,9 @@ export default async function getDocs(
   if (aggregation) {
     if (typeof request.pageSize === 'number') {
       return {
-        ...exchange,
+        ...action.response,
         status: 'badrequest',
-        response: {
-          ...exchange.response,
-          error: 'Paging is not allowed with aggregations',
-        },
+        error: 'Paging is not allowed with aggregations',
       }
     }
     debugMongo('Starting query with aggregation %o', aggregation)
@@ -157,23 +151,20 @@ export default async function getDocs(
 
   if (data.length === 0 && request.id) {
     return {
-      ...exchange,
+      ...action.response,
       status: 'notfound',
-      response: {
-        ...exchange.response,
-        error: `Could not find '${request.id}' of type '${request.type}'`,
-      },
+      error: `Could not find '${request.id}' of type '${request.type}'`,
     }
   }
 
-  const response: Exchange = {
-    ...exchange,
+  const response = {
+    ...action.response,
     status: 'ok',
-    response: { ...exchange.response, data: data.map(normalizeItem) as Data[] },
+    data: data.map(normalizeItem) as Data[],
   }
 
   if (request.pageSize) {
-    response.response.paging = createPaging(data, request, options.sort)
+    response.paging = createPaging(data, request, options.sort)
   }
 
   return response

@@ -1,14 +1,14 @@
 import getDocs from './getDocs'
 import setDocs from './setDocs'
-import { Exchange } from 'integreat'
+import { Action, Response } from 'integreat'
 import { MongoConnection, MongoOptions } from '.'
 import { Collection, MongoClient } from 'mongodb'
 
 export const getCollection = (
-  exchange: Exchange,
+  action: Action,
   client: MongoClient
 ): Collection | undefined => {
-  const options = exchange.options as MongoOptions | undefined
+  const options = action.meta?.options as MongoOptions | undefined
   if (!options?.collection) {
     return undefined
   }
@@ -17,32 +17,32 @@ export const getCollection = (
 }
 
 export default async function send(
-  exchange: Exchange,
+  action: Action,
   connection: MongoConnection | null
-): Promise<Exchange> {
-  if (!exchange.options) {
+): Promise<Response> {
+  if (!action.meta?.options) {
     return {
-      ...exchange,
+      ...action.response,
       status: 'badrequest',
-      response: { ...exchange.response, error: 'No endpoint options' },
+      error: 'No endpoint options',
     }
   }
   const client = connection?.client
   if (connection?.status !== 'ok' || !client) {
     return {
-      ...exchange,
+      ...action.response,
       status: 'error',
-      response: { ...exchange.response, error: 'No valid connection' },
+      error: 'No valid connection',
     }
   }
 
-  switch (exchange.type) {
+  switch (action.type) {
     case 'GET':
-      return getDocs(exchange, client)
+      return getDocs(action, client)
     case 'SET':
     case 'DELETE':
-      return setDocs(exchange, client)
+      return setDocs(action, client)
   }
 
-  return { ...exchange, status: 'noaction' }
+  return { ...action.response, status: 'noaction' }
 }

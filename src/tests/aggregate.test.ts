@@ -7,7 +7,6 @@ import {
   deleteDocuments,
   MongoElements,
 } from './helpers/mongo'
-import defaultExchange from './helpers/defaultExchange'
 
 import transporter from '..'
 
@@ -52,26 +51,27 @@ test('should get a document by type and id', async (t) => {
       values: { category: 'news', count: 8 },
     },
   ])
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'GET',
-    request: {
+    payload: {
       type: 'entry',
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
-      aggregation: [
-        {
-          type: 'group',
-          groupBy: ['values.category'],
-          values: { 'values.count': 'sum', id: 'first' },
-        },
-        {
-          type: 'sort',
-          sortBy: { id: 1 },
-        },
-      ],
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        aggregation: [
+          {
+            type: 'group',
+            groupBy: ['values.category'],
+            values: { 'values.count': 'sum', id: 'first' },
+          },
+          {
+            type: 'sort',
+            sortBy: { id: 1 },
+          },
+        ],
+      },
     },
   }
   const expectedData1 = {
@@ -86,11 +86,11 @@ test('should get a document by type and id', async (t) => {
   }
 
   const connection = await transporter.connect(options, authentication, null)
-  const { status, response } = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
   t.truthy(response)
-  t.is(status, 'ok')
+  t.is(response.status, 'ok')
   const data = response.data as Record<string, unknown>[]
   t.is(data.length, 2)
   t.deepEqual(data[0], expectedData1)

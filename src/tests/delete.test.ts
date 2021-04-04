@@ -8,7 +8,6 @@ import {
   deleteDocuments,
   MongoElements,
 } from './helpers/mongo'
-import defaultExchange from './helpers/defaultExchange'
 
 import transporter from '..'
 import { TypedData } from 'integreat'
@@ -38,23 +37,24 @@ test('should delete one document', async (t) => {
     { _id: 'entry:ent1', id: 'ent1', '\\$type': 'entry' },
     { _id: 'entry:ent2', id: 'ent2', '\\$type': 'entry' },
   ])
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'DELETE',
-    request: {
+    payload: {
       data: {
         $type: 'entry',
         id: 'ent1',
       },
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+      },
     },
   }
 
   const connection = await transporter.connect(options, authorization, null)
-  const response = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
   t.truthy(response)
@@ -72,23 +72,24 @@ test('should delete array of documents', async (t) => {
     { _id: 'entry:ent1', id: 'ent1', '\\$type': 'entry' },
     { _id: 'entry:ent2', id: 'ent2', '\\$type': 'entry' },
   ])
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'DELETE',
-    request: {
+    payload: {
       data: [
         { $type: 'entry', id: 'ent1' },
         { $type: 'entry', id: 'ent2' },
       ],
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+      },
     },
   }
 
   const connection = await transporter.connect(options, authorization, null)
-  const response = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
   t.truthy(response)

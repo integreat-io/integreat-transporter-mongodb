@@ -7,7 +7,6 @@ import {
   deleteDocuments,
   MongoElements,
 } from './helpers/mongo'
-import defaultExchange from './helpers/defaultExchange'
 import { TypedData } from 'integreat'
 
 import transporter from '..'
@@ -37,25 +36,26 @@ test('should get a document by type and id', async (t) => {
     { _id: 'entry:ent1', id: 'ent1', '\\$type': 'entry' },
     { _id: 'entry:ent2', id: 'ent2', '\\$type': 'entry' },
   ])
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'GET',
-    request: {
+    payload: {
       type: 'entry',
       id: 'ent1',
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+      },
     },
   }
 
   const connection = await transporter.connect(options, authentication, null)
-  const { status, response } = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
   t.truthy(response)
-  t.is(status, 'ok')
+  t.is(response.status, 'ok')
   const data = response.data as TypedData[]
   t.is(data.length, 1)
   t.is(data[0].id, 'ent1')
@@ -67,24 +67,25 @@ test('should get documents by type', async (t) => {
     { _id: 'entry:ent1', id: 'ent1', '\\$type': 'entry' },
     { _id: 'entry:ent2', id: 'ent2', '\\$type': 'entry' },
   ])
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'GET',
-    request: {
+    payload: {
       type: 'entry',
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+      },
     },
   }
 
   const connection = await transporter.connect(options, authentication, null)
-  const { status, response } = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
   t.truthy(response)
-  t.is(status, 'ok')
+  t.is(response.status, 'ok')
   const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
@@ -107,28 +108,29 @@ test('should get a document with endpoint query', async (t) => {
       attributes: { title: 'Entry 2' },
     },
   ])
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'GET',
-    request: {
+    payload: {
       type: 'entry',
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
-      query: [
-        { path: 'type', op: 'eq', param: 'type' },
-        { path: 'attributes.title', value: 'Entry 2' },
-      ],
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        query: [
+          { path: 'type', op: 'eq', param: 'type' },
+          { path: 'attributes.title', value: 'Entry 2' },
+        ],
+      },
     },
   }
 
   const connection = await transporter.connect(options, authentication, null)
-  const { status, response } = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
   t.truthy(response)
-  t.is(status, 'ok')
+  t.is(response.status, 'ok')
   const data = response.data as TypedData[]
   t.is(data.length, 1)
   t.is(data[0].id, 'ent2')
@@ -156,27 +158,28 @@ test('should sort documents', async (t) => {
       attributes: { index: 1 },
     },
   ])
-  const exchange = {
-    ...defaultExchange,
+  const action = {
     type: 'GET',
-    request: {
+    payload: {
       type: 'entry',
     },
-    options: {
-      collection: collectionName,
-      db: 'test',
-      sort: {
-        'attributes.index': 1,
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        sort: {
+          'attributes.index': 1,
+        },
       },
     },
   }
 
   const connection = await transporter.connect(options, authentication, null)
-  const { status, response } = await transporter.send(exchange, connection)
+  const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
   t.truthy(response)
-  t.is(status, 'ok')
+  t.is(response.status, 'ok')
   const data = response.data as TypedData[]
   t.is(data.length, 3)
   t.is(data[0].id, 'ent3')
