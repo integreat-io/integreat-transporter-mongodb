@@ -44,7 +44,7 @@ const explodeId = ({ _id, ...item }: ItemWithIdObject) => ({ ...item, ..._id })
 
 function mutateItem(item: unknown) {
   if (isObject(item) && isObject(item._id)) {
-    if (item._id._bsontype === 'ObjectId') {
+    if (item._id._bsontype === 'ObjectID') {
       // MongoDb id object
       return { ...item, _id: item._id.toString() }
     } else {

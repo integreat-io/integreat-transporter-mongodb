@@ -302,8 +302,9 @@ test('should convert mongodb _id to string', async (t) => {
   const find = createCollectionMethod([
     {
       _id: {
+        // An approximation of a mongodb _id object
         id: Buffer.from('123456'),
-        _bsontype: 'ObjectId',
+        _bsontype: 'ObjectID',
         toString: () => '123456',
       },
       id: 'ent1',
