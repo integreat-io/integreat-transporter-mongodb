@@ -42,10 +42,17 @@ const moveToData = async (
 
 const explodeId = ({ _id, ...item }: ItemWithIdObject) => ({ ...item, ..._id })
 
-const mutateItem = (item: unknown) =>
-  isObject(item) && isObject(item._id)
-    ? explodeId(item as ItemWithIdObject)
-    : item
+function mutateItem(item: unknown) {
+  if (isObject(item) && isObject(item._id)) {
+    if (item._id._bsontype === 'ObjectId') {
+      // MongoDb id object
+      return { ...item, _id: item._id.toString() }
+    } else {
+      return explodeId(item as ItemWithIdObject)
+    }
+  }
+  return item
+}
 
 // Get one page of docs from where the cursor is
 const getData = async (

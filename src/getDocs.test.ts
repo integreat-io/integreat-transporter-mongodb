@@ -13,9 +13,9 @@ const createCollectionMethod = (
 ) => {
   const docs = isAggregation
     ? items
-    : items.map(({ $type, ...item }) => ({
+    : items.map(({ $type, _id, ...item }) => ({
         ...item,
-        _id: `${$type}:${item.id}`,
+        _id: _id ?? `${$type}:${item.id}`,
         '\\$type': $type,
       }))
   const it = docs[Symbol.iterator]()
@@ -296,6 +296,43 @@ test('should return badrequest when combining aggregation and paging', async (t)
 
   t.is(ret.status, 'badrequest')
   t.is(typeof ret.error, 'string')
+})
+
+test('should convert mongodb _id to string', async (t) => {
+  const find = createCollectionMethod([
+    {
+      _id: {
+        id: Buffer.from('123456'),
+        _bsontype: 'ObjectId',
+        toString: () => '123456',
+      },
+      id: 'ent1',
+      $type: 'entry',
+    },
+  ])
+  const client = createClient({ find })
+  const action = {
+    type: 'GET',
+    payload: {
+      id: 'ent1',
+      type: 'entry',
+      params: { typePlural: 'entries' },
+    },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
+    },
+  }
+
+  const response = await getDocs(action, client)
+
+  t.is(response?.status, 'ok')
+  const data = response?.data as TypedData[]
+  t.is(data.length, 1)
+  t.is(data[0].id, 'ent1')
+  t.is(data[0]._id, '123456')
 })
 
 test('should get one page of items', async (t) => {
