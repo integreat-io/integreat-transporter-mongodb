@@ -32,12 +32,16 @@ test('should use options.query as filter', (t) => {
     { path: 'type', value: 'other' },
     { path: 'meta.parentType', param: 'type' },
     { path: 'meta.views', op: 'gt', value: 300 },
+    { path: 'completedAt', op: 'notset' },
+    { path: 'updatedAt', op: 'isset' },
     { path: 'escaped\\.dot', value: true },
   ]
   const expected = {
     '\\$type': 'other',
     'meta.parentType': 'entry',
     'meta.views': { $gt: 300 },
+    completedAt: { $eq: null },
+    updatedAt: { $ne: null },
     'escaped\\_dot': true,
   }
 

@@ -90,6 +90,9 @@ The `path` property describes what property to set, and the property is set to
 the value of `value` or to the value of the request parameter in `param`. The
 default operand is `eq`, but you may also use `gt`, `gte`, `lt`, `lte`, or `in`.
 
+There are also two special operands: `isset` and `notset`. They will match when
+a field is set or not.
+
 The query object will look like this, for a request for items of type `entry`:
 
 ```javascript

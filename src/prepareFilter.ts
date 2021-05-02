@@ -46,15 +46,29 @@ const castDates = (query: Record<string, unknown>) =>
 const mergeQueries = (...queries: (QueryArray | QueryObject | undefined)[]) =>
   queries.flat().filter(Boolean) as QueryObject[]
 
-const validOps = ['eq', 'lt', 'gt', 'lte', 'gte', 'in']
+const opsWithoutValue = ['isset', 'notset']
+const validOps = ['eq', 'lt', 'gt', 'lte', 'gte', 'in', ...opsWithoutValue]
 const validValueTypes = ['string', 'number', 'boolean']
 
 const isOpValid = (op: string) => validOps.includes(op)
-const isValidValue = (value: unknown): boolean =>
+const isValidValue = (value: unknown, op: string): boolean =>
   Array.isArray(value)
-    ? value.every(isValidValue)
-    : validValueTypes.includes(typeof value) || value instanceof Date
-const mapOp = (op: string) => (op === 'eq' ? undefined : `$${op}`)
+    ? value.every((value) => isValidValue(value, op))
+    : validValueTypes.includes(typeof value) ||
+      value instanceof Date ||
+      (value === undefined && opsWithoutValue.includes(op))
+function mapOp(op: string) {
+  switch (op) {
+    case 'eq':
+      return undefined
+    case 'isset':
+      return '$ne'
+    case 'notset':
+      return '$eq'
+    default:
+      return `$${op}`
+  }
+}
 
 function setMongoSelectorFromQueryObj(
   allParams: Record<string, unknown>,
@@ -64,13 +78,13 @@ function setMongoSelectorFromQueryObj(
   if (isOpValid(op)) {
     // eslint-disable-next-line security/detect-object-injection
     const comparee = param ? allParams[param] : value
-    if (isValidValue(comparee)) {
+    if (isValidValue(comparee, op)) {
       return dotprop.set(
         filter,
         [path === 'type' ? '\\$type' : serializePath(path), mapOp(op)]
           .filter(Boolean)
           .join('.'),
-        comparee
+        comparee || null
       )
     }
   }
