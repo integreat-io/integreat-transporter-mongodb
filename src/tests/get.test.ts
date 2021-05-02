@@ -33,8 +33,18 @@ test.afterEach.always(async (t) => {
 test('should get a document by type and id', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
-    { _id: 'entry:ent1', id: 'ent1', '\\$type': 'entry' },
-    { _id: 'entry:ent2', id: 'ent2', '\\$type': 'entry' },
+    {
+      _id: 'entry:ent1',
+      id: 'ent1',
+      '\\$type': 'entry',
+      date: new Date('2021-03-14T18:43:11Z'),
+    },
+    {
+      _id: 'entry:ent2',
+      id: 'ent2',
+      '\\$type': 'entry',
+      date: new Date('2021-03-14T18:51:09Z'),
+    },
   ])
   const action = {
     type: 'GET',
@@ -59,6 +69,7 @@ test('should get a document by type and id', async (t) => {
   const data = response.data as TypedData[]
   t.is(data.length, 1)
   t.is(data[0].id, 'ent1')
+  t.deepEqual(data[0].date, new Date('2021-03-14T18:43:11Z'))
 })
 
 test('should get documents by type', async (t) => {

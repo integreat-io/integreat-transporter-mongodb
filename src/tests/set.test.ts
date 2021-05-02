@@ -109,6 +109,7 @@ test('should update existing document', async (t) => {
         id: 'ent1',
         title: 'Updated entry 1',
         theNew: true,
+        date: new Date('2021-03-14T18:43:11Z'),
         meta: { section: 'oldies', 'archived.flag': true },
       },
     },
@@ -133,6 +134,7 @@ test('should update existing document', async (t) => {
   t.true(docs[0].theNew)
   t.true(docs[0].theOld)
   t.is(docs[0].title, 'Updated entry 1')
+  t.deepEqual(docs[0].date, new Date('2021-03-14T18:43:11Z'))
   t.is((docs[0].meta as Record<string, unknown>).section, 'oldies')
   t.is((docs[0].meta as Record<string, unknown>)['archived\\_flag'], true)
 })
