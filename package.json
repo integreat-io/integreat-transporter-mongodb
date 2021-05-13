@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@types/mongodb": "^3.6.12",
-    "debug": "^4.3.2",
+    "debug": "^4.3.1",
     "dot-prop": "^6.0.1",
     "mongodb": "^3.6.6"
   },
@@ -43,6 +43,6 @@
     "@integreat/ts-dev-setup": "^2.0.0",
     "@types/sinon": "^10.0.0",
     "integreat": "0.8.0-alpha.21",
-    "sinon": "^10.0.1"
+    "sinon": "^10.0.0"
   }
 }
