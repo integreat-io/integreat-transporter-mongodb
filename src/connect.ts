@@ -2,7 +2,7 @@ import { MongoClient } from 'mongodb'
 import { MongoOptions, MongoConnection } from '.'
 
 export default async function connect(
-  mongoClient: typeof MongoClient,
+  Client: typeof MongoClient,
   options: MongoOptions,
   connection: MongoConnection | null = null
 ): Promise<MongoConnection> {
@@ -10,7 +10,7 @@ export default async function connect(
     return connection
   }
 
-  const { uri, baseUri } = options
+  const { uri, baseUri, mongo } = options
   const mongoUri = uri || baseUri
   if (!mongoUri) {
     return {
@@ -20,10 +20,12 @@ export default async function connect(
   }
 
   try {
-    const client = await mongoClient.connect(mongoUri, {
+    const client = new Client(mongoUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      ...mongo,
     })
+    await client.connect()
     return { status: 'ok', client }
   } catch (error) {
     return {

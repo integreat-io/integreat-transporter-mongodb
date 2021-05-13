@@ -41,10 +41,12 @@ export interface MongoOptions extends Record<string, unknown> {
   sort?: Record<string, 1 | -1>
   query?: QueryObject[]
   aggregation?: AggregationObject[]
+  mongo?: Record<string, unknown>
 }
 
 export interface MongoConnection extends Connection {
   client?: mongodb.MongoClient
+  error?: string
 }
 
 export interface ExchangeRequest {
