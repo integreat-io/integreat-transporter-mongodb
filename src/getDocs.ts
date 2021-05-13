@@ -164,10 +164,16 @@ export default async function getDocs(
     }
   }
 
+  let totalCount = data.length
+  if (!aggregation && typeof request.pageSize === 'number') {
+    totalCount = await collection.countDocuments(filter)
+  }
+
   const response = {
     ...action.response,
     status: 'ok',
     data: data.map(normalizeItem) as Data[],
+    meta: { totalCount },
   }
 
   if (request.pageSize) {

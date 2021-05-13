@@ -70,6 +70,7 @@ test('should get items', async (t) => {
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
   t.is(data[1].id, 'ent2')
+  t.is(response?.meta?.totalCount, 2)
   t.true(find.calledWith(expectedQuery))
 })
 
@@ -205,6 +206,7 @@ test('should get with aggregation', async (t) => {
   t.deepEqual(arg, expectedPipeline)
   t.is(ret.status, 'ok')
   t.deepEqual(ret.data, expectedData)
+  t.is(ret.meta?.totalCount, 1)
 })
 
 test('should get put query and sort first in aggregation pipeline', async (t) => {
@@ -342,7 +344,8 @@ test('should get one page of items', async (t) => {
     { id: 'ent2', $type: 'entry' },
     { id: 'ent3', $type: 'entry' },
   ])
-  const client = createClient({ find })
+  const countDocuments = async () => 3
+  const client = createClient({ find, countDocuments })
   const action = {
     type: 'GET',
     payload: {
@@ -366,6 +369,7 @@ test('should get one page of items', async (t) => {
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
   t.is(data[1].id, 'ent2')
+  t.is(response?.meta?.totalCount, 3)
   t.true(find.calledWith(expectedQuery))
 })
 
@@ -374,7 +378,8 @@ test('should return params for next page', async (t) => {
     { id: 'ent1', $type: 'entry' },
     { id: 'ent2', $type: 'entry' },
   ])
-  const client = createClient({ find })
+  const countDocuments = async () => 3
+  const client = createClient({ find, countDocuments })
   const action = {
     type: 'GET',
     payload: {
@@ -408,7 +413,8 @@ test('should get second page of items', async (t) => {
     { id: 'ent3', $type: 'entry' },
     { id: 'ent4', $type: 'entry' },
   ])
-  const client = createClient({ find })
+  const countDocuments = async () => 3
+  const client = createClient({ find, countDocuments })
   const action = {
     type: 'GET',
     payload: {
@@ -449,7 +455,8 @@ test('should get second page of items', async (t) => {
 
 test('should get empty result when we have passed the last page', async (t) => {
   const find = createCollectionMethod([{ id: 'ent4', $type: 'entry' }])
-  const client = createClient({ find })
+  const countDocuments = async () => 3
+  const client = createClient({ find, countDocuments })
   const action = {
     type: 'GET',
     payload: {
@@ -483,7 +490,8 @@ test('should get empty result when we have passed the last page', async (t) => {
 
 test('should get empty result when the pageAfter doc is not found', async (t) => {
   const find = createCollectionMethod([{ id: 'ent5', $type: 'entry' }])
-  const client = createClient({ find })
+  const countDocuments = async () => 3
+  const client = createClient({ find, countDocuments })
   const action = {
     type: 'GET',
     payload: {
@@ -522,7 +530,8 @@ test('should get second page of items when there is documents before the pageAft
     { id: 'ent3', $type: 'entry', index: 2 },
     { id: 'ent4', $type: 'entry', index: 3 },
   ])
-  const client = createClient({ find })
+  const countDocuments = async () => 3
+  const client = createClient({ find, countDocuments })
   const action = {
     type: 'GET',
     payload: {
@@ -563,7 +572,8 @@ test('should get second page of items when there is documents before the pageAft
 
 test('should return empty array when collection query comes back empty', async (t) => {
   const find = createCollectionMethod([])
-  const client = createClient({ find })
+  const countDocuments = async () => 3
+  const client = createClient({ find, countDocuments })
   const action = {
     type: 'GET',
     payload: {
