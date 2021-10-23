@@ -28,17 +28,18 @@ const createCollectionMethod = (
     // Mimick next()
     next: async () => it.next().value,
     sort: () => cursor,
+    allowDiskUse: () => cursor, // Only on FindCursor
   }
 
-  return sinon.stub().resolves(cursor)
+  return sinon.stub().returns(cursor)
 }
 
 const createClient = (collection: unknown) =>
-  (({
+  ({
     db: () => ({
       collection: () => collection as Collection,
     }),
-  } as unknown) as MongoClient)
+  } as unknown as MongoClient)
 
 // Tests
 
@@ -568,6 +569,61 @@ test('should get second page of items when there is documents before the pageAft
   t.is(data[0].id, 'ent3')
   t.is(data[1].id, 'ent4')
   t.deepEqual(response?.paging, expectedPaging)
+})
+
+test('should support allowDiskUse for finds', async (t) => {
+  const find = createCollectionMethod([])
+  const countDocuments = async () => 3
+  const client = createClient({ find, countDocuments })
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      pageId: 'ZW50cnk6ZW50MnxpbmRleD4x', // entry:ent2|index>1
+      params: {
+        typePlural: 'entries',
+      },
+    },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+        sort: { index: 1 },
+      },
+    },
+  }
+
+  const response = await getDocs(action, client, { allowDiskUse: true })
+
+  t.is(response?.status, 'ok')
+  const findOptions = find.args[0][1]
+  t.true(findOptions.allowDiskUse)
+})
+
+test('should support allowDiskUse for aggregation', async (t) => {
+  const find = createCollectionMethod([])
+  const aggregate = createCollectionMethod([], true)
+  const client = createClient({ find, aggregate })
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      params: { typePlural: 'entries' },
+    },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+        aggregation: [{ type: 'sort', sortBy: { updatedAt: -1 } }],
+      },
+    },
+  }
+
+  const ret = await getDocs(action, client, { allowDiskUse: true })
+
+  t.is(ret.status, 'ok')
+  const aggregateOptions = aggregate.args[0][1]
+  t.true(aggregateOptions.allowDiskUse)
 })
 
 test('should return empty array when collection query comes back empty', async (t) => {

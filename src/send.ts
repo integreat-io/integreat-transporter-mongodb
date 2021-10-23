@@ -28,17 +28,18 @@ export default async function send(
     }
   }
   const client = connection?.client
-  if (connection?.status !== 'ok' || !client) {
+  if (!connection || connection.status !== 'ok' || !client) {
     return {
       ...action.response,
       status: 'error',
       error: 'No valid connection',
     }
   }
+  const allowDiskUse = connection.allowDiskUse || false
 
   switch (action.type) {
     case 'GET':
-      return getDocs(action, client)
+      return getDocs(action, client, { allowDiskUse })
     case 'SET':
     case 'DELETE':
       return setDocs(action, client)

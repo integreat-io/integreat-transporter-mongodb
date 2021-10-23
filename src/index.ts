@@ -42,10 +42,12 @@ export interface MongoOptions extends Record<string, unknown> {
   query?: QueryObject[]
   aggregation?: AggregationObject[]
   mongo?: Record<string, unknown>
+  allowDiskUse?: boolean
 }
 
 export interface MongoConnection extends Connection {
   client?: mongodb.MongoClient
+  allowDiskUse?: boolean
   error?: string
 }
 

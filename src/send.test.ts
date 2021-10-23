@@ -18,6 +18,7 @@ const createConnection = (collection: unknown) => ({
           }
         : null,
   } as MongoClient,
+  allowDiskUse: true,
 })
 
 const createFind = (items: TypedData[]) => {
@@ -28,7 +29,7 @@ const createFind = (items: TypedData[]) => {
   }))
   const it = docs[Symbol.iterator]()
 
-  return sinon.stub().resolves({
+  return sinon.stub().returns({
     // toArray returns all docs
     toArray: async () => docs,
     // Mimick limit method
@@ -70,7 +71,7 @@ test('should get items', async (t) => {
   t.is(data[0].id, 'ent1')
   t.is(data[0].$type, 'entry')
   t.is(data[1].id, 'ent2')
-  t.true(find.calledWith({ '\\$type': 'entry' }))
+  t.true(find.calledWith({ '\\$type': 'entry' }, { allowDiskUse: true }))
 })
 
 test('should update one item', async (t) => {

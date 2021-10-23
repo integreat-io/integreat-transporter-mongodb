@@ -2,7 +2,7 @@ import debug = require('debug')
 import prepareFilter from './prepareFilter'
 import prepareAggregation from './prepareAggregation'
 import createPaging from './createPaging'
-import { AggregationCursor, FindCursor, MongoClient } from 'mongodb'
+import { AbstractCursor, MongoClient } from 'mongodb'
 import { Action, Response, Data } from 'integreat'
 import {
   MongoOptions,
@@ -17,16 +17,17 @@ import { isObject } from './utils/is'
 
 const debugMongo = debug('great:transporter:mongo')
 
+export interface Options {
+  allowDiskUse?: boolean
+}
+
 interface ItemWithIdObject extends Record<string, unknown> {
   _id: Record<string, unknown>
 }
 
 // Move the cursor to the first doc after the `pageAfter`
 // When no `pageAfter`, just start from the beginning
-const moveToData = async (
-  cursor: FindCursor | AggregationCursor,
-  pageAfter?: string
-) => {
+const moveToData = async (cursor: AbstractCursor, pageAfter?: string) => {
   if (!pageAfter) {
     // Start from the beginning
     return true
@@ -55,10 +56,7 @@ function mutateItem(item: unknown) {
 }
 
 // Get one page of docs from where the cursor is
-const getData = async (
-  cursor: FindCursor | AggregationCursor,
-  pageSize: number
-) => {
+const getData = async (cursor: AbstractCursor, pageSize: number) => {
   const data = []
 
   while (data.length < pageSize) {
@@ -75,7 +73,7 @@ const pageAfterFromPageId = (pageId?: string) =>
   typeof pageId === 'string' ? pageId.split('|')[0] : undefined
 
 const getPage = async (
-  cursor: FindCursor | AggregationCursor,
+  cursor: AbstractCursor,
   { pageSize = Infinity, pageAfter, pageId }: ExchangeRequest
 ) => {
   const after = pageAfter || pageAfterFromPageId(atob(pageId))
@@ -103,7 +101,8 @@ const appendToAggregation = (
 
 export default async function getDocs(
   action: Action,
-  client: MongoClient
+  client: MongoClient,
+  { allowDiskUse = false }: Options = {}
 ): Promise<Response> {
   const collection = getCollection(action, client)
   if (!collection) {
@@ -142,10 +141,10 @@ export default async function getDocs(
       }
     }
     debugMongo('Starting query with aggregation %o', aggregation)
-    cursor = await collection.aggregate(aggregation)
+    cursor = collection.aggregate(aggregation, { allowDiskUse })
   } else {
     debugMongo('Starting query with filter %o', filter)
-    cursor = await collection.find(filter)
+    cursor = collection.find(filter, { allowDiskUse })
     if (sort) {
       debugMongo('Sorting with %o', sort)
       cursor = cursor.sort(sort)

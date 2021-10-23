@@ -10,7 +10,7 @@ export default async function connect(
     return connection
   }
 
-  const { uri, baseUri, mongo } = options
+  const { uri, baseUri, mongo, allowDiskUse = false } = options
   const mongoUri = uri || baseUri
   if (!mongoUri) {
     return {
@@ -22,7 +22,7 @@ export default async function connect(
   try {
     const client = new Client(mongoUri, mongo)
     await client.connect()
-    return { status: 'ok', client }
+    return { status: 'ok', client, allowDiskUse }
   } catch (error) {
     return {
       status: 'error',

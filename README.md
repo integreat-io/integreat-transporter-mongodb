@@ -79,7 +79,8 @@ Here's an example:
           { path: 'type', param: 'type' },
           { path: 'meta.status', value: 'draft' }
           { path: 'meta.views', op: 'gt', value: 1000 }
-        ]
+        ],
+        allowDiskUse: true
       }
     }
   ]
