@@ -35,11 +35,10 @@ export default async function send(
       error: 'No valid connection',
     }
   }
-  const allowDiskUse = connection.allowDiskUse || false
 
   switch (action.type) {
     case 'GET':
-      return getDocs(action, client, { allowDiskUse })
+      return getDocs(action, client)
     case 'SET':
     case 'DELETE':
       return setDocs(action, client)

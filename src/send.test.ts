@@ -18,7 +18,6 @@ const createConnection = (collection: unknown) => ({
           }
         : null,
   } as MongoClient,
-  allowDiskUse: true,
 })
 
 const createFind = (items: TypedData[]) => {
@@ -71,7 +70,7 @@ test('should get items', async (t) => {
   t.is(data[0].id, 'ent1')
   t.is(data[0].$type, 'entry')
   t.is(data[1].id, 'ent2')
-  t.true(find.calledWith({ '\\$type': 'entry' }, { allowDiskUse: true }))
+  t.true(find.calledWith({ '\\$type': 'entry' }))
 })
 
 test('should update one item', async (t) => {

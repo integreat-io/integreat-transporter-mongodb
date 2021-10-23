@@ -47,7 +47,6 @@ export interface MongoOptions extends Record<string, unknown> {
 
 export interface MongoConnection extends Connection {
   client?: mongodb.MongoClient
-  allowDiskUse?: boolean
   error?: string
 }
 

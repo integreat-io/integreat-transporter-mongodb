@@ -65,20 +65,6 @@ test('should use supplied mongo options', async (t) => {
   })
 })
 
-test('should set allowDiskUse from options', async (t) => {
-  const options = {
-    uri: 'mongodb://db:27017/database',
-    allowDiskUse: true,
-  }
-  const constructSpy = sinon.stub()
-  const connectSpy = sinon.stub()
-
-  const ret = await connect(createMockMongo(constructSpy, connectSpy), options)
-
-  t.is(ret.status, 'ok', ret.error)
-  t.true(ret.allowDiskUse)
-})
-
 test('should return the given connection', async (t) => {
   const options = {
     uri: 'mongodb://db:27017/database',

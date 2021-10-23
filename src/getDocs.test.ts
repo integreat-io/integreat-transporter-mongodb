@@ -589,11 +589,12 @@ test('should support allowDiskUse for finds', async (t) => {
         collection: 'documents',
         db: 'database',
         sort: { index: 1 },
+        allowDiskUse: true,
       },
     },
   }
 
-  const response = await getDocs(action, client, { allowDiskUse: true })
+  const response = await getDocs(action, client)
 
   t.is(response?.status, 'ok')
   const findOptions = find.args[0][1]
@@ -615,11 +616,12 @@ test('should support allowDiskUse for aggregation', async (t) => {
         collection: 'documents',
         db: 'database',
         aggregation: [{ type: 'sort', sortBy: { updatedAt: -1 } }],
+        allowDiskUse: true,
       },
     },
   }
 
-  const ret = await getDocs(action, client, { allowDiskUse: true })
+  const ret = await getDocs(action, client)
 
   t.is(ret.status, 'ok')
   const aggregateOptions = aggregate.args[0][1]

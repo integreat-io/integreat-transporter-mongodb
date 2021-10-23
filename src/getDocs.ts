@@ -17,10 +17,6 @@ import { isObject } from './utils/is'
 
 const debugMongo = debug('great:transporter:mongo')
 
-export interface Options {
-  allowDiskUse?: boolean
-}
-
 interface ItemWithIdObject extends Record<string, unknown> {
   _id: Record<string, unknown>
 }
@@ -101,8 +97,7 @@ const appendToAggregation = (
 
 export default async function getDocs(
   action: Action,
-  client: MongoClient,
-  { allowDiskUse = false }: Options = {}
+  client: MongoClient
 ): Promise<Response> {
   const collection = getCollection(action, client)
   if (!collection) {
@@ -123,6 +118,7 @@ export default async function getDocs(
 
   const filter = prepareFilter(options.query, params)
   const sort = options.sort
+  const allowDiskUse = options.allowDiskUse || false
 
   const aggregation = options.aggregation
     ? prepareAggregation(
