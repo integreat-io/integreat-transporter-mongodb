@@ -148,7 +148,7 @@ test('should return paging when sorting descending', (t) => {
   t.deepEqual(ret, expected)
 })
 
-test('should return paging when sorting ascending and descending', (t) => {
+test('should return paging with first sort field only', (t) => {
   const data = prepareData([
     { id: 'ent3', $type: 'entry', index: 2 },
     { id: 'ent2', $type: 'entry', index: 1 },
@@ -164,7 +164,7 @@ test('should return paging when sorting ascending and descending', (t) => {
   const expected = {
     next: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50MnxpbmRleDwxfGlkPiJlbnQyIg', // entry:ent2|index<1|id>"ent2"
+      pageId: 'ZW50cnk6ZW50MnxpbmRleDwx', // entry:ent2|index<1
       pageSize: 2,
     },
   }

@@ -19,15 +19,14 @@ const encodeValue = (value: unknown) =>
     ? value.toISOString()
     : value
 
-const createSortString = (lastItem: TypedData) => ([path, direction]: [
-  string,
-  number
-]) =>
-  [
-    path,
-    direction > 0 ? '>' : '<',
-    encodeValue(dotprop.get(lastItem, path)),
-  ].join('')
+const createSortString =
+  (lastItem: TypedData) =>
+  ([path, direction]: [string, number]) =>
+    [
+      path,
+      direction > 0 ? '>' : '<',
+      encodeValue(dotprop.get(lastItem, path)),
+    ].join('')
 
 const createPageId = (
   lastItem: TypedData,
@@ -35,7 +34,9 @@ const createPageId = (
 ): string =>
   [
     lastItem._id,
-    ...(sort ? Object.entries(sort).map(createSortString(lastItem)) : ['>']),
+    ...(sort
+      ? Object.entries(sort).slice(0, 1).map(createSortString(lastItem))
+      : ['>']),
   ].join('|')
 
 export default function createPaging(
