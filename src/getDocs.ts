@@ -2,7 +2,7 @@ import debug = require('debug')
 import prepareFilter from './prepareFilter'
 import prepareAggregation from './prepareAggregation'
 import createPaging from './createPaging'
-import { AggregationCursor, Cursor, MongoClient } from 'mongodb'
+import { AggregationCursor, FindCursor, MongoClient } from 'mongodb'
 import { Action, Response, Data } from 'integreat'
 import {
   MongoOptions,
@@ -24,7 +24,7 @@ interface ItemWithIdObject extends Record<string, unknown> {
 // Move the cursor to the first doc after the `pageAfter`
 // When no `pageAfter`, just start from the beginning
 const moveToData = async (
-  cursor: Cursor | AggregationCursor,
+  cursor: FindCursor | AggregationCursor,
   pageAfter?: string
 ) => {
   if (!pageAfter) {
@@ -56,7 +56,7 @@ function mutateItem(item: unknown) {
 
 // Get one page of docs from where the cursor is
 const getData = async (
-  cursor: Cursor | AggregationCursor,
+  cursor: FindCursor | AggregationCursor,
   pageSize: number
 ) => {
   const data = []
@@ -75,7 +75,7 @@ const pageAfterFromPageId = (pageId?: string) =>
   typeof pageId === 'string' ? pageId.split('|')[0] : undefined
 
 const getPage = async (
-  cursor: Cursor | AggregationCursor,
+  cursor: FindCursor | AggregationCursor,
   { pageSize = Infinity, pageAfter, pageId }: ExchangeRequest
 ) => {
   const after = pageAfter || pageAfterFromPageId(atob(pageId))

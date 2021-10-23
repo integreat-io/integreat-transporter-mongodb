@@ -20,17 +20,15 @@ export default async function connect(
   }
 
   try {
-    const client = new Client(mongoUri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      ...mongo,
-    })
+    const client = new Client(mongoUri, mongo)
     await client.connect()
     return { status: 'ok', client }
   } catch (error) {
     return {
       status: 'error',
-      error: `Could not connect to MongoDb on ${mongoUri}. Error: ${error.message}`,
+      error: `Could not connect to MongoDb on ${mongoUri}. Error: ${
+        (error as Error).message
+      }`,
     }
   }
 }

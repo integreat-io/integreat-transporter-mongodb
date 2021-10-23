@@ -15,10 +15,7 @@ export async function openMongoWithCollection(
   dbName: string
 ): Promise<MongoElements> {
   const collectionName = `docs_${Date.now()}_${collectionCount++}`
-  const client = await mongo.connect(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  const client = await mongo.connect(uri)
   const collection = client.db(dbName).collection(collectionName)
   return { client, collection, collectionName }
 }
@@ -32,7 +29,7 @@ export async function insertDocument(
   doc: Record<string, unknown>
 ): Promise<number> {
   const r = await collection.insertOne(doc)
-  return r.insertedCount
+  return r.insertedId ? 1 : 0
 }
 
 export async function insertDocuments(

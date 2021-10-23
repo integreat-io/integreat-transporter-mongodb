@@ -78,44 +78,44 @@ const createErrorResponse = (status: string, error: string, id?: string) => ({
   error,
 })
 
-const performOne = (action: Action, collection: Collection) => async (
-  item: unknown
-): Promise<ItemResponse> => {
-  if (!isObjectWithId(item)) {
-    return createErrorResponse(
-      'badrequest',
-      'Only object data with an id may be sent to MongoDB'
-    )
-  }
-  const {
-    type,
-    payload: { params },
-  } = action
-  const options = action.meta?.options as MongoOptions | undefined
-  const filter = prepareFilter(options?.query, {
-    ...params,
-    type: item.$type,
-    id: item.id,
-  })
-  const _id = [item.$type, item.id].filter(Boolean).join(':')
-  try {
-    if (type === 'SET') {
-      const ret = await collection.updateOne(
-        filter,
-        {
-          $set: { ...(serializeItem(item) as Record<string, unknown>), _id },
-        },
-        { upsert: true }
+const performOne =
+  (action: Action, collection: Collection) =>
+  async (item: unknown): Promise<ItemResponse> => {
+    if (!isObjectWithId(item)) {
+      return createErrorResponse(
+        'badrequest',
+        'Only object data with an id may be sent to MongoDB'
       )
-      return createOkResponse(ret.modifiedCount, ret.upsertedCount, 0, _id)
-    } else {
-      const ret = await collection.deleteOne(filter)
-      return createOkResponse(0, 0, ret.deletedCount ?? 0, _id)
     }
-  } catch (error) {
-    return createErrorResponse('error', error.message, _id)
+    const {
+      type,
+      payload: { params },
+    } = action
+    const options = action.meta?.options as MongoOptions | undefined
+    const filter = prepareFilter(options?.query, {
+      ...params,
+      type: item.$type,
+      id: item.id,
+    })
+    const _id = [item.$type, item.id].filter(Boolean).join(':')
+    try {
+      if (type === 'SET') {
+        const ret = await collection.updateOne(
+          filter,
+          {
+            $set: { ...(serializeItem(item) as Record<string, unknown>), _id },
+          },
+          { upsert: true }
+        )
+        return createOkResponse(ret.modifiedCount, ret.upsertedCount, 0, _id)
+      } else {
+        const ret = await collection.deleteOne(filter)
+        return createOkResponse(0, 0, ret.deletedCount ?? 0, _id)
+      }
+    } catch (error) {
+      return createErrorResponse('error', (error as Error).message, _id)
+    }
   }
-}
 
 const performOnObjectOrArray = async (
   action: Action,

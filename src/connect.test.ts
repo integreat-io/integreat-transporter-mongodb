@@ -10,10 +10,10 @@ const createMockMongo = (
   constructSpy: sinon.SinonStub,
   connectSpy: sinon.SinonStub
 ) =>
-  (function MongoMock(uri: string, options: Record<string, unknown>) {
+  function MongoMock(uri: string, options: Record<string, unknown>) {
     constructSpy(uri, options)
     return { connect: connectSpy }
-  } as unknown) as typeof MongoClient
+  } as unknown as typeof MongoClient
 
 // Tests
 
@@ -61,8 +61,6 @@ test('should use supplied mongo options', async (t) => {
 
   t.is(constructSpy.callCount, 1)
   t.deepEqual(constructSpy.args[0][1], {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
     readPreference: 'primaryPreferred',
   })
 })

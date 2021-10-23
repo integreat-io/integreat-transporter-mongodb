@@ -22,7 +22,7 @@ test('prepareOptions should set options', async (t) => {
   }
   const expected = options
 
-  const ret = transporter.prepareOptions(options)
+  const ret = transporter.prepareOptions(options, 'mongodb')
 
   t.deepEqual(ret, expected)
 })
