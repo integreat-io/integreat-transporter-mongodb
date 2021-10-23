@@ -1,6 +1,6 @@
 {
   "name": "integreat-transporter-mongodb",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Integreat transporter for mongodb",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,7 +15,7 @@
     "test:inspect": "node --inspect node_modules/ava/profile.js",
     "test:watch": "npm run dev",
     "dev": "ava --watch",
-    "dev:setup": "npm run build && docker-compose -f docker-compose-dev.yml up",
+    "dev:setup": "docker-compose -f docker-compose-dev.yml up",
     "dev:teardown": "docker-compose -f docker-compose-dev.yml down",
     "build": "tsc",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
