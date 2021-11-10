@@ -1,7 +1,7 @@
 import getDocs from './getDocs'
 import setDocs from './setDocs'
 import { Action, Response } from 'integreat'
-import { MongoConnection, MongoOptions } from '.'
+import { Connection, MongoOptions } from '.'
 import { Collection, MongoClient } from 'mongodb'
 
 export const getCollection = (
@@ -18,7 +18,7 @@ export const getCollection = (
 
 export default async function send(
   action: Action,
-  connection: MongoConnection | null
+  connection: Connection | null
 ): Promise<Response> {
   if (!action.meta?.options) {
     return {

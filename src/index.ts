@@ -2,7 +2,7 @@ import mongodb = require('mongodb')
 import connect from './connect'
 import disconnect from './disconnect'
 import send from './send'
-import { Transporter, Connection } from 'integreat'
+import { Transporter, Connection as ConnectionBase } from 'integreat'
 
 export interface QueryObject {
   path: string
@@ -46,7 +46,7 @@ export interface MongoOptions extends Record<string, unknown> {
   allowDiskUse?: boolean
 }
 
-export interface MongoConnection extends Connection {
+export interface Connection extends ConnectionBase {
   client?: mongodb.MongoClient
   error?: string
 }
@@ -81,7 +81,7 @@ const mongodbTransporter: Transporter = {
    * The MongoDb transporter will connect to the database and return the client
    * object.
    */
-  async connect(options, _auth, connection: MongoConnection | null) {
+  async connect(options, _auth, connection: Connection | null) {
     return connect(mongodb.MongoClient, options, connection)
   },
 
@@ -89,7 +89,7 @@ const mongodbTransporter: Transporter = {
    * Disconnect from the source if relevant. The method is given the return
    * value from the connect method.
    */
-  async disconnect(connection: MongoConnection | null) {
+  async disconnect(connection: Connection | null) {
     return disconnect(connection)
   },
 

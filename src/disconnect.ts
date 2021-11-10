@@ -1,7 +1,7 @@
-import { MongoConnection } from '.'
+import { Connection } from '.'
 
 export default async function disconnect(
-  connection: MongoConnection | null
+  connection: Connection | null
 ): Promise<void> {
   if (connection?.status === 'ok' && connection.client) {
     connection.client.close()

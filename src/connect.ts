@@ -1,11 +1,11 @@
 import { MongoClient } from 'mongodb'
-import { MongoOptions, MongoConnection } from '.'
+import { MongoOptions, Connection } from '.'
 
 export default async function connect(
   Client: typeof MongoClient,
   options: MongoOptions,
-  connection: MongoConnection | null = null
-): Promise<MongoConnection> {
+  connection: Connection | null = null
+): Promise<Connection> {
   if (connection) {
     return connection
   }
