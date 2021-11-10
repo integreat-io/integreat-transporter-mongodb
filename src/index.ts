@@ -1,5 +1,6 @@
 import mongodb = require('mongodb')
 import connect from './connect'
+import disconnect from './disconnect'
 import send from './send'
 import { Transporter, Connection } from 'integreat'
 
@@ -89,9 +90,7 @@ const mongodbTransporter: Transporter = {
    * value from the connect method.
    */
   async disconnect(connection: MongoConnection | null) {
-    if (connection && connection.status === 'ok' && connection.client?.close) {
-      connection.client.close()
-    }
+    return disconnect(connection)
   },
 
   /**
