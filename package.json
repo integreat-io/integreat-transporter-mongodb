@@ -34,12 +34,13 @@
     "node": ">= 12.9"
   },
   "dependencies": {
-    "debug": "^4.3.2",
+    "debug": "^4.3.4",
     "dot-prop": "^6.0.1",
-    "mongodb": "^4.1.4"
+    "mongodb": "^4.4.1"
   },
   "devDependencies": {
     "@integreat/ts-dev-setup": "^2.2.0",
+    "@types/sinon": "^10.0.11",
     "integreat": "0.8.0-alpha.49",
     "sinon": "^12.0.1"
   }
