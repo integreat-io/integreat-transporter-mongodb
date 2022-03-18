@@ -1,3 +1,4 @@
+import debug = require('debug')
 import prepareFilter from './prepareFilter'
 import { Action, Response } from 'integreat'
 import { Collection, MongoClient } from 'mongodb'
@@ -14,6 +15,8 @@ interface ItemResponse {
   status: string
   error?: string
 }
+
+const debugMongo = debug('great:transporter:mongo')
 
 const summarizeResponses = (responses: ItemResponse[]) =>
   responses.reduce(
@@ -100,6 +103,7 @@ const performOne =
     const _id = [item.$type, item.id].filter(Boolean).join(':')
     try {
       if (type === 'SET') {
+        debugMongo('Set with filter %o', filter)
         const ret = await collection.updateOne(
           filter,
           {
@@ -109,6 +113,8 @@ const performOne =
         )
         return createOkResponse(ret.modifiedCount, ret.upsertedCount, 0, _id)
       } else {
+        // 'DELETE'
+        debugMongo('Delete with filter %o', filter)
         const ret = await collection.deleteOne(filter)
         return createOkResponse(0, 0, ret.deletedCount ?? 0, _id)
       }
