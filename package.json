@@ -39,8 +39,7 @@
     "mongodb": "^4.1.4"
   },
   "devDependencies": {
-    "@integreat/ts-dev-setup": "^2.1.0",
-    "@types/sinon": "^10.0.6",
+    "@integreat/ts-dev-setup": "^2.2.0",
     "integreat": "0.8.0-alpha.49",
     "sinon": "^12.0.1"
   }
