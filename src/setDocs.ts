@@ -92,7 +92,7 @@ const performOne =
     }
     const {
       type,
-      payload: { params },
+      payload: { data, ...params },
     } = action
     const options = action.meta?.options as MongoOptions | undefined
     const filter = prepareFilter(options?.query, {

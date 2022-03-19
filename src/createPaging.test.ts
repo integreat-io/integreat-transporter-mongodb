@@ -28,7 +28,7 @@ test('should return paging for first page', (t) => {
   const request = {
     type: 'entry',
     pageSize: 2,
-    params: { archived: true },
+    archived: true,
     target: 'crm',
   }
   const expected = {
@@ -233,7 +233,7 @@ test('should include id and other params when present in request', (t) => {
     type: 'entry',
     id: 'ent1',
     pageSize: 2,
-    params: { archived: true },
+    archived: true,
     target: 'crm',
   }
   const expected = {
@@ -259,7 +259,7 @@ test('should not touch existing query', (t) => {
   const request = {
     type: 'entry',
     pageSize: 2,
-    params: { query: [{ path: 'index', op: 'gt', value: 1 }] },
+    query: [{ path: 'index', op: 'gt', value: 1 }],
     target: 'crm',
   }
   const expected = {
@@ -284,7 +284,6 @@ test('should not touch when not typed data', (t) => {
   const request = {
     type: 'entry',
     pageSize: 2,
-    params: {},
     target: 'crm',
   }
   const expected = {

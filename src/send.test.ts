@@ -50,9 +50,7 @@ test('should get items', async (t) => {
     type: 'GET',
     payload: {
       type: 'entry',
-      params: {
-        typePlural: 'entries',
-      },
+      typePlural: 'entries',
     },
     meta: {
       options: {
@@ -492,9 +490,7 @@ test('should return badrequest when GETting with no collection', async (t) => {
     type: 'GET',
     payload: {
       type: 'entry',
-      params: {
-        typePlural: 'entries',
-      },
+      typePlural: 'entries',
     },
     meta: {
       options: {

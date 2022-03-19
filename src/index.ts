@@ -51,13 +51,12 @@ export interface Connection extends ConnectionBase {
   error?: string
 }
 
-export interface ExchangeRequest {
+export interface ExchangeRequest extends Record<string, unknown> {
   type?: string | string[]
   id?: string | string[]
   pageSize?: number
   pageAfter?: string
   pageId?: string
-  params?: Record<string, unknown>
 }
 
 /**

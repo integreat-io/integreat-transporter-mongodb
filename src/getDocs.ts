@@ -3,7 +3,7 @@ import prepareFilter from './prepareFilter'
 import prepareAggregation from './prepareAggregation'
 import createPaging from './createPaging'
 import { AbstractCursor, MongoClient } from 'mongodb'
-import { Action, Response, Data } from 'integreat'
+import { Action, Response, Data, Payload } from 'integreat'
 import {
   MongoOptions,
   ExchangeRequest,
@@ -95,6 +95,8 @@ const appendToAggregation = (
     ...aggregation,
   ].filter(Boolean) as AggregationObject[]
 
+const paramsFromPayload = ({ data, ...payload }: Payload) => payload
+
 export default async function getDocs(
   action: Action,
   client: MongoClient
@@ -111,7 +113,7 @@ export default async function getDocs(
 
   const request = action.payload
   const options = action.meta?.options as MongoOptions
-  const params = { ...request.params, type: request.type, id: request.id }
+  const params = paramsFromPayload(action.payload)
 
   debugMongo('Incoming options %o', options)
   debugMongo('Incoming params %o', params)

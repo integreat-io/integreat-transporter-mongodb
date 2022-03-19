@@ -53,7 +53,7 @@ test('should get items', async (t) => {
     type: 'GET',
     payload: {
       type: 'entry',
-      params: { typePlural: 'entries' },
+      typePlural: 'entries',
     },
     meta: {
       options: {
@@ -83,7 +83,7 @@ test('should get one item', async (t) => {
     payload: {
       id: 'ent1',
       type: 'entry',
-      params: { typePlural: 'entries' },
+      typePlural: 'entries',
     },
     meta: {
       options: {
@@ -109,7 +109,7 @@ test('should get with query', async (t) => {
     type: 'GET',
     payload: {
       type: 'entry',
-      params: { typePlural: 'entries' },
+      typePlural: 'entries',
     },
     meta: {
       options: {
@@ -150,7 +150,7 @@ test('should get with aggregation', async (t) => {
     type: 'GET',
     payload: {
       type: 'entry',
-      params: { typePlural: 'entries' },
+      typePlural: 'entries',
     },
     meta: {
       options: {
@@ -218,7 +218,7 @@ test('should get put query and sort first in aggregation pipeline', async (t) =>
     type: 'GET',
     payload: {
       type: 'entry',
-      params: { typePlural: 'entries' },
+      typePlural: 'entries',
     },
     meta: {
       options: {
@@ -273,7 +273,7 @@ test('should return badrequest when combining aggregation and paging', async (t)
     payload: {
       type: 'entry',
       pageSize: 100,
-      params: { typePlural: 'entries' },
+      typePlural: 'entries',
     },
     meta: {
       options: {
@@ -320,7 +320,7 @@ test('should convert mongodb _id to string', async (t) => {
     payload: {
       id: 'ent1',
       type: 'entry',
-      params: { typePlural: 'entries' },
+      typePlural: 'entries',
     },
     meta: {
       options: {
@@ -352,7 +352,7 @@ test('should get one page of items', async (t) => {
     payload: {
       type: 'entry',
       pageSize: 2,
-      params: { typePlural: 'entries' },
+      typePlural: 'entries',
     },
     meta: {
       options: {
@@ -386,7 +386,7 @@ test('should return params for next page', async (t) => {
     payload: {
       type: 'entry',
       pageSize: 2,
-      params: { typePlural: 'entries' },
+      typePlural: 'entries',
     },
     meta: {
       options: {
@@ -422,10 +422,8 @@ test('should get second page of items', async (t) => {
       type: 'entry',
       pageSize: 2,
       pageAfter: 'entry:ent2',
-      params: {
-        typePlural: 'entries',
-        pageId: 'ZW50cnk6ZW50Mnw+', // entry:ent2|>
-      },
+      typePlural: 'entries',
+      pageId: 'ZW50cnk6ZW50Mnw+', // entry:ent2|>
     },
     meta: {
       options: {
@@ -464,10 +462,8 @@ test('should get empty result when we have passed the last page', async (t) => {
       type: 'entry',
       pageSize: 2,
       pageAfter: 'entry:ent4',
-      params: {
-        typePlural: 'entries',
-        query: [{ path: '_id', op: 'gte', value: 'entry:ent4' }],
-      },
+      typePlural: 'entries',
+      query: [{ path: '_id', op: 'gte', value: 'entry:ent4' }],
     },
     meta: {
       options: {
@@ -499,10 +495,8 @@ test('should get empty result when the pageAfter doc is not found', async (t) =>
       type: 'entry',
       pageSize: 2,
       pageAfter: 'entry:ent4',
-      params: {
-        typePlural: 'entries',
-        query: [{ path: '_id', op: 'gte', value: 'entry:ent4' }],
-      },
+      typePlural: 'entries',
+      query: [{ path: '_id', op: 'gte', value: 'entry:ent4' }],
     },
     meta: {
       options: {
@@ -524,7 +518,7 @@ test('should get empty result when the pageAfter doc is not found', async (t) =>
   t.deepEqual(response?.paging, expectedPaging)
 })
 
-test('should get second page of items when there is documents before the pageAfter', async (t) => {
+test('should get second page of items when there are documents before the pageAfter', async (t) => {
   const find = createCollectionMethod([
     { id: 'ent1', $type: 'entry', index: 1 },
     { id: 'ent2', $type: 'entry', index: 1 },
@@ -539,9 +533,7 @@ test('should get second page of items when there is documents before the pageAft
       type: 'entry',
       pageSize: 2,
       pageId: 'ZW50cnk6ZW50MnxpbmRleD4x', // entry:ent2|index>1
-      params: {
-        typePlural: 'entries',
-      },
+      typePlural: 'entries',
     },
     meta: {
       options: {
@@ -558,7 +550,7 @@ test('should get second page of items when there is documents before the pageAft
       pageSize: 2,
     },
   }
-  const expectedQuery = { '\\$type': 'entry' }
+  const expectedQuery = { '\\$type': 'entry', index: { $gte: 1 } }
 
   const response = await getDocs(action, client)
 
@@ -580,9 +572,7 @@ test('should support allowDiskUse for finds', async (t) => {
     payload: {
       type: 'entry',
       pageId: 'ZW50cnk6ZW50MnxpbmRleD4x', // entry:ent2|index>1
-      params: {
-        typePlural: 'entries',
-      },
+      typePlural: 'entries',
     },
     meta: {
       options: {
@@ -609,7 +599,7 @@ test('should support allowDiskUse for aggregation', async (t) => {
     type: 'GET',
     payload: {
       type: 'entry',
-      params: { typePlural: 'entries' },
+      typePlural: 'entries',
     },
     meta: {
       options: {
@@ -636,7 +626,7 @@ test('should return empty array when collection query comes back empty', async (
     type: 'GET',
     payload: {
       type: 'entry',
-      params: { typePlural: 'entries' },
+      typePlural: 'entries',
     },
     meta: {
       options: {
@@ -660,7 +650,7 @@ test('should return notfound when member query comes back empty', async (t) => {
     payload: {
       id: 'ent1',
       type: 'entry',
-      params: { typePlural: 'entries' },
+      typePlural: 'entries',
     },
     meta: {
       options: {
@@ -684,7 +674,7 @@ test('should return error when missing option in exchange', async (t) => {
     payload: {
       id: 'ent1',
       type: 'entry',
-      params: { typePlural: 'entries' },
+      typePlural: 'entries',
     },
   }
 

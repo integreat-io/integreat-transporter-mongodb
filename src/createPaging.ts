@@ -39,14 +39,17 @@ const createPageId = (
       : ['>']),
   ].join('|')
 
+const removeNonPageParams = ({
+  data,
+  target,
+  typePlural,
+  pageAfter,
+  ...params
+}: Record<string, unknown>) => params
+
 export default function createPaging(
   data: unknown[],
-  {
-    type,
-    id,
-    pageSize,
-    params: { typePlural, ...params } = {},
-  }: ExchangeRequest,
+  { type, id, pageSize, ...params }: ExchangeRequest,
   sort?: Record<string, number>
 ): Paging {
   if (data.length === 0 || pageSize === undefined || data.length < pageSize) {
@@ -61,7 +64,7 @@ export default function createPaging(
     next: {
       ...(type && { type }),
       ...(id && { id }),
-      ...params,
+      ...removeNonPageParams(params),
       pageSize,
       pageId,
     },

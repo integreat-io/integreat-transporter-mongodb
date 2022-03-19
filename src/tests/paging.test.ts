@@ -212,7 +212,7 @@ test('should return empty array when past last page', async (t) => {
     type: 'GET',
     payload: {
       type: 'entry',
-      params: { query: [{ path: '_id', op: 'gte', value: 'entry:ent4' }] },
+      query: [{ path: '_id', op: 'gte', value: 'entry:ent4' }],
       pageId: 'ZW50cnk6ZW50NHw+',
       pageSize: 2,
     },
@@ -247,7 +247,7 @@ test('should not throw when pageId does not exist', async (t) => {
     type: 'GET',
     payload: {
       type: 'entry',
-      params: { query: [{ path: '_id', op: 'gte', value: 'entry:ent3' }] },
+      query: [{ path: '_id', op: 'gte', value: 'entry:ent3' }],
       pageSize: 2,
     },
     meta: {
@@ -429,7 +429,6 @@ test('should return page params when sorting by two dimensions', async (t) => {
     type: 'GET',
     payload: {
       type: 'entry',
-      params: {},
       pageId: undefined,
       pageSize: 2,
     },
@@ -444,8 +443,7 @@ test('should return page params when sorting by two dimensions', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId:
-        'ZW50cnk6ZW50MnxhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkxMDAwfGF0dHJpYnV0ZXMuaW5kZXg+MQ',
+      pageId: 'ZW50cnk6ZW50MnxhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkxMDAw',
       pageSize: 2,
     },
   }
@@ -557,9 +555,7 @@ test('should keep existing queries', async (t) => {
     type: 'GET',
     payload: {
       type: 'entry',
-      params: {
-        query: [{ path: 'attributes.index', op: 'lt', value: 3 }],
-      },
+      query: [{ path: 'attributes.index', op: 'lt', value: 3 }],
       pageId: undefined,
       pageSize: 2,
     },
@@ -575,8 +571,7 @@ test('should keep existing queries', async (t) => {
     next: {
       type: 'entry',
       query: [{ path: 'attributes.index', op: 'lt', value: 3 }],
-      pageId:
-        'ZW50cnk6ZW50M3xhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkwMDgzfGF0dHJpYnV0ZXMuaW5kZXg+Mg',
+      pageId: 'ZW50cnk6ZW50M3xhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkwMDgz',
       pageSize: 2,
     },
   }

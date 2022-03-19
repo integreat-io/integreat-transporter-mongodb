@@ -27,7 +27,8 @@ const setTypeOrId = (
   }
 }
 
-const dateStringRegex = /^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d\d\d)?([+-]\d\d:\d\d|Z)$/
+const dateStringRegex =
+  /^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d\d\d)?([+-]\d\d:\d\d|Z)$/
 const isDateString = (value: unknown): value is string =>
   typeof value === 'string' && dateStringRegex.test(value)
 const castValueIfDate = (value: unknown): unknown =>
@@ -92,18 +93,17 @@ function setMongoSelectorFromQueryObj(
   return filter
 }
 
-const setMongoSelectorFromQuery = (allParams: Record<string, unknown>) => (
-  filter: Record<string, unknown>,
-  query: QueryObject | QueryObject[]
-) =>
-  Array.isArray(query)
-    ? {
-        ...filter,
-        $or: query.map((queryObj) =>
-          mongoSelectorFromQuery(allParams, queryObj)
-        ),
-      }
-    : setMongoSelectorFromQueryObj(allParams, query, filter)
+const setMongoSelectorFromQuery =
+  (allParams: Record<string, unknown>) =>
+  (filter: Record<string, unknown>, query: QueryObject | QueryObject[]) =>
+    Array.isArray(query)
+      ? {
+          ...filter,
+          $or: query.map((queryObj) =>
+            mongoSelectorFromQuery(allParams, queryObj)
+          ),
+        }
+      : setMongoSelectorFromQueryObj(allParams, query, filter)
 
 const mongoSelectorFromQuery = (
   allParams: Record<string, unknown>,
@@ -112,8 +112,6 @@ const mongoSelectorFromQuery = (
   ([] as QueryObject[])
     .concat(query)
     .reduce(setMongoSelectorFromQuery(allParams), {})
-
-const partRegex = /^(.+)([\<\>])(.+)$/
 
 function decodePartValue(value: string) {
   if (value.startsWith('"')) {
@@ -126,6 +124,8 @@ function decodePartValue(value: string) {
     }
   }
 }
+
+const partRegex = /^(.+)([\<\>])(.+)$/
 
 function createQueryObjectFromPageIdPart(part: string) {
   const match = partRegex.exec(part)
