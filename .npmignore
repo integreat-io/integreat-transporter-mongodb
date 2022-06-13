@@ -11,3 +11,4 @@ mongodb
 src
 coverage
 *.config.cjs
+tsconfig.json
