@@ -8,12 +8,15 @@ import connect from './connect'
 
 const createMockMongo = (
   constructSpy: sinon.SinonStub,
-  connectSpy: sinon.SinonStub
+  connectSpy: sinon.SinonStub,
+  onSpy = () => undefined
 ) =>
   function MongoMock(uri: string, options: Record<string, unknown>) {
     constructSpy(uri, options)
-    return { connect: connectSpy }
+    return { connect: connectSpy, on: onSpy }
   } as unknown as typeof MongoClient
+
+const emit = () => undefined
 
 // Tests
 
@@ -24,7 +27,11 @@ test('should return client as connection', async (t) => {
   const constructSpy = sinon.stub()
   const connectSpy = sinon.stub()
 
-  const ret = await connect(createMockMongo(constructSpy, connectSpy), options)
+  const ret = await connect(
+    createMockMongo(constructSpy, connectSpy),
+    options,
+    emit
+  )
 
   t.is(ret.status, 'ok', ret.error)
   t.is(ret.client?.connect, connectSpy)
@@ -41,7 +48,7 @@ test('should use baseUri when uri is not supplied', async (t) => {
   const constructSpy = sinon.stub()
   const connectSpy = sinon.stub()
 
-  await connect(createMockMongo(constructSpy, connectSpy), options)
+  await connect(createMockMongo(constructSpy, connectSpy), options, emit)
 
   t.is(constructSpy.callCount, 1)
   t.true(constructSpy.calledWith('mongodb://db:27017/database'))
@@ -57,7 +64,7 @@ test('should use supplied mongo options', async (t) => {
   const constructSpy = sinon.stub()
   const connectSpy = sinon.stub()
 
-  await connect(createMockMongo(constructSpy, connectSpy), options)
+  await connect(createMockMongo(constructSpy, connectSpy), options, emit)
 
   t.is(constructSpy.callCount, 1)
   t.deepEqual(constructSpy.args[0][1], {
@@ -76,7 +83,7 @@ test('should use supplied auth', async (t) => {
   const constructSpy = sinon.stub()
   const connectSpy = sinon.stub()
 
-  await connect(createMockMongo(constructSpy, connectSpy), options, auth)
+  await connect(createMockMongo(constructSpy, connectSpy), options, emit, auth)
 
   t.is(constructSpy.callCount, 1)
   t.deepEqual(constructSpy.args[0][1], {
@@ -97,6 +104,7 @@ test('should return the given connection', async (t) => {
   const ret = await connect(
     createMockMongo(constructSpy, connectSpy),
     options,
+    emit,
     null,
     oldConnection
   )
@@ -105,12 +113,41 @@ test('should return the given connection', async (t) => {
   t.is(connectSpy.callCount, 0)
 })
 
+test('should listen to error events', async (t) => {
+  const options = {
+    uri: 'mongodb://db:27017/database',
+  }
+  const constructSpy = sinon.stub()
+  const connectSpy = sinon.stub()
+  const onSpy = sinon.stub()
+  const emitSpy = sinon.stub()
+
+  const ret = await connect(
+    createMockMongo(constructSpy, connectSpy, onSpy),
+    options,
+    emitSpy
+  )
+
+  t.is(ret.status, 'ok', ret.error)
+  t.is(onSpy.callCount, 1)
+  t.is(onSpy.args[0][0], 'error')
+  const emitFn = onSpy.args[0][1]
+  emitFn(new Error('Oh no!'))
+  t.is(emitSpy.callCount, 1)
+  t.is(emitSpy.args[0][0], 'error')
+  t.deepEqual(emitSpy.args[0][1], new Error('MongoDB error: Oh no!'))
+})
+
 test('should return with error on missing uri', async (t) => {
   const options = {}
   const constructSpy = sinon.stub()
   const connectSpy = sinon.stub()
 
-  const ret = await connect(createMockMongo(constructSpy, connectSpy), options)
+  const ret = await connect(
+    createMockMongo(constructSpy, connectSpy),
+    options,
+    emit
+  )
 
   t.is(ret.status, 'badrequest')
   t.is(ret.error, 'A uri is required when connecting to MongoDb')
@@ -125,7 +162,11 @@ test('should return error when connect throws', async (t) => {
   const constructSpy = sinon.stub()
   const connectSpy = sinon.stub().rejects(new Error('Mongo error'))
 
-  const ret = await connect(createMockMongo(constructSpy, connectSpy), options)
+  const ret = await connect(
+    createMockMongo(constructSpy, connectSpy),
+    options,
+    emit
+  )
 
   t.is(ret.status, 'error')
   t.is(

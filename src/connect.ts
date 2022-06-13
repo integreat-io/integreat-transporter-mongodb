@@ -14,6 +14,7 @@ const prepareOptions = (
 export default async function connect(
   Client: typeof MongoClient,
   options: MongoOptions,
+  emit: (eventType: string, ...args: unknown[]) => void,
   auth?: Record<string, unknown> | null,
   connection: Connection | null = null
 ): Promise<Connection> {
@@ -31,8 +32,18 @@ export default async function connect(
   }
 
   try {
+    // Create client
     const client = new Client(mongoUri, prepareOptions(mongo, auth))
+
+    // Listen to errors
+    client.on('error', (error) =>
+      emit('error', new Error(`MongoDB error: ${error.message}`))
+    )
+
+    // Connect
     await client.connect()
+
+    // Return connection
     return { status: 'ok', client }
   } catch (error) {
     return {
