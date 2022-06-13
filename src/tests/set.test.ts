@@ -1,4 +1,4 @@
-import ava, { TestInterface } from 'ava'
+import ava, { TestFn } from 'ava'
 import {
   uri,
   openMongoWithCollection,
@@ -11,12 +11,13 @@ import {
 
 import transporter from '..'
 
-const test = ava as TestInterface<MongoElements>
+const test = ava as TestFn<MongoElements>
 
 // Helpers
 
 const options = { uri }
 const authorization = null
+const emit = () => undefined
 
 test.beforeEach(async (t) => {
   t.context = await openMongoWithCollection('test')
@@ -48,7 +49,12 @@ test('should set one document', async (t) => {
     },
   }
 
-  const connection = await transporter.connect(options, authorization, null)
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit
+  )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
@@ -78,7 +84,12 @@ test('should set array of documents', async (t) => {
     },
   }
 
-  const connection = await transporter.connect(options, authorization, null)
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit
+  )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
@@ -121,7 +132,12 @@ test('should update existing document', async (t) => {
     },
   }
 
-  const connection = await transporter.connect(options, authorization, null)
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit
+  )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 

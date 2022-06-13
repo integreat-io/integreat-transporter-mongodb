@@ -1,4 +1,4 @@
-import ava, { TestInterface } from 'ava'
+import ava, { TestFn } from 'ava'
 import {
   uri,
   openMongoWithCollection,
@@ -11,12 +11,13 @@ import { TypedData } from 'integreat'
 
 import transporter from '..'
 
-const test = ava as TestInterface<MongoElements>
+const test = ava as TestFn<MongoElements>
 
 // Helpers
 
 const options = { uri }
 const authorization = null
+const emit = () => undefined
 
 test.beforeEach(async (t) => {
   t.context = await openMongoWithCollection('test')
@@ -58,7 +59,12 @@ test('should get one page of documents with params for next page', async (t) => 
     },
   }
 
-  const connection = await transporter.connect(options, authorization, null)
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit
+  )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
@@ -100,7 +106,12 @@ test('should get second page of documents', async (t) => {
     },
   }
 
-  const connection = await transporter.connect(options, authorization, null)
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit
+  )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
@@ -152,7 +163,12 @@ test('should get second page of documents using date index', async (t) => {
     },
   }
 
-  const connection = await transporter.connect(options, authorization, null)
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit
+  )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
@@ -189,7 +205,12 @@ test('should return less than a full page at the end', async (t) => {
     next: undefined,
   }
 
-  const connection = await transporter.connect(options, authorization, null)
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit
+  )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
@@ -227,7 +248,12 @@ test('should return empty array when past last page', async (t) => {
     next: undefined,
   }
 
-  const connection = await transporter.connect(options, authorization, null)
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit
+  )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
@@ -261,7 +287,12 @@ test('should not throw when pageId does not exist', async (t) => {
     next: undefined,
   }
 
-  const connection = await transporter.connect(options, authorization, null)
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit
+  )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
@@ -322,7 +353,12 @@ test('should get second page of documents when sorting', async (t) => {
     },
   }
 
-  const connection = await transporter.connect(options, authorization, null)
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit
+  )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
@@ -385,7 +421,12 @@ test('should get second page of documents when sorting descending', async (t) =>
     },
   }
 
-  const connection = await transporter.connect(options, authorization, null)
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit
+  )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
@@ -448,7 +489,12 @@ test('should return page params when sorting by two dimensions', async (t) => {
     },
   }
 
-  const connection = await transporter.connect(options, authorization, null)
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit
+  )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
@@ -511,7 +557,12 @@ test('should get second page of documents when sorting key is not unique', async
     },
   }
 
-  const connection = await transporter.connect(options, authorization, null)
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit
+  )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
@@ -576,7 +627,12 @@ test('should keep existing queries', async (t) => {
     },
   }
 
-  const connection = await transporter.connect(options, authorization, null)
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit
+  )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 

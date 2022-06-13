@@ -1,4 +1,4 @@
-import ava, { TestInterface } from 'ava'
+import ava, { TestFn } from 'ava'
 import {
   uri,
   openMongoWithCollection,
@@ -11,8 +11,9 @@ import {
 
 import transporter from '..'
 import { TypedData } from 'integreat'
+const emit = () => undefined
 
-const test = ava as TestInterface<MongoElements>
+const test = ava as TestFn<MongoElements>
 
 // Helpers
 
@@ -53,7 +54,12 @@ test('should delete one document', async (t) => {
     },
   }
 
-  const connection = await transporter.connect(options, authorization, null)
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit
+  )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
@@ -88,7 +94,12 @@ test('should delete array of documents', async (t) => {
     },
   }
 
-  const connection = await transporter.connect(options, authorization, null)
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit
+  )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 

@@ -1,4 +1,4 @@
-import ava, { TestInterface } from 'ava'
+import ava, { TestFn } from 'ava'
 import {
   uri,
   openMongoWithCollection,
@@ -10,12 +10,13 @@ import {
 
 import transporter from '..'
 
-const test = ava as TestInterface<MongoElements>
+const test = ava as TestFn<MongoElements>
 
 // Helpers
 
 const options = { uri }
 const authentication = null
+const emit = () => undefined
 
 test.beforeEach(async (t) => {
   t.context = await openMongoWithCollection('test')
@@ -85,7 +86,12 @@ test('should get a document by type and id', async (t) => {
     'values\\_count': 2,
   }
 
-  const connection = await transporter.connect(options, authentication, null)
+  const connection = await transporter.connect(
+    options,
+    authentication,
+    null,
+    emit
+  )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
