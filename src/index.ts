@@ -63,7 +63,7 @@ export interface ExchangeRequest extends Record<string, unknown> {
  * MongoDB Transporter for Integreat
  */
 const mongodbTransporter: Transporter = {
-  authentication: '', // TODO: Change to null after updating type in Integreat
+  authentication: 'asObject',
 
   /**
    * Prepare endpoint options.
