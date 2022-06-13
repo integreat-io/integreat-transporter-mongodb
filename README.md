@@ -49,9 +49,9 @@ Example service configuration:
 {
   id: 'store',
   transporter: 'mongodb',
-  auth: true,
+  auth: 'mongoAuth', // See below for documentation of authentication
   options: {
-    uri: 'mongodb://username:password@mymongo.com',
+    uri: 'mongodb://mymongo.com',
   }
   endpoints: [
     { options: { db: 'store', collection: 'documents' } }
@@ -186,15 +186,39 @@ Example of an aggregation pipeline:
 by calling `updateOne` and `deleteOne` for every item in the array. This is not
 the best method of doing it, so stay tuned for improvements.
 
-**Note 2:** Including credential in the connection uri, is a fairly common
-practice with MongoDB. To tell Integreat that the source is authenticated and
-make all built in security measures kick in, simply set `auth: true` on the
-source def.
-
-**Note 3:** As MongoDB does not allow keys with `.` in it or starting with `$`,
+**Note 2:** As MongoDB does not allow keys with `.` in it or starting with `$`,
 so these characters are mapped. `.` is always mapped to `\_`, and `$` is mapped
 to `\$` when used at the beginning of a key. Consequently, `\` is mapped to
 `\\` as well.
+
+#### Authentication
+
+We recommend using Integreat's built in authentication mechanism to authenticate
+with MongoDB. To do this, set the id of an auth object on the `auth` prop of the
+service definition -- in the example above this is set to `mongoAuth`. Then
+define an auth object like this:
+
+```javascript
+{
+  id: 'mongoAuth',
+  authenticator: 'options',
+  options: {
+    key: '<mongo username>',
+    secret: '<mongo password>',
+  }
+}
+```
+
+The `options` authenticator will simply pass on the options object to Integreat,
+which will again pass it on to the MongoDB transport -- which will know how to
+use this to authenticate with MongoDB.
+
+**Note:** Including credential in the connection uri, is a fairly common
+practice with MongoDB. When using this approach, tell Integreat that the service
+is authenticated by setting `auth: true` on the service definition. However, we
+not recommend this approach, as the username and password is then included in
+the definition file and this makes the chance of it being e.g. commited to a git
+repo, much higher.
 
 ### Running the tests
 

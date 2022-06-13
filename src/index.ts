@@ -80,8 +80,8 @@ const mongodbTransporter: Transporter = {
    * The MongoDb transporter will connect to the database and return the client
    * object.
    */
-  async connect(options, _auth, connection: Connection | null) {
-    return connect(mongodb.MongoClient, options, connection)
+  async connect(options, auth, connection: Connection | null, _emit) {
+    return connect(mongodb.MongoClient, options, auth, connection)
   },
 
   /**

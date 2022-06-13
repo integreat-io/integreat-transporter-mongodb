@@ -1,9 +1,20 @@
 import { MongoClient } from 'mongodb'
 import { MongoOptions, Connection } from '.'
 
+const prepareOptions = (
+  options?: Record<string, unknown>,
+  auth?: Record<string, unknown> | null
+) => ({
+  ...options,
+  ...(auth && typeof auth.key === 'string' && typeof auth.secret === 'string'
+    ? { auth: { username: auth.key, password: auth.secret } }
+    : {}),
+})
+
 export default async function connect(
   Client: typeof MongoClient,
   options: MongoOptions,
+  auth?: Record<string, unknown> | null,
   connection: Connection | null = null
 ): Promise<Connection> {
   if (connection) {
@@ -20,7 +31,7 @@ export default async function connect(
   }
 
   try {
-    const client = new Client(mongoUri, mongo)
+    const client = new Client(mongoUri, prepareOptions(mongo, auth))
     await client.connect()
     return { status: 'ok', client }
   } catch (error) {

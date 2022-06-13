@@ -65,6 +65,26 @@ test('should use supplied mongo options', async (t) => {
   })
 })
 
+test('should use supplied auth', async (t) => {
+  const options = {
+    baseUri: 'mongodb://db:27017/database',
+    mongo: {
+      readPreference: 'primaryPreferred',
+    },
+  }
+  const auth = { key: 'johnf', secret: 's3cr3t' }
+  const constructSpy = sinon.stub()
+  const connectSpy = sinon.stub()
+
+  await connect(createMockMongo(constructSpy, connectSpy), options, auth)
+
+  t.is(constructSpy.callCount, 1)
+  t.deepEqual(constructSpy.args[0][1], {
+    readPreference: 'primaryPreferred',
+    auth: { username: 'johnf', password: 's3cr3t' },
+  })
+})
+
 test('should return the given connection', async (t) => {
   const options = {
     uri: 'mongodb://db:27017/database',
@@ -77,6 +97,7 @@ test('should return the given connection', async (t) => {
   const ret = await connect(
     createMockMongo(constructSpy, connectSpy),
     options,
+    null,
     oldConnection
   )
 
