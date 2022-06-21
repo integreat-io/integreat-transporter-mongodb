@@ -48,7 +48,16 @@ const mergeQueries = (...queries: (QueryArray | QueryObject | undefined)[]) =>
   queries.flat().filter(Boolean) as QueryObject[]
 
 const opsWithoutValue = ['isset', 'notset']
-const validOps = ['eq', 'lt', 'gt', 'lte', 'gte', 'in', ...opsWithoutValue]
+const validOps = [
+  'eq',
+  'lt',
+  'gt',
+  'lte',
+  'gte',
+  'in',
+  'regex',
+  ...opsWithoutValue,
+]
 const validValueTypes = ['string', 'number', 'boolean']
 
 const isOpValid = (op: string) => validOps.includes(op)

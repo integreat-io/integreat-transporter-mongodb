@@ -35,6 +35,7 @@ test('should use options.query as filter', (t) => {
     { path: 'completedAt', op: 'notset' },
     { path: 'updatedAt', op: 'isset' },
     { path: 'escaped\\.dot', value: true },
+    { path: 'id', op: 'regex', value: '.+:lastUpdated$' },
   ]
   const expected = {
     '\\$type': 'other',
@@ -43,6 +44,7 @@ test('should use options.query as filter', (t) => {
     completedAt: { $eq: null },
     updatedAt: { $ne: null },
     'escaped\\_dot': true,
+    id: { $regex: '.+:lastUpdated$' },
   }
 
   const ret = prepareFilter(query, { type, id })
