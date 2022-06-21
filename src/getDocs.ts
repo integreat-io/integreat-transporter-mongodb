@@ -15,7 +15,7 @@ import { getCollection } from './send'
 import { atob } from './utils/base64'
 import { isObject } from './utils/is'
 
-const debugMongo = debug('great:transporter:mongo')
+const debugMongo = debug('integreat:transporter:mongodb')
 
 interface ItemWithIdObject extends Record<string, unknown> {
   _id: Record<string, unknown>

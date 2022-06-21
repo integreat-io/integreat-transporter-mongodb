@@ -16,7 +16,7 @@ interface ItemResponse {
   error?: string
 }
 
-const debugMongo = debug('great:transporter:mongo')
+const debugMongo = debug('integreat:transporter:mongodb')
 
 const summarizeResponses = (responses: ItemResponse[]) =>
   responses.reduce(
