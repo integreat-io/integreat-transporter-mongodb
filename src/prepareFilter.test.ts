@@ -37,6 +37,7 @@ test('should use options.query as filter', (t) => {
     { path: 'escaped\\.dot', value: true },
     { path: 'id', op: 'regex', value: '.+:lastUpdated$' },
     { path: 'topic', op: 'in', value: ['news', 'sports'] },
+    { path: 'jobs', op: 'isArray' },
   ]
   const expected = {
     '\\$type': 'other',
@@ -47,6 +48,7 @@ test('should use options.query as filter', (t) => {
     'escaped\\_dot': true,
     id: { $regex: '.+:lastUpdated$' },
     topic: { $in: ['news', 'sports'] },
+    $expr: { $isArray: '$jobs' },
   }
 
   const ret = prepareFilter(query, { type, id })

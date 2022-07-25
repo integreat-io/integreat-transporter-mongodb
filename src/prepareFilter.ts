@@ -56,6 +56,7 @@ const validOps = [
   'gte',
   'in',
   'regex',
+  'isArray',
   ...opsWithoutValue,
 ]
 const validValueTypes = ['string', 'number', 'boolean']
@@ -89,11 +90,17 @@ function setMongoSelectorFromQueryObj(
   if (isOpValid(op)) {
     const targetValue = expr
       ? [`$${serializePath(path)}`, `$$${expr}`]
+      : op === 'isArray'
+      ? `$${serializePath(path)}`
       : (param ? allParams[param] : value) || null // eslint-disable-line security/detect-object-injection
 
     if (isValidValue(targetValue, op)) {
       const targetPath = [
-        expr ? '$expr' : path === 'type' ? '\\$type' : serializePath(path),
+        expr || op === 'isArray'
+          ? '$expr'
+          : path === 'type'
+          ? '\\$type'
+          : serializePath(path),
         mapOp(op),
       ]
         .filter(Boolean)
