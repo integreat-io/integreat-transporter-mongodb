@@ -3,13 +3,8 @@ import prepareFilter from './prepareFilter'
 import prepareAggregation from './prepareAggregation'
 import createPaging from './createPaging'
 import { AbstractCursor, MongoClient } from 'mongodb'
-import { Action, Response, Data, Payload } from 'integreat'
-import {
-  MongoOptions,
-  ExchangeRequest,
-  AggregationObject,
-  QueryObject,
-} from './types'
+import { Action, Response, Data } from 'integreat'
+import { MongoOptions, Payload, AggregationObject, QueryObject } from './types'
 import { normalizeItem } from './escapeKeys'
 import { getCollection } from './send'
 import { atob } from './utils/base64'
@@ -70,7 +65,7 @@ const pageAfterFromPageId = (pageId?: string) =>
 
 const getPage = async (
   cursor: AbstractCursor,
-  { pageSize = Infinity, pageAfter, pageId }: ExchangeRequest
+  { pageSize = Infinity, pageAfter, pageId }: Payload
 ) => {
   const after = pageAfter || pageAfterFromPageId(atob(pageId))
   // When pageAfter is set – loop until we find the doc with that _id

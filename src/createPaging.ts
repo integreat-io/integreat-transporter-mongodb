@@ -1,6 +1,6 @@
 import dotprop = require('dot-prop')
 import { TypedData, Data } from 'integreat'
-import { ExchangeRequest } from './types'
+import { Payload } from './types'
 import { btoa, removePadding } from './utils/base64'
 import { isObject } from './utils/is'
 
@@ -49,7 +49,7 @@ const removeNonPageParams = ({
 
 export default function createPaging(
   data: unknown[],
-  { type, id, pageSize, ...params }: ExchangeRequest,
+  { type, id, pageSize, ...params }: Payload,
   sort?: Record<string, number>
 ): Paging {
   if (data.length === 0 || pageSize === undefined || data.length < pageSize) {

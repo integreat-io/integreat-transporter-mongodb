@@ -1,5 +1,5 @@
 import { MongoClient } from 'mongodb'
-import { Connection as ConnectionBase } from 'integreat'
+import { Connection as ConnectionBase, Payload as BasePayload } from 'integreat'
 
 export interface QueryObject {
   path: string
@@ -101,7 +101,7 @@ export interface Connection extends ConnectionBase {
   error?: string
 }
 
-export interface ExchangeRequest extends Record<string, unknown> {
+export interface Payload extends BasePayload {
   type?: string | string[]
   id?: string | string[]
   pageSize?: number
