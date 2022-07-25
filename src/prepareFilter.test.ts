@@ -36,6 +36,7 @@ test('should use options.query as filter', (t) => {
     { path: 'updatedAt', op: 'isset' },
     { path: 'escaped\\.dot', value: true },
     { path: 'id', op: 'regex', value: '.+:lastUpdated$' },
+    { path: 'topic', op: 'in', value: ['news', 'sports'] },
   ]
   const expected = {
     '\\$type': 'other',
@@ -45,6 +46,7 @@ test('should use options.query as filter', (t) => {
     updatedAt: { $ne: null },
     'escaped\\_dot': true,
     id: { $regex: '.+:lastUpdated$' },
+    topic: { $in: ['news', 'sports'] },
   }
 
   const ret = prepareFilter(query, { type, id })
@@ -194,6 +196,19 @@ test('should accept queries with and logic wihin or logic', (t) => {
       { 'meta.author': 'johnf' },
       { 'meta.author': 'lucyk', 'meta.views': { $gt: 500 } },
     ],
+  }
+
+  const ret = prepareFilter(query, { type, id })
+
+  t.deepEqual(ret, expected)
+})
+
+test('should support expr queries', (t) => {
+  const type = 'entry'
+  const id = 'ent1'
+  const query = [{ path: 'id', op: 'in', expr: 'ids' }]
+  const expected = {
+    $expr: { $in: ['$id', '$$ids'] },
   }
 
   const ret = prepareFilter(query, { type, id })

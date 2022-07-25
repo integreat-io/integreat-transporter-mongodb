@@ -1,5 +1,5 @@
 import dotprop = require('dot-prop')
-import { QueryObject } from '.'
+import { QueryObject } from './types'
 import { serializePath } from './escapeKeys'
 import { atob } from './utils/base64'
 
@@ -66,7 +66,8 @@ const isValidValue = (value: unknown, op: string): boolean =>
     ? value.every((value) => isValidValue(value, op))
     : validValueTypes.includes(typeof value) ||
       value instanceof Date ||
-      (value === undefined && opsWithoutValue.includes(op))
+      (value === null && opsWithoutValue.includes(op))
+
 function mapOp(op: string) {
   switch (op) {
     case 'eq':
@@ -82,20 +83,23 @@ function mapOp(op: string) {
 
 function setMongoSelectorFromQueryObj(
   allParams: Record<string, unknown>,
-  { path, op = 'eq', value, param }: QueryObject,
+  { path, op = 'eq', value, param, expr }: QueryObject,
   filter = {}
 ) {
   if (isOpValid(op)) {
-    // eslint-disable-next-line security/detect-object-injection
-    const comparee = param ? allParams[param] : value
-    if (isValidValue(comparee, op)) {
-      return dotprop.set(
-        filter,
-        [path === 'type' ? '\\$type' : serializePath(path), mapOp(op)]
-          .filter(Boolean)
-          .join('.'),
-        comparee || null
-      )
+    const targetValue = expr
+      ? [`$${serializePath(path)}`, `$$${expr}`]
+      : (param ? allParams[param] : value) || null // eslint-disable-line security/detect-object-injection
+
+    if (isValidValue(targetValue, op)) {
+      const targetPath = [
+        expr ? '$expr' : path === 'type' ? '\\$type' : serializePath(path),
+        mapOp(op),
+      ]
+        .filter(Boolean)
+        .join('.')
+
+      return dotprop.set(filter, targetPath, targetValue)
     }
   }
 

@@ -2,62 +2,9 @@ import mongodb = require('mongodb')
 import connect from './connect'
 import disconnect from './disconnect'
 import send from './send'
-import { Transporter, Connection as ConnectionBase } from 'integreat'
-
-export interface QueryObject {
-  path: string
-  op?: string
-  param?: string
-  value?: unknown
-}
-
-export interface AggregationObjectSort {
-  type: 'sort'
-  sortBy: Record<string, 1 | -1>
-}
-
-export type GroupMethod = 'first' | 'last' | 'sum' | 'avg' | 'max' | 'min'
-
-export interface AggregationObjectGroup {
-  type: 'group'
-  groupBy: string[]
-  values: Record<string, GroupMethod>
-}
-
-export interface AggregationObjectQuery {
-  type: 'query'
-  query: QueryObject[]
-}
-
-export type AggregationObject =
-  | AggregationObjectSort
-  | AggregationObjectGroup
-  | AggregationObjectQuery
-
-export interface MongoOptions extends Record<string, unknown> {
-  uri?: string
-  baseUri?: string
-  db?: string
-  collection?: string
-  sort?: Record<string, 1 | -1>
-  query?: QueryObject[]
-  aggregation?: AggregationObject[]
-  mongo?: Record<string, unknown>
-  allowDiskUse?: boolean
-}
-
-export interface Connection extends ConnectionBase {
-  client?: mongodb.MongoClient
-  error?: string
-}
-
-export interface ExchangeRequest extends Record<string, unknown> {
-  type?: string | string[]
-  id?: string | string[]
-  pageSize?: number
-  pageAfter?: string
-  pageId?: string
-}
+import { Transporter } from 'integreat'
+import { MongoOptions, Connection } from './types'
+export * from './types'
 
 /**
  * MongoDB Transporter for Integreat

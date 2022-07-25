@@ -1,5 +1,5 @@
 import test from 'ava'
-import { AggregationObject } from '.'
+import { AggregationObject } from './types'
 
 import prepareAggregation from './prepareAggregation'
 
@@ -20,6 +20,9 @@ test('should return mongo aggregation pipeline', (t) => {
         { path: 'personalia\\.age', op: 'gt', value: 18 },
       ],
     },
+    { type: 'limit' as const, count: 1 },
+    { type: 'unwind' as const, path: 'jobs' },
+    { type: 'root' as const, path: 'jobs' },
   ]
   const expected = [
     { $sort: { updatedAt: -1 } },
@@ -34,6 +37,97 @@ test('should return mongo aggregation pipeline', (t) => {
       $match: {
         '\\$type': 'entry',
         'personalia\\_age': { $gt: 18 },
+      },
+    },
+    { $limit: 1 },
+    {
+      $unwind: {
+        path: '$jobs',
+        preserveNullAndEmptyArrays: false,
+      },
+    },
+    { $replaceRoot: { newRoot: '$jobs' } },
+  ]
+
+  const ret = prepareAggregation(aggregation, { type: 'entry' })
+
+  t.deepEqual(ret, expected)
+})
+
+test('should return mongo aggregation with lookup', (t) => {
+  const aggregation = [
+    {
+      type: 'lookup' as const,
+      collection: 'projects',
+      field: 'included',
+      variables: { ids: 'include' },
+      pipeline: [
+        {
+          type: 'query' as const,
+          query: [{ path: 'id', op: 'in' as const, expr: 'ids' }], // TODO
+        },
+        { type: 'sort' as const, sortBy: { updatedAt: -1 as const } },
+        {
+          type: 'group' as const,
+          groupBy: ['id'],
+          values: {
+            jobs: { op: 'first' as const, path: 'definitions.jobs' },
+          },
+        },
+      ],
+    },
+  ]
+  const expected = [
+    {
+      $lookup: {
+        from: 'projects',
+        as: 'included',
+        let: { ids: '$include' },
+        pipeline: [
+          {
+            $match: { $expr: { $in: ['$id', '$$ids'] } },
+          },
+          { $sort: { updatedAt: -1 } },
+          {
+            $group: {
+              _id: { id: '$id' },
+              jobs: { $first: '$definitions.jobs' },
+            },
+          },
+        ],
+      },
+    },
+  ]
+
+  const ret = prepareAggregation(aggregation, { type: 'entry' })
+
+  t.deepEqual(ret, expected)
+})
+
+test('should return mongo aggregation with project', (t) => {
+  const aggregation = [
+    {
+      type: 'project' as const,
+      values: {
+        jobs: {
+          type: 'reduce' as const,
+          path: 'included.jobs',
+          initialPath: 'definitions.jobs',
+          pipeline: { type: 'concatArrays' as const, path: ['value', 'this'] },
+        },
+      },
+    },
+  ]
+  const expected = [
+    {
+      $project: {
+        jobs: {
+          $reduce: {
+            input: '$included.jobs',
+            initialValue: '$definitions.jobs',
+            in: { $concatArrays: ['$$value', '$$this'] },
+          },
+        },
       },
     },
   ]

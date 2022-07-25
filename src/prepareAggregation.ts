@@ -1,12 +1,20 @@
-/* eslint-disable @typescript-eslint/ban-types */
 import {
   AggregationObject,
   AggregationObjectGroup,
   AggregationObjectSort,
   AggregationObjectQuery,
+  AggregationObjectReduce,
+  AggregationObjectLimit,
+  AggregationObjectUnwind,
+  AggregationObjectRoot,
+  AggregationObjectLookUp,
+  AggregationObjectProject,
+  AggregationObjectConcatArrays,
   GroupMethod,
-} from '.'
+  GroupObject,
+} from './types'
 import { isObject } from './utils/is'
+import { ensureArray, dearrayIfPossible } from './utils/array'
 import prepareFilter from './prepareFilter'
 
 const serializeFieldKey = (key: string) => key.replace('.', '\\\\_')
@@ -17,11 +25,21 @@ const prepareGroupId = (fields: string[]) =>
     {}
   )
 
-const prepareGroupFields = (fields: Record<string, GroupMethod>) =>
+const createFieldObject = (
+  field: string,
+  method: GroupMethod | GroupObject
+) => ({ [`$${method}`]: `$${field}` })
+
+const prepareGroupFields = (
+  fields: Record<string, GroupMethod | GroupObject>
+) =>
   Object.entries(fields).reduce(
     (obj, [field, method]) => ({
       ...obj,
-      [serializeFieldKey(field)]: { [`$${method}`]: `$${field}` },
+      [serializeFieldKey(field)]:
+        typeof method === 'string'
+          ? createFieldObject(field, method)
+          : createFieldObject(method.path, method.op),
     }),
     {}
   )
@@ -51,6 +69,67 @@ const queryToMongo = (
       }
     : undefined
 
+const reduceToMongo = (
+  { path, initialPath, pipeline }: AggregationObjectReduce,
+  params: Record<string, unknown>
+) => ({
+  $reduce: {
+    input: `$${path}`,
+    initialValue: `$${initialPath}`,
+    in: dearrayIfPossible(prepareAggregation(ensureArray(pipeline), params)),
+  },
+})
+
+const prepareLookupValues = (variables: Record<string, string>) =>
+  Object.entries(variables).reduce(
+    (obj, [key, value]) => ({ ...obj, [key]: `$${value}` }),
+    {}
+  )
+
+const lookupToMongo = (
+  { collection, field, variables, pipeline }: AggregationObjectLookUp,
+  params: Record<string, unknown>
+) => ({
+  $lookup: {
+    from: collection,
+    as: field,
+    ...(variables && {
+      let: prepareLookupValues(variables),
+    }),
+    ...(pipeline && {
+      pipeline: dearrayIfPossible(
+        prepareAggregation(ensureArray(pipeline), params)
+      ),
+    }),
+  },
+})
+
+const projectToMongo = (
+  { values }: AggregationObjectProject,
+  params: Record<string, unknown>
+) => ({
+  $project: Object.fromEntries(
+    Object.entries(values).map(([key, value]) => [
+      key,
+      dearrayIfPossible(prepareAggregation(ensureArray(value), params)),
+    ])
+  ),
+})
+
+const limitToMongo = ({ count }: AggregationObjectLimit) => ({ $limit: count })
+
+const unwindToMongo = ({ path }: AggregationObjectUnwind) => ({
+  $unwind: { path: `$${path}`, preserveNullAndEmptyArrays: false },
+})
+
+const rootToMongo = ({ path }: AggregationObjectRoot) => ({
+  $replaceRoot: { newRoot: `$${path}` },
+})
+
+const concatArraysToMongo = ({ path }: AggregationObjectConcatArrays) => ({
+  $concatArrays: path.map((p) => `$$${p}`),
+})
+
 const toMongo = (params: Record<string, unknown>) =>
   function toMongo(obj: AggregationObject) {
     switch (obj.type) {
@@ -60,6 +139,20 @@ const toMongo = (params: Record<string, unknown>) =>
         return sortToMongo(obj)
       case 'query':
         return queryToMongo(obj, params)
+      case 'reduce':
+        return reduceToMongo(obj, params)
+      case 'lookup':
+        return lookupToMongo(obj, params)
+      case 'project':
+        return projectToMongo(obj, params)
+      case 'limit':
+        return limitToMongo(obj)
+      case 'unwind':
+        return unwindToMongo(obj)
+      case 'root':
+        return rootToMongo(obj)
+      case 'concatArrays':
+        return concatArraysToMongo(obj)
       default:
         return undefined
     }
