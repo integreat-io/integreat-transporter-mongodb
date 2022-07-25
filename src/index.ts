@@ -4,7 +4,6 @@ import disconnect from './disconnect'
 import send from './send'
 import { Transporter } from 'integreat'
 import { MongoOptions, Connection } from './types'
-export * from './types'
 
 /**
  * MongoDB Transporter for Integreat

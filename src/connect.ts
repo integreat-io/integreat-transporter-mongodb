@@ -1,5 +1,5 @@
 import { MongoClient } from 'mongodb'
-import { MongoOptions, Connection } from '.'
+import { MongoOptions, Connection } from './types'
 
 const prepareOptions = (
   options?: Record<string, unknown>,

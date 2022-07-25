@@ -1,7 +1,7 @@
 import getDocs from './getDocs'
 import setDocs from './setDocs'
 import { Action, Response } from 'integreat'
-import { Connection, MongoOptions } from '.'
+import { Connection, MongoOptions } from './types'
 import { Collection, MongoClient } from 'mongodb'
 
 export const getCollection = (

@@ -1,6 +1,6 @@
 import dotprop = require('dot-prop')
 import { TypedData, Data } from 'integreat'
-import { ExchangeRequest } from '.'
+import { ExchangeRequest } from './types'
 import { btoa, removePadding } from './utils/base64'
 import { isObject } from './utils/is'
 

@@ -1,4 +1,4 @@
-import { Connection } from '.'
+import { Connection } from './types'
 
 export default async function disconnect(
   connection: Connection | null

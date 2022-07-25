@@ -5,7 +5,7 @@ import { Collection, MongoClient } from 'mongodb'
 import { serializeItem } from './escapeKeys'
 import { isObjectWithId } from './utils/is'
 import { getCollection } from './send'
-import { MongoOptions } from '.'
+import { MongoOptions } from './types'
 
 interface ItemResponse {
   id?: string

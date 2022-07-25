@@ -9,7 +9,7 @@ import {
   ExchangeRequest,
   AggregationObject,
   QueryObject,
-} from '.'
+} from './types'
 import { normalizeItem } from './escapeKeys'
 import { getCollection } from './send'
 import { atob } from './utils/base64'
