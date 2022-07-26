@@ -6,7 +6,8 @@ export interface QueryObject {
   op?: string
   param?: string
   value?: unknown
-  expr?: string
+  variable?: string
+  expr?: boolean
 }
 
 export interface AggregationObjectSort {
@@ -35,8 +36,15 @@ export interface AggregationObjectQuery {
 export interface AggregationObjectReduce {
   type: 'reduce'
   path: string
-  initialPath: string
+  initialPath: string | AggregationObject | AggregationObject[]
   pipeline: AggregationObject | AggregationObject[]
+}
+
+export interface AggregationObjectIf {
+  type: 'if'
+  condition: QueryObject | QueryObject[]
+  then: AggregationObject | AggregationObject[] | unknown
+  else: AggregationObject | AggregationObject[] | unknown
 }
 
 export interface AggregationObjectLimit {
@@ -77,6 +85,7 @@ export type AggregationObject =
   | AggregationObjectGroup
   | AggregationObjectQuery
   | AggregationObjectReduce
+  | AggregationObjectIf
   | AggregationObjectLimit
   | AggregationObjectUnwind
   | AggregationObjectRoot

@@ -64,7 +64,9 @@ test('should return mongo aggregation with lookup', (t) => {
       pipeline: [
         {
           type: 'query' as const,
-          query: [{ path: 'id', op: 'in' as const, expr: 'ids' }], // TODO
+          query: [
+            { path: 'id', op: 'in' as const, variable: 'ids', expr: true },
+          ],
         },
         { type: 'sort' as const, sortBy: { updatedAt: -1 as const } },
         {
@@ -125,6 +127,50 @@ test('should return mongo aggregation with project', (t) => {
           $reduce: {
             input: '$included.jobs',
             initialValue: '$definitions.jobs',
+            in: { $concatArrays: ['$$value', '$$this'] },
+          },
+        },
+      },
+    },
+  ]
+
+  const ret = prepareAggregation(aggregation, { type: 'entry' })
+
+  t.deepEqual(ret, expected)
+})
+
+test('should return mongo aggregation with project and an expression in reduce initialPath', (t) => {
+  const aggregation = [
+    {
+      type: 'project' as const,
+      values: {
+        jobs: {
+          type: 'reduce' as const,
+          path: 'included.jobs',
+          initialPath: {
+            type: 'if' as const,
+            condition: { path: 'definitions.jobs', op: 'isArray' },
+            then: 'definitions.jobs',
+            else: [],
+          },
+          pipeline: { type: 'concatArrays' as const, path: ['value', 'this'] },
+        },
+      },
+    },
+  ]
+  const expected = [
+    {
+      $project: {
+        jobs: {
+          $reduce: {
+            input: '$included.jobs',
+            initialValue: {
+              $cond: {
+                if: { $isArray: '$definitions.jobs' },
+                then: '$definitions.jobs',
+                else: [],
+              },
+            },
             in: { $concatArrays: ['$$value', '$$this'] },
           },
         },

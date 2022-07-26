@@ -1,4 +1,6 @@
 import {
+  GroupMethod,
+  GroupObject,
   AggregationObject,
   AggregationObjectGroup,
   AggregationObjectSort,
@@ -10,12 +12,20 @@ import {
   AggregationObjectLookUp,
   AggregationObjectProject,
   AggregationObjectConcatArrays,
-  GroupMethod,
-  GroupObject,
+  AggregationObjectIf,
 } from './types'
 import { isObject } from './utils/is'
 import { ensureArray, dearrayIfPossible } from './utils/array'
 import prepareFilter from './prepareFilter'
+
+const isAggregationObject = (expr: unknown): expr is AggregationObject =>
+  isObject(expr) && typeof expr.type === 'string'
+
+const isAggregation = (
+  expr: unknown
+): expr is AggregationObject | AggregationObject[] =>
+  (Array.isArray(expr) && isAggregationObject(expr[0])) ||
+  isAggregationObject(expr)
 
 const serializeFieldKey = (key: string) => key.replace('.', '\\\\_')
 
@@ -75,8 +85,34 @@ const reduceToMongo = (
 ) => ({
   $reduce: {
     input: `$${path}`,
-    initialValue: `$${initialPath}`,
+    initialValue:
+      typeof initialPath === 'string'
+        ? `$${initialPath}`
+        : dearrayIfPossible(
+            prepareAggregation(ensureArray(initialPath), params)
+          ),
     in: dearrayIfPossible(prepareAggregation(ensureArray(pipeline), params)),
+  },
+})
+
+const expressionToMongo = (
+  expr: AggregationObject | AggregationObject[] | unknown,
+  params: Record<string, unknown>
+) =>
+  typeof expr === 'string'
+    ? `$${expr}`
+    : isAggregation(expr)
+    ? dearrayIfPossible(prepareAggregation(ensureArray(expr), params))
+    : expr
+
+const ifToMongo = (
+  { condition, then: thenArg, else: elseArg }: AggregationObjectIf,
+  params: Record<string, unknown>
+) => ({
+  $cond: {
+    if: dearrayIfPossible(prepareFilter(ensureArray(condition), params)),
+    then: expressionToMongo(thenArg, params),
+    else: expressionToMongo(elseArg, params),
   },
 })
 
@@ -141,6 +177,8 @@ const toMongo = (params: Record<string, unknown>) =>
         return queryToMongo(obj, params)
       case 'reduce':
         return reduceToMongo(obj, params)
+      case 'if':
+        return ifToMongo(obj, params)
       case 'lookup':
         return lookupToMongo(obj, params)
       case 'project':

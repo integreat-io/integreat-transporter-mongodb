@@ -84,20 +84,26 @@ function mapOp(op: string) {
 
 function setMongoSelectorFromQueryObj(
   allParams: Record<string, unknown>,
-  { path, op = 'eq', value, param, expr }: QueryObject,
+  { path, op = 'eq', value, param, variable, expr }: QueryObject,
   filter = {}
 ) {
   if (isOpValid(op)) {
-    const targetValue = expr
-      ? [`$${serializePath(path)}`, `$$${expr}`]
+    let targetValue = variable
+      ? `$$${variable}`
       : op === 'isArray'
-      ? `$${serializePath(path)}`
+      ? `$${path}`
       : (param ? allParams[param] : value) || null // eslint-disable-line security/detect-object-injection
+
+    if (expr && op === 'in') {
+      targetValue = [`$${path}`, targetValue]
+    }
 
     if (isValidValue(targetValue, op)) {
       const targetPath = [
-        expr || op === 'isArray'
+        expr
           ? '$expr'
+          : op === 'isArray'
+          ? undefined
           : path === 'type'
           ? '\\$type'
           : serializePath(path),

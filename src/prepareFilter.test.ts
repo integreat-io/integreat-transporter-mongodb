@@ -37,6 +37,7 @@ test('should use options.query as filter', (t) => {
     { path: 'escaped\\.dot', value: true },
     { path: 'id', op: 'regex', value: '.+:lastUpdated$' },
     { path: 'topic', op: 'in', value: ['news', 'sports'] },
+    { path: 'status', op: 'in', variable: 'statuslist' },
     { path: 'jobs', op: 'isArray' },
   ]
   const expected = {
@@ -48,7 +49,8 @@ test('should use options.query as filter', (t) => {
     'escaped\\_dot': true,
     id: { $regex: '.+:lastUpdated$' },
     topic: { $in: ['news', 'sports'] },
-    $expr: { $isArray: '$jobs' },
+    status: { $in: '$$statuslist' },
+    $isArray: '$jobs',
   }
 
   const ret = prepareFilter(query, { type, id })
@@ -205,12 +207,25 @@ test('should accept queries with and logic wihin or logic', (t) => {
   t.deepEqual(ret, expected)
 })
 
-test('should support expr queries', (t) => {
+test('should support expr queries for in', (t) => {
   const type = 'entry'
   const id = 'ent1'
-  const query = [{ path: 'id', op: 'in', expr: 'ids' }]
+  const query = [{ path: 'id', op: 'in', variable: 'ids', expr: true }]
   const expected = {
     $expr: { $in: ['$id', '$$ids'] },
+  }
+
+  const ret = prepareFilter(query, { type, id })
+
+  t.deepEqual(ret, expected)
+})
+
+test('should support expr queries for isArray', (t) => {
+  const type = 'entry'
+  const id = 'ent1'
+  const query = [{ path: 'jobs', op: 'isArray', expr: true }]
+  const expected = {
+    $expr: { $isArray: '$jobs' },
   }
 
   const ret = prepareFilter(query, { type, id })
