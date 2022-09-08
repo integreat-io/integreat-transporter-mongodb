@@ -129,13 +129,13 @@ test('should listen to error events', async (t) => {
   )
 
   t.is(ret.status, 'ok', ret.error)
-  t.is(onSpy.callCount, 1)
+  t.true(onSpy.callCount >= 1)
   t.is(onSpy.args[0][0], 'error')
   const emitFn = onSpy.args[0][1]
   emitFn(new Error('Oh no!'))
   t.is(emitSpy.callCount, 1)
   t.is(emitSpy.args[0][0], 'error')
-  t.deepEqual(emitSpy.args[0][1], new Error('MongoDB error: Oh no!'))
+  t.deepEqual(emitSpy.args[0][1], new Error('MongoDb error: Oh no!'))
 })
 
 test('should return with error on missing uri', async (t) => {
