@@ -103,6 +103,7 @@ export interface MongoOptions extends Record<string, unknown> {
   aggregation?: AggregationObject[]
   mongo?: Record<string, unknown>
   allowDiskUse?: boolean
+  throwAfterFailedHeartbeatCount?: number
 }
 
 export interface Connection extends ConnectionBase {

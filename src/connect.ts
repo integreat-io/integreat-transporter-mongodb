@@ -14,6 +14,8 @@ const prepareOptions = (
     : {}),
 })
 
+let failedHeartbeatCount = 0
+
 export default async function connect(
   Client: typeof MongoClient,
   options: MongoOptions,
@@ -25,7 +27,7 @@ export default async function connect(
     return connection
   }
 
-  const { uri, baseUri, mongo } = options
+  const { uri, baseUri, mongo, throwAfterFailedHeartbeatCount } = options
   const mongoUri = uri || baseUri
   if (!mongoUri) {
     return {
@@ -37,33 +39,39 @@ export default async function connect(
   try {
     // Create client
     const client = new Client(mongoUri, prepareOptions(mongo, auth))
+    const response = { status: 'ok', client }
 
     // Listen to errors
     client.on('error', (error) => {
       debugMongo(`*** MongoDb Client error: ${error.message}`)
       emit('error', new Error(`MongoDb error: ${error.message}`))
     })
-    client.on('serverOpening', () => {
-      debugMongo('*** MongoDb Client: Server opening')
-    })
-    client.on('serverClosed', () => {
-      debugMongo('*** MongoDb Client: Server closed')
-    })
-    client.on('topologyOpening', () => {
-      debugMongo('*** MongoDb Client: Topology opening')
-    })
-    client.on('topologyClosed', () => {
-      debugMongo('*** MongoDb Client: Topology closed')
-    })
+
+    // Count failed heartbeats and throw an error when we reach a set threshold
     client.on('serverHeartbeatFailed', () => {
       debugMongo('*** MongoDb Client: Server heartbeat failed')
+      failedHeartbeatCount += 1
+
+      if (
+        throwAfterFailedHeartbeatCount &&
+        failedHeartbeatCount >= throwAfterFailedHeartbeatCount
+      ) {
+        throw new Error(
+          `MongoDb experienced ${failedHeartbeatCount} failed heartbeats`
+        )
+      }
+    })
+
+    // Reset failed heartbeat counter when it succeeds
+    client.on('serverHeartbeatSucceeded', () => {
+      failedHeartbeatCount = 0
     })
 
     // Connect
     await client.connect()
 
     // Return connection
-    return { status: 'ok', client }
+    return response
   } catch (error) {
     return {
       status: 'error',

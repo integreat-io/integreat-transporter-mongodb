@@ -220,6 +220,17 @@ not recommend this approach, as the username and password is then included in
 the definition file and this makes the chance of it being e.g. commited to a git
 repo, much higher.
 
+#### Heartbeat
+
+**Experimental:** By setting a number on the `throwAfterFailedHeartbeatCount`
+option, the transporter will throw after the number of heartbeat failures you
+specify. The counter will reset for every sucessful heartbeat, so if
+`throwAfterFailedHeartbeatCount` is `3`, it will throw when after three
+heartbeat failures in a row.
+
+The point of this is to allow the server to restart after loosing contact with
+MongoDb.
+
 ### Running the tests
 
 The tests can be run with `npm test`.
