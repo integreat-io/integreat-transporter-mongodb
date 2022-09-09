@@ -1,6 +1,6 @@
 {
   "name": "integreat-transporter-mongodb",
-  "version": "0.8.7",
+  "version": "0.8.8",
   "description": "Integreat transporter for mongodb",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
