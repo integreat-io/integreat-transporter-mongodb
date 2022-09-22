@@ -31,6 +31,9 @@ async function createOrReuseClient(
 
   if (clientObject && clientObject.count > 0 && clientObject.client) {
     clientObject.count += 1
+    debugMongo(
+      `*** MongoDb Client: Reusing client, count is ${clientObject.count}`
+    )
   } else {
     // Create client if it doesn't exist
     const client = new Client(mongoUri, options)
@@ -38,9 +41,11 @@ async function createOrReuseClient(
     if (clientObject) {
       clientObject.client = client
       clientObject.count = 1
+      debugMongo('*** MongoDb Client: Created new client, old was closed')
     } else {
       clientObject = { client, count: 1 }
       clients[hash] = clientObject
+      debugMongo('*** MongoDb Client: Created new client')
     }
 
     // Listen to errors
