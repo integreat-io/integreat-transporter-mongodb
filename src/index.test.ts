@@ -17,7 +17,7 @@ test('prepareOptions should set options', async (t) => {
   const options = {
     db: 'database',
     collection: 'documents',
-    uri: 'mongodb://db:27017/database',
+    uri: 'mongodb://db:27030/database',
   }
   const expected = options
 

@@ -106,8 +106,13 @@ export interface MongoOptions extends Record<string, unknown> {
   throwAfterFailedHeartbeatCount?: number
 }
 
+export interface MongoClientObject {
+  client: MongoClient
+  count: number
+}
+
 export interface Connection extends ConnectionBase {
-  client?: MongoClient
+  mongo?: MongoClientObject
   error?: string
 }
 

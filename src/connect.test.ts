@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import test from 'ava'
 import sinon = require('sinon')
 import { MongoClient } from 'mongodb'
@@ -20,9 +21,9 @@ const emit = () => undefined
 
 // Tests
 
-test('should return client as connection', async (t) => {
+test('should return connection with client', async (t) => {
   const options = {
-    uri: 'mongodb://db:27017/database',
+    uri: 'mongodb://db:27027/database',
   }
   const constructSpy = sinon.stub()
   const connectSpy = sinon.stub()
@@ -34,16 +35,17 @@ test('should return client as connection', async (t) => {
   )
 
   t.is(ret.status, 'ok', ret.error)
-  t.is(ret.client?.connect, connectSpy)
+  t.is(ret.mongo?.client.connect, connectSpy)
+  t.is(ret.mongo?.count, 1) // Number of connections made to this client
   t.falsy(ret.error)
   t.is(constructSpy.callCount, 1)
-  t.true(constructSpy.calledWith('mongodb://db:27017/database'))
+  t.true(constructSpy.calledWith('mongodb://db:27027/database'))
   t.is(connectSpy.callCount, 1)
 })
 
 test('should use baseUri when uri is not supplied', async (t) => {
   const options = {
-    baseUri: 'mongodb://db:27017/database',
+    baseUri: 'mongodb://db:27018/database',
   }
   const constructSpy = sinon.stub()
   const connectSpy = sinon.stub()
@@ -51,12 +53,12 @@ test('should use baseUri when uri is not supplied', async (t) => {
   await connect(createMockMongo(constructSpy, connectSpy), options, emit)
 
   t.is(constructSpy.callCount, 1)
-  t.true(constructSpy.calledWith('mongodb://db:27017/database'))
+  t.true(constructSpy.calledWith('mongodb://db:27018/database'))
 })
 
 test('should use supplied mongo options', async (t) => {
   const options = {
-    baseUri: 'mongodb://db:27017/database',
+    baseUri: 'mongodb://db:27019/database',
     mongo: {
       readPreference: 'primaryPreferred',
     },
@@ -74,7 +76,7 @@ test('should use supplied mongo options', async (t) => {
 
 test('should use supplied auth', async (t) => {
   const options = {
-    baseUri: 'mongodb://db:27017/database',
+    baseUri: 'mongodb://db:27020/database',
     mongo: {
       readPreference: 'primaryPreferred',
     },
@@ -92,9 +94,123 @@ test('should use supplied auth', async (t) => {
   })
 })
 
+test('should reuse client when connecting twice with same options', async (t) => {
+  const options = {
+    uri: 'mongodb://db:27021/database',
+  }
+  const constructSpy = sinon.stub()
+  const connectSpy = sinon.stub()
+
+  const ret1 = await connect(
+    createMockMongo(constructSpy, connectSpy),
+    options,
+    emit
+  )
+  const ret2 = await connect(
+    createMockMongo(constructSpy, connectSpy),
+    options,
+    emit
+  )
+
+  t.is(ret1.status, 'ok', ret1.error)
+  t.is(ret2.status, 'ok', ret2.error)
+  t.is(ret1.mongo?.client.connect, connectSpy)
+  t.is(ret1.mongo?.client, ret2.mongo?.client)
+  t.is(ret1.mongo?.count, 2)
+  t.is(ret2.mongo?.count, 2)
+  t.is(constructSpy.callCount, 1)
+  t.true(constructSpy.calledWith('mongodb://db:27021/database'))
+  t.is(connectSpy.callCount, 1)
+})
+
+test('should create new client after disconnect', async (t) => {
+  const options = {
+    uri: 'mongodb://db:27029/database',
+  }
+  const constructSpy = sinon.stub()
+  const connectSpy = sinon.stub()
+
+  const ret1 = await connect(
+    createMockMongo(constructSpy, connectSpy),
+    options,
+    emit
+  )
+  ret1.mongo!.count = 0 // Mimicks disconnect
+  const ret2 = await connect(
+    createMockMongo(constructSpy, connectSpy),
+    options,
+    emit
+  )
+
+  t.is(ret1.status, 'ok', ret1.error)
+  t.is(ret2.status, 'ok', ret2.error)
+  t.is(ret1.mongo?.count, 1)
+  t.is(ret2.mongo?.count, 1)
+  // t.not(ret1.mongo?.client, ret2.mongo?.client) // This don't work, as client is the same due to mocking
+  t.is(constructSpy.callCount, 2)
+  t.is(connectSpy.callCount, 2)
+})
+
+test('should create new client for different options', async (t) => {
+  const options1 = {
+    uri: 'mongodb://db:27022/database',
+  }
+  const options2 = {
+    uri: 'mongodb://db:27022/database2',
+  }
+  const constructSpy = sinon.stub()
+  const connectSpy = sinon.stub()
+
+  const ret1 = await connect(
+    createMockMongo(constructSpy, connectSpy),
+    options1,
+    emit
+  )
+  const ret2 = await connect(
+    createMockMongo(constructSpy, connectSpy),
+    options2,
+    emit
+  )
+
+  t.is(ret1.status, 'ok', ret1.error)
+  t.is(ret2.status, 'ok', ret2.error)
+  t.not(ret1.mongo?.client, ret2.mongo?.client)
+  t.is(constructSpy.callCount, 2)
+  t.is(connectSpy.callCount, 2)
+})
+
+test('should create new client for different auths', async (t) => {
+  const options = {
+    uri: 'mongodb://db:27023/database',
+  }
+  const auth1 = { key: 'johnf', secret: 's3cr3t' }
+  const auth2 = { key: 'johnf', secret: 'wr0ng' }
+  const constructSpy = sinon.stub()
+  const connectSpy = sinon.stub()
+
+  const ret1 = await connect(
+    createMockMongo(constructSpy, connectSpy),
+    options,
+    emit,
+    auth1
+  )
+  const ret2 = await connect(
+    createMockMongo(constructSpy, connectSpy),
+    options,
+    emit,
+    auth2
+  )
+
+  t.is(ret1.status, 'ok', ret1.error)
+  t.is(ret2.status, 'ok', ret2.error)
+  t.not(ret1.mongo?.client, ret2.mongo?.client)
+  t.is(constructSpy.callCount, 2)
+  t.is(connectSpy.callCount, 2)
+})
+
 test('should return the given connection', async (t) => {
   const options = {
-    uri: 'mongodb://db:27017/database',
+    uri: 'mongodb://db:27024/database',
   }
   const client = {} as MongoClient
   const oldConnection = { status: 'ok', client }
@@ -115,7 +231,7 @@ test('should return the given connection', async (t) => {
 
 test('should listen to error events', async (t) => {
   const options = {
-    uri: 'mongodb://db:27017/database',
+    uri: 'mongodb://db:27025/database',
   }
   const constructSpy = sinon.stub()
   const connectSpy = sinon.stub()
@@ -151,13 +267,13 @@ test('should return with error on missing uri', async (t) => {
 
   t.is(ret.status, 'badrequest')
   t.is(ret.error, 'A uri is required when connecting to MongoDb')
-  t.falsy(ret.client)
+  t.falsy(ret.mongo?.client)
   t.is(connectSpy.callCount, 0)
 })
 
 test('should return error when connect throws', async (t) => {
   const options = {
-    uri: 'mongodb://db:27017/database',
+    uri: 'mongodb://db:27026/database',
   }
   const constructSpy = sinon.stub()
   const connectSpy = sinon.stub().rejects(new Error('Mongo error'))
@@ -171,7 +287,7 @@ test('should return error when connect throws', async (t) => {
   t.is(ret.status, 'error')
   t.is(
     ret.error,
-    'Could not connect to MongoDb on mongodb://db:27017/database. Error: Mongo error'
+    'Could not connect to MongoDb on mongodb://db:27026/database. Error: Mongo error'
   )
-  t.falsy(ret.client)
+  t.falsy(ret.mongo?.client)
 })

@@ -68,7 +68,7 @@ test('should get one page of documents with params for next page', async (t) => 
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(response.status, 'ok')
+  t.is(response.status, 'ok', response.error)
   const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
@@ -115,7 +115,7 @@ test('should get second page of documents', async (t) => {
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(response.status, 'ok')
+  t.is(response.status, 'ok', response.error)
   const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent3')
@@ -172,7 +172,7 @@ test('should get second page of documents using date index', async (t) => {
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(response.status, 'ok')
+  t.is(response.status, 'ok', response.error)
   const data = response.data as TypedData[]
   t.is(data.length, 1)
   t.is(data[0].id, 'ent2')
@@ -214,7 +214,7 @@ test('should return less than a full page at the end', async (t) => {
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(response.status, 'ok')
+  t.is(response.status, 'ok', response.error)
   const data = response.data as TypedData[]
   t.is(data.length, 1)
   t.is(data[0].id, 'ent3')
@@ -257,7 +257,7 @@ test('should return empty array when past last page', async (t) => {
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(response.status, 'ok')
+  t.is(response.status, 'ok', response.error)
   const data = response.data as TypedData[]
   t.is(data.length, 0)
   t.deepEqual(response.paging, expectedPaging)
@@ -296,7 +296,7 @@ test('should not throw when pageId does not exist', async (t) => {
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(response.status, 'ok')
+  t.is(response.status, 'ok', response.error)
   const data = response.data as TypedData[]
   t.is(data.length, 0)
   t.deepEqual(response.paging, expectedPaging)
@@ -362,7 +362,7 @@ test('should get second page of documents when sorting', async (t) => {
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(response.status, 'ok')
+  t.is(response.status, 'ok', response.error)
   const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
@@ -430,7 +430,7 @@ test('should get second page of documents when sorting descending', async (t) =>
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(response.status, 'ok')
+  t.is(response.status, 'ok', response.error)
   const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent3')
@@ -498,7 +498,7 @@ test('should return page params when sorting by two dimensions', async (t) => {
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(response.status, 'ok')
+  t.is(response.status, 'ok', response.error)
   const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent4')
@@ -566,7 +566,7 @@ test('should get second page of documents when sorting key is not unique', async
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(response.status, 'ok')
+  t.is(response.status, 'ok', response.error)
   const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
@@ -636,7 +636,7 @@ test('should keep existing queries', async (t) => {
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.is(response.status, 'ok')
+  t.is(response.status, 'ok', response.error)
   const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent2')

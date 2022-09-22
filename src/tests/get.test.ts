@@ -71,7 +71,7 @@ test('should get a document by type and id', async (t) => {
   await transporter.disconnect(connection)
 
   t.truthy(response)
-  t.is(response.status, 'ok')
+  t.is(response.status, 'ok', response.error)
   const data = response.data as TypedData[]
   t.is(data.length, 1)
   t.is(data[0].id, 'ent1')
@@ -107,7 +107,7 @@ test('should get documents by type', async (t) => {
   await transporter.disconnect(connection)
 
   t.truthy(response)
-  t.is(response.status, 'ok')
+  t.is(response.status, 'ok', response.error)
   const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
@@ -157,7 +157,7 @@ test('should get a document with endpoint query', async (t) => {
   await transporter.disconnect(connection)
 
   t.truthy(response)
-  t.is(response.status, 'ok')
+  t.is(response.status, 'ok', response.error)
   const data = response.data as TypedData[]
   t.is(data.length, 1)
   t.is(data[0].id, 'ent2')
@@ -211,7 +211,7 @@ test('should sort documents', async (t) => {
   await transporter.disconnect(connection)
 
   t.truthy(response)
-  t.is(response.status, 'ok')
+  t.is(response.status, 'ok', response.error)
   const data = response.data as TypedData[]
   t.is(data.length, 3)
   t.is(data[0].id, 'ent3')

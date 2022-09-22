@@ -96,7 +96,7 @@ test('should get a document by type and id', async (t) => {
   await transporter.disconnect(connection)
 
   t.truthy(response)
-  t.is(response.status, 'ok')
+  t.is(response.status, 'ok', response.error)
   const data = response.data as Record<string, unknown>[]
   t.is(data.length, 2)
   t.deepEqual(data[0], expectedData1)

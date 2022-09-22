@@ -9,15 +9,18 @@ import send from './send'
 
 const createConnection = (collection: unknown) => ({
   status: 'ok',
-  client: {
-    db: (name: string) =>
-      name === 'database'
-        ? {
-            collection: (name: string) =>
-              name === 'documents' ? (collection as Collection) : null,
-          }
-        : null,
-  } as MongoClient,
+  mongo: {
+    client: {
+      db: (name: string) =>
+        name === 'database'
+          ? {
+              collection: (name: string) =>
+                name === 'documents' ? (collection as Collection) : null,
+            }
+          : null,
+    } as MongoClient,
+    count: 1,
+  },
 })
 
 const createFind = (items: TypedData[]) => {

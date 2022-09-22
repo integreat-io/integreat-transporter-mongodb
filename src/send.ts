@@ -27,7 +27,7 @@ export default async function send(
       error: 'No endpoint options',
     }
   }
-  const client = connection?.client
+  const client = connection?.mongo?.client
   if (!connection || connection.status !== 'ok' || !client) {
     return {
       ...action.response,
