@@ -37,7 +37,7 @@
     "@types/object-hash": "^2.2.1",
     "debug": "^4.3.4",
     "dot-prop": "^6.0.1",
-    "mongodb": "^4.9.1",
+    "mongodb": "^4.10.0",
     "object-hash": "^3.0.0"
   },
   "devDependencies": {
