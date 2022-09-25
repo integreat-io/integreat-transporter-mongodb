@@ -68,11 +68,14 @@ const getPage = async (
   { pageSize = Infinity, pageAfter, pageId }: Payload
 ) => {
   const after = pageAfter || pageAfterFromPageId(atob(pageId))
+
   // When pageAfter is set – loop until we find the doc with that _id
+  debugMongo('Moving to cursor %s', after)
   const foundFirst = await moveToData(cursor, after)
 
   // Get the number of docs specified with pageSize - or the rest of the docs
   if (foundFirst) {
+    debugMongo('Getting %s items', pageSize)
     return getData(cursor, pageSize)
   }
 
@@ -158,17 +161,22 @@ export default async function getDocs(
 
   let totalCount = data.length
   if (!aggregation && typeof request.pageSize === 'number') {
+    debugMongo('Counting documents')
     totalCount = await collection.countDocuments(filter)
   }
+
+  debugMongo('Normalizing data')
+  const normalizedData = data.map(normalizeItem) as Data[]
 
   const response = {
     ...action.response,
     status: 'ok',
-    data: data.map(normalizeItem) as Data[],
+    data: normalizedData,
     meta: { totalCount },
   }
 
   if (request.pageSize) {
+    debugMongo('Creating paging')
     response.paging = createPaging(data, request, options.sort)
   }
 
