@@ -107,7 +107,7 @@ export interface MongoOptions extends Record<string, unknown> {
 }
 
 export interface MongoClientObject {
-  client: MongoClient
+  client: MongoClient | null
   count: number
 }
 

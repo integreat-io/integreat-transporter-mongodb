@@ -14,6 +14,7 @@ export default async function disconnect(
 
     if (connection.mongo.count <= 0) {
       connection.mongo.client.close()
+      connection.mongo.client = null
     }
   }
 }

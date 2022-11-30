@@ -35,7 +35,7 @@ test('should return connection with client', async (t) => {
   )
 
   t.is(ret.status, 'ok', ret.error)
-  t.is(ret.mongo?.client.connect, connectSpy)
+  t.is(ret.mongo?.client?.connect, connectSpy)
   t.is(ret.mongo?.count, 1) // Number of connections made to this client
   t.falsy(ret.error)
   t.is(constructSpy.callCount, 1)
@@ -114,7 +114,7 @@ test('should reuse client when connecting twice with same options', async (t) =>
 
   t.is(ret1.status, 'ok', ret1.error)
   t.is(ret2.status, 'ok', ret2.error)
-  t.is(ret1.mongo?.client.connect, connectSpy)
+  t.is(ret1.mongo?.client?.connect, connectSpy)
   t.is(ret1.mongo?.client, ret2.mongo?.client)
   t.is(ret1.mongo?.count, 2)
   t.is(ret2.mongo?.count, 2)
@@ -136,6 +136,7 @@ test('should create new client after disconnect', async (t) => {
     emit
   )
   ret1.mongo!.count = 0 // Mimicks disconnect
+  ret1.mongo!.client = null // Mimicks disconnect
   const ret2 = await connect(
     createMockMongo(constructSpy, connectSpy),
     options,

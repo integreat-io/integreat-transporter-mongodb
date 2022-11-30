@@ -1,6 +1,7 @@
 import test from 'ava'
 import sinon = require('sinon')
 import { MongoClient } from 'mongodb'
+import { MongoClientObject } from './types'
 
 import disconnect from './disconnect'
 
@@ -11,13 +12,14 @@ import disconnect from './disconnect'
 test('should disconnect client', async (t) => {
   const closeSpy = sinon.stub().resolves(undefined)
   const client = { close: closeSpy } as unknown as MongoClient
-  const clientObject = { client, count: 1 }
+  const clientObject: MongoClientObject = { client, count: 1 }
   const connection = { status: 'ok', mongo: clientObject }
 
   await disconnect(connection)
 
   t.is(closeSpy.callCount, 1)
   t.is(clientObject.count, 0)
+  t.is(clientObject.client, null)
 })
 
 test('should not disconnect client when the count is higher than 1', async (t) => {

@@ -29,7 +29,7 @@ async function createOrReuseClient(
   const hash = createHash({ mongoUri, ...options })
   let clientObject = clients[hash]
 
-  if (clientObject && clientObject.count > 0 && clientObject.client) {
+  if (clientObject && clientObject.client) {
     clientObject.count += 1
     debugMongo(
       `*** MongoDb Client: Reusing client, count is ${clientObject.count}`
