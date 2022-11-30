@@ -3,7 +3,7 @@ import prepareFilter from './prepareFilter'
 import prepareAggregation from './prepareAggregation'
 import createPaging from './createPaging'
 import { AbstractCursor, MongoClient } from 'mongodb'
-import { Action, Response, Data } from 'integreat'
+import { Action, Response, TypedData } from 'integreat'
 import { MongoOptions, Payload, AggregationObject, QueryObject } from './types'
 import { normalizeItem } from './escapeKeys'
 import { getCollection } from './send'
@@ -166,7 +166,7 @@ export default async function getDocs(
   }
 
   debugMongo('Normalizing data')
-  const normalizedData = data.map(normalizeItem) as Data[]
+  const normalizedData = data.map(normalizeItem) as TypedData[]
 
   const response = {
     ...action.response,

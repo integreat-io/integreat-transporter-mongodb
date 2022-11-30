@@ -1,12 +1,12 @@
 import dotprop = require('dot-prop')
-import { TypedData, Data } from 'integreat'
+import { TypedData } from 'integreat'
 import { Payload } from './types'
 import { btoa, removePadding } from './utils/base64'
 import { isObject } from './utils/is'
 
 export interface Paging {
-  next?: Record<string, Data> // TODO: Update when typing in Integreat changes
-  prev?: Record<string, Data>
+  next?: Payload
+  prev?: Payload
 }
 
 const isDataWithMongoId = (value: unknown): value is TypedData =>
