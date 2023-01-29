@@ -7,9 +7,9 @@ import {
   getDocuments,
   deleteDocuments,
   MongoElements,
-} from './helpers/mongo'
+} from './helpers/mongo.js'
 
-import transporter from '..'
+import transporter from '../index.js'
 
 const test = ava as TestFn<MongoElements>
 

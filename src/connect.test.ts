@@ -3,7 +3,7 @@ import test from 'ava'
 import sinon = require('sinon')
 import { MongoClient } from 'mongodb'
 
-import connect from './connect'
+import connect from './connect.js'
 
 // Setup
 

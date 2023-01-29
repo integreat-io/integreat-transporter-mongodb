@@ -1,8 +1,8 @@
-import getDocs from './getDocs'
-import setDocs from './setDocs'
 import { Action, Response } from 'integreat'
-import { Connection, MongoOptions } from './types'
 import { Collection, MongoClient } from 'mongodb'
+import getDocs from './getDocs.js'
+import setDocs from './setDocs.js'
+import { Connection, MongoOptions } from './types.js'
 
 export const getCollection = (
   action: Action,

@@ -1,7 +1,7 @@
 import test from 'ava'
 import { TypedData } from 'integreat'
 
-import createPaging from './createPaging'
+import createPaging from './createPaging.js'
 
 // Helpers
 

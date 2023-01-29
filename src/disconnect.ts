@@ -1,5 +1,5 @@
 import debug = require('debug')
-import { Connection } from './types'
+import { Connection } from './types.js'
 
 const debugMongo = debug('integreat:transporter:mongodb:client')
 

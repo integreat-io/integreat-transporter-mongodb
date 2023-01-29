@@ -1,9 +1,9 @@
 import mongodb = require('mongodb')
-import connect from './connect'
-import disconnect from './disconnect'
-import send from './send'
+import connect from './connect.js'
+import disconnect from './disconnect.js'
+import send from './send.js'
 import { Transporter } from 'integreat'
-import { MongoOptions, Connection } from './types'
+import { MongoOptions, Connection } from './types.js'
 
 /**
  * MongoDB Transporter for Integreat

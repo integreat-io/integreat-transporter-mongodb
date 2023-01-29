@@ -13,10 +13,10 @@ import {
   AggregationObjectProject,
   AggregationObjectConcatArrays,
   AggregationObjectIf,
-} from './types'
-import { isObject } from './utils/is'
-import { ensureArray, dearrayIfPossible } from './utils/array'
-import prepareFilter from './prepareFilter'
+} from './types.js'
+import { isObject } from './utils/is.js'
+import { ensureArray, dearrayIfPossible } from './utils/array.js'
+import prepareFilter from './prepareFilter.js'
 
 const isAggregationObject = (expr: unknown): expr is AggregationObject =>
   isObject(expr) && typeof expr.type === 'string'

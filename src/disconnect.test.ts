@@ -1,9 +1,9 @@
 import test from 'ava'
 import sinon = require('sinon')
 import { MongoClient } from 'mongodb'
-import { MongoClientObject } from './types'
+import { MongoClientObject } from './types.js'
 
-import disconnect from './disconnect'
+import disconnect from './disconnect.js'
 
 // Setup
 

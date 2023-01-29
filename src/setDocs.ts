@@ -1,11 +1,11 @@
-import debug = require('debug')
-import prepareFilter from './prepareFilter'
 import { Action, Response } from 'integreat'
 import { Collection, MongoClient } from 'mongodb'
-import { serializeItem } from './escapeKeys'
-import { isObjectWithId } from './utils/is'
-import { getCollection } from './send'
-import { MongoOptions } from './types'
+import debug = require('debug')
+import prepareFilter from './prepareFilter.js'
+import { serializeItem } from './escapeKeys.js'
+import { isObjectWithId } from './utils/is.js'
+import { getCollection } from './send.js'
+import { MongoOptions } from './types.js'
 
 interface ItemResponse {
   id?: string

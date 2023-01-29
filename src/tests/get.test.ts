@@ -6,10 +6,10 @@ import {
   insertDocuments,
   deleteDocuments,
   MongoElements,
-} from './helpers/mongo'
+} from './helpers/mongo.js'
 import { TypedData } from 'integreat'
 
-import transporter from '..'
+import transporter from '../index.js'
 
 const test = ava as TestFn<MongoElements>
 

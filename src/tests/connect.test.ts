@@ -1,7 +1,7 @@
 import test from 'ava'
-import { uri } from './helpers/mongo'
+import { uri } from './helpers/mongo.js'
 
-import transporter from '..'
+import transporter from '../index.js'
 
 // Helpers
 

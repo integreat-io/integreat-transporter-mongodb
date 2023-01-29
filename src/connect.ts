@@ -2,7 +2,7 @@
 import debug = require('debug')
 import { MongoClient } from 'mongodb'
 import createHash = require('object-hash')
-import { MongoOptions, Connection, MongoClientObject } from './types'
+import { MongoOptions, Connection, MongoClientObject } from './types.js'
 
 const debugMongo = debug('integreat:transporter:mongodb:client')
 

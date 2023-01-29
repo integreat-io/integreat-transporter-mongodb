@@ -1,7 +1,9 @@
-const baseConfig = require('./node_modules/@integreat/ts-dev-setup/ava.config.cjs')
 const commonConfig = require('./ava-common.config.cjs')
 
 module.exports = {
-  ...baseConfig,
   ...commonConfig,
+  extensions: { ts: 'module' },
+  nodeArguments: ['--loader=ts-node/esm', '--no-warnings'],
+  ignoredByWatcher: ['{coverage,dist,media}/**', 'mongodb/**', '**/*.md'],
+  files: ['src/**/*.test.ts'],
 }

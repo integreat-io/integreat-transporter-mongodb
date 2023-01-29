@@ -1,6 +1,6 @@
 import test from 'ava'
 
-import { serializeItem, normalizeItem, serializePath } from './escapeKeys'
+import { serializeItem, normalizeItem, serializePath } from './escapeKeys.js'
 
 test('should escape reserved characters on serialization', (t) => {
   const data = {

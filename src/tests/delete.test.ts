@@ -7,9 +7,9 @@ import {
   getDocuments,
   deleteDocuments,
   MongoElements,
-} from './helpers/mongo'
+} from './helpers/mongo.js'
 
-import transporter from '..'
+import transporter from '../index.js'
 import { TypedData } from 'integreat'
 const emit = () => undefined
 

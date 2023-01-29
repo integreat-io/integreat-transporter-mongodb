@@ -1,7 +1,7 @@
 import test from 'ava'
-import { AggregationObject } from './types'
+import { AggregationObject } from './types.js'
 
-import prepareAggregation from './prepareAggregation'
+import prepareAggregation from './prepareAggregation.js'
 
 // Tests
 

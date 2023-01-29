@@ -1,4 +1,4 @@
-import { isObject } from './utils/is'
+import { isObject } from './utils/is.js'
 
 const serializeDollarHead = (key: string) =>
   key.startsWith('$') ? `\\${key}` : key

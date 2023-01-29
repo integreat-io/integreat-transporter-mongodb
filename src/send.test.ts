@@ -3,7 +3,7 @@ import sinon = require('sinon')
 import { TypedData } from 'integreat'
 import { Collection, MongoClient } from 'mongodb'
 
-import send from './send'
+import send from './send.js'
 
 // Helpers
 

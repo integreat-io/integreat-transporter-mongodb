@@ -1,14 +1,19 @@
 import debug = require('debug')
-import prepareFilter from './prepareFilter'
-import prepareAggregation from './prepareAggregation'
-import createPaging from './createPaging'
 import { AbstractCursor, MongoClient } from 'mongodb'
 import { Action, Response, TypedData } from 'integreat'
-import { MongoOptions, Payload, AggregationObject, QueryObject } from './types'
-import { normalizeItem } from './escapeKeys'
-import { getCollection } from './send'
-import { atob } from './utils/base64'
-import { isObject } from './utils/is'
+import prepareFilter from './prepareFilter.js'
+import prepareAggregation from './prepareAggregation.js'
+import createPaging from './createPaging.js'
+import { normalizeItem } from './escapeKeys.js'
+import { getCollection } from './send.js'
+import { atob } from './utils/base64.js'
+import { isObject } from './utils/is.js'
+import {
+  MongoOptions,
+  Payload,
+  AggregationObject,
+  QueryObject,
+} from './types.js'
 
 const debugMongo = debug('integreat:transporter:mongodb')
 

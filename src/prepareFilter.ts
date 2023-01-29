@@ -1,7 +1,7 @@
-import dotprop = require('dot-prop')
-import { QueryObject } from './types'
-import { serializePath } from './escapeKeys'
-import { atob } from './utils/base64'
+import { setProperty } from 'dot-prop'
+import { QueryObject } from './types.js'
+import { serializePath } from './escapeKeys.js'
+import { atob } from './utils/base64.js'
 
 type QueryArray = (QueryObject | QueryArray)[]
 
@@ -112,7 +112,7 @@ function setMongoSelectorFromQueryObj(
         .filter(Boolean)
         .join('.')
 
-      return dotprop.set(filter, targetPath, targetValue)
+      return setProperty(filter, targetPath, targetValue)
     }
   }
 

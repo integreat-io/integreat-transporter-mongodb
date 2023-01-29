@@ -1,6 +1,6 @@
 import test from 'ava'
 
-import transporter from '.'
+import transporter from './index.js'
 
 // Tests
 

@@ -1,8 +1,8 @@
-import dotprop = require('dot-prop')
+import { getProperty } from 'dot-prop'
 import { TypedData } from 'integreat'
-import { Payload } from './types'
-import { btoa, removePadding } from './utils/base64'
-import { isObject } from './utils/is'
+import { Payload } from './types.js'
+import { btoa, removePadding } from './utils/base64.js'
+import { isObject } from './utils/is.js'
 
 export interface Paging {
   next?: Payload
@@ -25,7 +25,7 @@ const createSortString =
     [
       path,
       direction > 0 ? '>' : '<',
-      encodeValue(dotprop.get(lastItem, path)),
+      encodeValue(getProperty(lastItem, path)),
     ].join('')
 
 const createPageId = (
