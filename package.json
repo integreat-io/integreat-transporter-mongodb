@@ -7,19 +7,15 @@
   "author": "Kjell-Morten Bratsberg Thorsen <post@kjellmorten.no>",
   "license": "ISC",
   "scripts": {
-    "test": "npm run build && nyc --reporter=text-summary ava --config ./ava-dist.config.js",
+    "test": "npm run lint && npm run build && c8 --reporter=text-summary ava --config ./ava-dist.config.cjs",
     "test:setup": "npm run build && docker-compose -f docker-compose-test.yml up",
     "test:teardown": "docker-compose -f docker-compose-test.yml down",
-    "test:rebuild": "npm run build && docker-compose -f docker-compose-test.yml build",
-    "test:local": "npm run lint && npm run build && docker-compose -f docker-compose-test.yml up --abort-on-container-exit",
-    "test:inspect": "node --inspect node_modules/ava/profile.js",
     "test:watch": "npm run dev",
     "dev": "ava --watch",
     "dev:setup": "docker-compose -f docker-compose-dev.yml up",
     "dev:teardown": "docker-compose -f docker-compose-dev.yml down",
     "build": "tsc",
-    "coverage": "nyc report --reporter=text-lcov | coveralls",
-    "nyc:report": "nyc report --reporter=text --reporter=html",
+    "coverage": "c8 report",
     "lint": "eslint --ext .ts src"
   },
   "repository": {
@@ -31,19 +27,19 @@
   },
   "homepage": "https://github.com/integreat-io/integreat-transporter-mongodb#readme",
   "engines": {
-    "node": ">= 12.9"
+    "node": ">= 14.19"
   },
   "dependencies": {
-    "@types/object-hash": "^3.0.0",
+    "@types/object-hash": "^3.0.2",
     "debug": "^4.3.4",
     "dot-prop": "^6.0.1",
     "mongodb": "^4.12.1",
     "object-hash": "^3.0.0"
   },
   "devDependencies": {
-    "@integreat/ts-dev-setup": "^2.3.1",
+    "@integreat/ts-dev-setup": "^4.0.0",
     "@types/sinon": "^10.0.13",
     "integreat": "0.8.0-beta.15",
-    "sinon": "^15.0.0"
+    "sinon": "^15.0.1"
   }
 }
