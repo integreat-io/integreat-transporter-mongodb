@@ -41,7 +41,7 @@ export default async function send(
       return getDocs(action, client)
     case 'SET':
     case 'DELETE':
-      return setDocs(action, client)
+      return setDocs(action, client, action.type === 'DELETE')
   }
 
   return { ...action.response, status: 'noaction' }

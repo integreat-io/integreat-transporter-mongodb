@@ -1,7 +1,13 @@
 import test from 'ava'
 import sinon = require('sinon')
 import { TypedData } from 'integreat'
-import { Collection, MongoClient } from 'mongodb'
+import {
+  Collection,
+  MongoClient,
+  MongoBulkWriteError,
+  WriteError,
+  BulkWriteResult,
+} from 'mongodb'
 
 import send from './send.js'
 
@@ -112,12 +118,13 @@ test('should update one item', async (t) => {
 })
 
 test('should update items', async (t) => {
-  const updateOne = sinon.stub().returns({
-    matchedCount: 1,
-    modifiedCount: 1,
+  const updateOne = sinon.stub().returns({})
+  const bulkWrite = sinon.stub().returns({
+    matchedCount: 2,
+    modifiedCount: 2,
     upsertedCount: 0,
   })
-  const connection = createConnection({ updateOne })
+  const connection = createConnection({ updateOne, bulkWrite })
   const data = [
     { id: 'ent1', $type: 'entry', title: 'Entry 1' },
     { id: 'ent2', $type: 'entry', title: 'Entry 2' },
@@ -149,14 +156,30 @@ test('should update items', async (t) => {
       title: 'Entry 2',
     },
   }
+  const expectedBulkWrite = [
+    {
+      updateOne: {
+        filter: { _id: 'entry:ent1' },
+        update: expectedSet1,
+        upsert: true,
+      },
+    },
+    {
+      updateOne: {
+        filter: { _id: 'entry:ent2' },
+        update: expectedSet2,
+        upsert: true,
+      },
+    },
+  ]
 
   const response = await send(action, connection)
 
   t.is(response?.status, 'ok')
+  t.is(updateOne.callCount, 0)
+  t.is(bulkWrite.callCount, 1)
+  t.deepEqual(bulkWrite.args[0][0], expectedBulkWrite)
   t.deepEqual(response?.data, expectedData)
-  t.is(updateOne.callCount, 2)
-  t.true(updateOne.calledWith({ _id: 'entry:ent1' }, expectedSet1))
-  t.true(updateOne.calledWith({ _id: 'entry:ent2' }, expectedSet2))
 })
 
 test('should update object data (not Integreat typed)', async (t) => {
@@ -221,15 +244,19 @@ test('should return error when data cannot be updated', async (t) => {
 })
 
 test('should return error when some of the items cannot be updated', async (t) => {
-  const updateOne = sinon.stub()
-  updateOne.onFirstCall().returns({
-    matchedCount: 1,
-    modifiedCount: 1,
-    upsertedCount: 0,
-  })
-  updateOne.onSecondCall().throws(new Error('Mongo error'))
-  updateOne.onThirdCall().throws(new Error('Mongo error'))
-  const connection = createConnection({ updateOne })
+  const error1 = { index: 1, code: 52, errmsg: 'Bad data!' } as WriteError
+  const error2 = { index: 2, code: 52, errmsg: 'Bader data!' } as WriteError
+  const mongoError = new MongoBulkWriteError(
+    {
+      message: 'Mongo error',
+      code: 52,
+      writeErrors: [error1, error2],
+    },
+    { matchedCount: 3, modifiedCount: 1, upsertedCount: 0 } as BulkWriteResult
+  )
+  const bulkWrite = sinon.stub()
+  bulkWrite.throws(mongoError)
+  const connection = createConnection({ bulkWrite })
   const data = [
     { id: 'ent1', $type: 'entry', title: 'Entry 1' },
     { id: 'ent2', $type: 'entry', title: 'Entry 2' },
@@ -249,13 +276,13 @@ test('should return error when some of the items cannot be updated', async (t) =
     status: 'error',
     data: { modifiedCount: 1, insertedCount: 0, deletedCount: 0 },
     error:
-      "Error updating items 'entry:ent2', 'entry:ent3' in mongodb: Mongo error | Mongo error",
+      "Error updating items 'entry:ent2', 'entry:ent3' in mongodb: Bad data! | Bader data!",
   }
 
   const response = await send(action, connection)
 
   t.deepEqual(response, expectedResponse)
-  t.is(updateOne.callCount, 3)
+  t.is(bulkWrite.callCount, 1)
 })
 
 test('should insert one item', async (t) => {
@@ -406,8 +433,14 @@ test('should return error when the item cannot be deleted', async (t) => {
 })
 
 test('should delete items', async (t) => {
-  const deleteOne = sinon.stub().returns({ deletedCount: 1 })
-  const connection = createConnection({ deleteOne })
+  const deleteOne = sinon.stub().returns({ deletedCount: 0 })
+  const bulkWrite = sinon.stub().returns({
+    matchedCount: 0,
+    modifiedCount: 0,
+    upsertedCount: 0,
+    deletedCount: 2,
+  })
+  const connection = createConnection({ deleteOne, bulkWrite })
   const action = {
     type: 'DELETE',
     payload: {
@@ -424,21 +457,37 @@ test('should delete items', async (t) => {
     },
   }
   const expectedData = { modifiedCount: 0, insertedCount: 0, deletedCount: 2 }
+  const expectedBulkWrite = [
+    { deleteOne: { filter: { _id: 'entry:ent1' } } },
+    { deleteOne: { filter: { _id: 'entry:ent2' } } },
+  ]
 
   const response = await send(action, connection)
 
   t.is(response?.status, 'ok')
+  t.is(deleteOne.callCount, 0)
+  t.deepEqual(bulkWrite.args[0][0], expectedBulkWrite)
   t.deepEqual(response?.data, expectedData)
-  t.is(deleteOne.callCount, 2)
-  t.true(deleteOne.calledWith({ _id: 'entry:ent1' }))
-  t.true(deleteOne.calledWith({ _id: 'entry:ent2' }))
 })
 
 test('should return error when one of the items cannot be deleted', async (t) => {
-  const deleteOne = sinon.stub()
-  deleteOne.onFirstCall().returns({ deletedCount: 1 })
-  deleteOne.onSecondCall().throws(new Error('Mongo error'))
-  const connection = createConnection({ deleteOne })
+  const error1 = { index: 1, code: 52, errmsg: 'Keeping it' } as WriteError
+  const mongoError = new MongoBulkWriteError(
+    {
+      message: 'Mongo error',
+      code: 52,
+      writeErrors: [error1],
+    },
+    {
+      matchedCount: 1,
+      modifiedCount: 0,
+      upsertedCount: 0,
+      deletedCount: 1,
+    } as BulkWriteResult
+  )
+  const bulkWrite = sinon.stub()
+  bulkWrite.throws(mongoError)
+  const connection = createConnection({ bulkWrite })
   const action = {
     type: 'DELETE',
     payload: {
@@ -457,7 +506,7 @@ test('should return error when one of the items cannot be deleted', async (t) =>
   const expectedResponse = {
     status: 'error',
     data: { modifiedCount: 0, insertedCount: 0, deletedCount: 1 },
-    error: "Error deleting item 'entry:ent4' in mongodb: Mongo error",
+    error: "Error deleting item 'entry:ent4' in mongodb: Keeping it",
   }
 
   const response = await send(action, connection)
