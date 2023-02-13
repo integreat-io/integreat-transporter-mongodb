@@ -8,14 +8,20 @@ import getDocs from './getDocs.js'
 // Helpers
 
 const createCollectionMethod = (items: Record<string, unknown>[]) => {
-  const docs = items
-  const it = docs[Symbol.iterator]()
+  let offset = 0
+  const it = items[Symbol.iterator]()
 
   const cursor = {
     // toArray returns all docs
-    toArray: async () => docs,
-    // Mimick limit method
-    limit: (size: number) => ({ toArray: async () => docs.slice(0, size) }),
+    toArray: async () => items.slice(offset),
+    // Mimick skip method
+    skip: (value: number) => {
+      offset += value
+      for (let i = 0; i < value; i++) {
+        it.next().value
+      }
+      return cursor
+    },
     // Mimick next()
     next: async () => it.next().value,
     sort: () => cursor,
@@ -548,6 +554,85 @@ test('should get second page of items when there are documents before the pageAf
   t.is(data.length, 2)
   t.is(data[0].id, 'ent3')
   t.is(data[1].id, 'ent4')
+  t.deepEqual(response?.paging, expectedPaging)
+})
+
+test('should get second page of items - using pageOffset', async (t) => {
+  const find = createCollectionMethod([
+    { id: 'ent1', $type: 'entry' },
+    { id: 'ent2', $type: 'entry' },
+    { id: 'ent3', $type: 'entry' },
+    { id: 'ent4', $type: 'entry' },
+  ])
+  const countDocuments = async () => 3
+  const client = createClient({ find, countDocuments })
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      pageSize: 2,
+      pageOffset: 2,
+    },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
+    },
+  }
+  const expectedPaging = {
+    next: {
+      type: 'entry',
+      pageOffset: 4,
+      pageSize: 2,
+    },
+  }
+  const expectedQuery = {}
+
+  const response = await getDocs(action, client)
+
+  t.deepEqual(find.args[0][0], expectedQuery)
+  t.is(response?.status, 'ok')
+  const data = response?.data as TypedData[]
+  t.is(data.length, 2)
+  t.is(data[0].id, 'ent3')
+  t.is(data[1].id, 'ent4')
+  t.deepEqual(response?.paging, expectedPaging)
+})
+
+test('should get empty result when we have passed the last page - using pageOffset', async (t) => {
+  const find = createCollectionMethod([
+    { id: 'ent1', $type: 'entry' },
+    { id: 'ent2', $type: 'entry' },
+    { id: 'ent3', $type: 'entry' },
+    { id: 'ent4', $type: 'entry' },
+  ])
+  const countDocuments = async () => 3
+  const client = createClient({ find, countDocuments })
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      pageSize: 2,
+      pageOffset: 4,
+    },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
+    },
+  }
+  const expectedPaging = {
+    next: undefined,
+  }
+  const expectedQuery = {}
+
+  const response = await getDocs(action, client)
+
+  t.deepEqual(find.args[0][0], expectedQuery)
+  t.is(response?.status, 'ok')
+  t.is((response?.data as TypedData[]).length, 0)
   t.deepEqual(response?.paging, expectedPaging)
 })
 

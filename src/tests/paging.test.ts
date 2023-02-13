@@ -29,7 +29,7 @@ test.afterEach.always(async (t) => {
   closeMongo(client)
 })
 
-// Tests
+// Tests -- pageId
 
 test('should get one page of documents with params for next page', async (t) => {
   const { collection, collectionName } = t.context
@@ -617,5 +617,100 @@ test('should keep existing queries', async (t) => {
   t.is(data.length, 2)
   t.is(data[0].id, 'ent2')
   t.is(data[1].id, 'ent3')
+  t.deepEqual(response.paging, expectedPaging)
+})
+
+// Tests -- pageOffset
+
+test('should get one page of documents with params for next page - using pageOffset', async (t) => {
+  const { collection, collectionName } = t.context
+  await insertDocuments(collection, [
+    { _id: '12345', id: 'ent1' },
+    { _id: '12346', id: 'ent2' },
+    { _id: '12347', id: 'ent2' },
+  ])
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      pageOffset: 0,
+      pageSize: 2,
+    },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+      },
+    },
+  }
+  const expectedPaging = {
+    next: {
+      type: 'entry',
+      pageOffset: 2,
+      pageSize: 2,
+    },
+  }
+
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit
+  )
+  const response = await transporter.send(action, connection)
+  await transporter.disconnect(connection)
+
+  t.is(response.status, 'ok', response.error)
+  const data = response.data as TypedData[]
+  t.is(data.length, 2)
+  t.is(data[0].id, 'ent1')
+  t.is(data[1].id, 'ent2')
+  t.deepEqual(response.paging, expectedPaging)
+})
+
+test('should get second page of documents - using pageOffset', async (t) => {
+  const { collection, collectionName } = t.context
+  await insertDocuments(collection, [
+    { _id: '12345', id: 'ent1' },
+    { _id: '12346', id: 'ent2' },
+    { _id: '12347', id: 'ent3' },
+    { _id: '12348', id: 'ent4' },
+  ])
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      pageOffset: 2,
+      pageSize: 2,
+    },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+      },
+    },
+  }
+  const expectedPaging = {
+    next: {
+      type: 'entry',
+      pageOffset: 4,
+      pageSize: 2,
+    },
+  }
+
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit
+  )
+  const response = await transporter.send(action, connection)
+  await transporter.disconnect(connection)
+
+  t.is(response.status, 'ok', response.error)
+  const data = response.data as TypedData[]
+  t.is(data.length, 2)
+  t.is(data[0].id, 'ent3')
+  t.is(data[1].id, 'ent4')
   t.deepEqual(response.paging, expectedPaging)
 })

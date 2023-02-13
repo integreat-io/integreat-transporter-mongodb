@@ -39,34 +39,41 @@ const createPageId = (
       : ['>']),
   ].join('|')
 
-const removeNonPageParams = ({
-  data,
-  target,
-  typePlural,
-  pageAfter,
-  ...params
-}: Record<string, unknown>) => params
+const preparePageParams = (
+  { data, target, typePlural, pageAfter, ...params }: Record<string, unknown>,
+  type?: string | string[],
+  id?: string | string[]
+) => ({ ...(type && { type }), ...(id && { id }), ...params })
 
 export default function createPaging(
   data: unknown[],
-  { type, id, pageSize, ...params }: Payload,
+  { type, id, pageOffset, pageSize, ...params }: Payload,
   sort?: Record<string, number>
 ): Paging {
   if (data.length === 0 || pageSize === undefined || data.length < pageSize) {
     return { next: undefined }
   }
-  const lastItem = data[data.length - 1]
-  const pageId = isDataWithMongoId(lastItem)
-    ? removePadding(btoa(createPageId(lastItem, sort)))
-    : undefined
 
-  return {
-    next: {
-      ...(type && { type }),
-      ...(id && { id }),
-      ...removeNonPageParams(params),
-      pageSize,
-      pageId,
-    },
+  if (typeof pageOffset === 'number') {
+    return {
+      next: {
+        ...preparePageParams(params, type, id),
+        pageOffset: pageOffset + pageSize,
+        pageSize,
+      },
+    }
+  } else {
+    const lastItem = data[data.length - 1]
+    const pageId = isDataWithMongoId(lastItem)
+      ? removePadding(btoa(createPageId(lastItem, sort)))
+      : undefined
+
+    return {
+      next: {
+        ...preparePageParams(params, type, id),
+        pageId,
+        pageSize,
+      },
+    }
   }
 }

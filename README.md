@@ -160,6 +160,15 @@ documents to return in the response. When nothing else is specified, the first
 page of documents is returned, and the `paging.next` prop on the response will
 hold a params object that may be used to get the next page.
 
+There are two types of pagination; `pageId` or `pageOffset`. The first one is
+used by default, and returns an id for the next page in the dataset. All details
+around this id is internal to the transporter and may change without being
+considered a breaking change. Used treat it as an id and you'll be find.
+
+The `pageOffset` approach kicks in when a `pageOffset` param is specified on the
+action, so to use this approach, you need to set `pageOffset: 0` for the first
+page. If the `pageSize` is e.g. `100`, the next `pageOffset` will be `100`, etc.
+
 Aggregation is supported by specifying a pipeline on the `aggregation` property
 on the `options` object. If a query or a sort order is specified, they are put
 first in the aggregation pipeline, query first, then sorting. Aggregations don't

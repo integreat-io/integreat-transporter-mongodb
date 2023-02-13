@@ -1,5 +1,5 @@
 import debug = require('debug')
-import { AbstractCursor, MongoClient } from 'mongodb'
+import { FindCursor, AggregationCursor, MongoClient } from 'mongodb'
 import { Action, Response, TypedData } from 'integreat'
 import prepareFilter from './prepareFilter.js'
 import prepareAggregation from './prepareAggregation.js'
@@ -17,13 +17,15 @@ import {
 
 const debugMongo = debug('integreat:transporter:mongodb')
 
+type Cursor = FindCursor | AggregationCursor
+
 interface ItemWithIdObject extends Record<string, unknown> {
   _id: Record<string, unknown>
 }
 
 // Move the cursor to the first doc after the `pageAfter`
 // When no `pageAfter`, just start from the beginning
-const moveToData = async (cursor: AbstractCursor, pageAfter?: string) => {
+const moveToData = async (cursor: Cursor, pageAfter?: string) => {
   if (!pageAfter) {
     // Start from the beginning
     return true
@@ -52,7 +54,7 @@ function mutateItem(item: unknown) {
 }
 
 // Get one page of docs from where the cursor is
-const getData = async (cursor: AbstractCursor, pageSize: number) => {
+const getData = async (cursor: Cursor, pageSize: number) => {
   const data = []
 
   while (data.length < pageSize) {
@@ -69,22 +71,26 @@ const pageAfterFromPageId = (pageId?: string) =>
   typeof pageId === 'string' ? pageId.split('|')[0] : undefined
 
 const getPage = async (
-  cursor: AbstractCursor,
-  { pageSize = Infinity, pageAfter, pageId }: Payload
+  cursor: Cursor,
+  { pageSize = Infinity, pageOffset, pageAfter, pageId }: Payload
 ) => {
-  const after = pageAfter || pageAfterFromPageId(atob(pageId))
+  if (typeof pageOffset === 'number') {
+    cursor.skip(pageOffset)
+  } else {
+    const after = pageAfter || pageAfterFromPageId(atob(pageId))
 
-  // When pageAfter is set – loop until we find the doc with that `id`
-  debugMongo('Moving to cursor %s', after)
-  const foundFirst = await moveToData(cursor, after)
+    // When pageAfter is set – loop until we find the doc with that `id`
+    debugMongo('Moving to cursor %s', after)
+    const foundFirst = await moveToData(cursor, after)
 
-  // Get the number of docs specified with pageSize - or the rest of the docs
-  if (foundFirst) {
-    debugMongo('Getting %s items', pageSize)
-    return getData(cursor, pageSize)
+    if (!foundFirst) {
+      return []
+    }
   }
 
-  return []
+  // Get the number of docs specified with pageSize - or the rest of the docs
+  debugMongo('Getting %s items', pageSize)
+  return getData(cursor, pageSize)
 }
 
 const appendToAggregation = (
