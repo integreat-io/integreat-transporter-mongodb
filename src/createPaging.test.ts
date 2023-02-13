@@ -6,7 +6,7 @@ import createPaging from './createPaging.js'
 // Helpers
 
 const prepareData = (data: TypedData[]) =>
-  data.map((item) => ({ ...item, _id: `${item.$type}:${item.id}` }))
+  data.map((item) => ({ ...item, _id: `id_${item.id}` }))
 
 // Tests
 
@@ -34,7 +34,7 @@ test('should return paging for first page', (t) => {
   const expected = {
     next: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50Mnw+', // entry:ent2|>
+      pageId: 'ZW50Mnw+', // ent2|>
       pageSize: 2,
       archived: true,
     },
@@ -52,13 +52,13 @@ test('should return paging for second page', (t) => {
   ])
   const request = {
     type: 'entry',
-    pageId: 'ZW50cnk6ZW50NHw+', // entry:ent2|>
+    pageId: 'ZW50Mnw+', // ent2|>
     pageSize: 2,
   }
   const expected = {
     next: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50NHw+', // entry:ent4|>
+      pageId: 'ZW50NHw+', // ent4|>
       pageSize: 2,
     },
   }
@@ -72,7 +72,7 @@ test('should not return paging next when data size is smaller than page size', (
   const data = prepareData([{ id: 'ent3', $type: 'entry' }])
   const request = {
     type: 'entry',
-    pageId: 'ZW50cnk6ZW50NHw+', // entry:ent2|>
+    pageId: 'ZW50Mnw+', // ent2|>
     pageSize: 2,
   }
   const expected = {
@@ -113,7 +113,7 @@ test('should return paging when sorting', (t) => {
   const expected = {
     next: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50M3xpbmRleD4y', // entry:ent3|index>2
+      pageId: 'ZW50M3xpbmRleD4y', // ent3|index>2
       pageSize: 2,
     },
   }
@@ -138,7 +138,7 @@ test('should return paging when sorting descending', (t) => {
   const expected = {
     next: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50MnxpbmRleDwx', //entry:ent2|index<1
+      pageId: 'ZW50MnxpbmRleDwx', // ent2|index<1
       pageSize: 2,
     },
   }
@@ -164,7 +164,7 @@ test('should return paging with first sort field only', (t) => {
   const expected = {
     next: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50MnxpbmRleDwx', // entry:ent2|index<1
+      pageId: 'ZW50MnxpbmRleDwx', // ent2|index<1
       pageSize: 2,
     },
   }
@@ -189,7 +189,7 @@ test('should return paging when sorting on a date field', (t) => {
   const expected = {
     next: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50M3xkYXRlPjIwMjEtMDEtMThUMTI6MDU6MTEuMDAwWg', // entry:ent3|date>2021-01-18T12:05:11.000Z
+      pageId: 'ZW50M3xkYXRlPjIwMjEtMDEtMThUMTI6MDU6MTEuMDAwWg', // ent3|date>2021-01-18T12:05:11.000Z
       pageSize: 2,
     },
   }
@@ -214,7 +214,7 @@ test('should return paging with encoded string', (t) => {
   const expected = {
     next: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50MnxtZXNzYWdlPCJFc2NhcGUlMjAlMjJtZSUyMiI', // entry:ent2|message<"Escape%20%22me%22"
+      pageId: 'ZW50MnxtZXNzYWdlPCJFc2NhcGUlMjAlMjJtZSUyMiI', // ent2|message<"Escape%20%22me%22"
       pageSize: 2,
     },
   }
@@ -240,7 +240,7 @@ test('should include id and other params when present in request', (t) => {
     next: {
       type: 'entry',
       id: 'ent1',
-      pageId: 'ZW50cnk6ZW50Mnw+', // entry:ent2|>
+      pageId: 'ZW50Mnw+', // ent2|>
       pageSize: 2,
       archived: true,
     },
@@ -266,7 +266,7 @@ test('should not touch existing query', (t) => {
     next: {
       type: 'entry',
       query: [{ path: 'index', op: 'gt', value: 1 }],
-      pageId: 'ZW50cnk6ZW50M3w+', // entry:ent3|>
+      pageId: 'ZW50M3w+', // ent3|>
       pageSize: 2,
     },
   }

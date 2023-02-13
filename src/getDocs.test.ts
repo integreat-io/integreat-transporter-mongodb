@@ -7,17 +7,8 @@ import getDocs from './getDocs.js'
 
 // Helpers
 
-const createCollectionMethod = (
-  items: Record<string, unknown>[],
-  isAggregation = false
-) => {
-  const docs = isAggregation
-    ? items
-    : items.map(({ $type, _id, ...item }) => ({
-        ...item,
-        _id: _id ?? `${$type}:${item.id}`,
-        '\\$type': $type,
-      }))
+const createCollectionMethod = (items: Record<string, unknown>[]) => {
+  const docs = items
   const it = docs[Symbol.iterator]()
 
   const cursor = {
@@ -62,7 +53,7 @@ test('should get items', async (t) => {
       },
     },
   }
-  const expectedQuery = { '\\$type': 'entry' }
+  const expectedQuery = {}
 
   const response = await getDocs(action, client)
 
@@ -99,7 +90,7 @@ test('should get one item', async (t) => {
   const data = response?.data as TypedData[]
   t.is(data.length, 1)
   t.is(data[0].id, 'ent1')
-  t.true(find.calledWith({ _id: 'entry:ent1' }))
+  t.true(find.calledWith({ id: 'ent1' }))
 })
 
 test('should get with query', async (t) => {
@@ -123,7 +114,7 @@ test('should get with query', async (t) => {
     },
   }
   const expectedQuery = {
-    '\\$type': 'entry',
+    type: 'entry',
     'personalia\\_age': { $gt: 18 },
   }
 
@@ -135,16 +126,13 @@ test('should get with query', async (t) => {
 
 test('should get with aggregation', async (t) => {
   const find = createCollectionMethod([])
-  const aggregate = createCollectionMethod(
-    [
-      {
-        _id: { 'values\\_account': '1501', id: 'ent1' },
-        updatedAt: '2021-01-18T00:00:00Z',
-        'values.status': 'inactive',
-      },
-    ],
-    true
-  )
+  const aggregate = createCollectionMethod([
+    {
+      _id: { 'values\\_account': '1501', id: 'ent1' },
+      updatedAt: '2021-01-18T00:00:00Z',
+      'values.status': 'inactive',
+    },
+  ])
   const client = createClient({ find, aggregate })
   const action = {
     type: 'GET',
@@ -185,7 +173,7 @@ test('should get with aggregation', async (t) => {
     },
     {
       $match: {
-        '\\$type': 'entry',
+        type: 'entry',
         'personalia\\_age': { $gt: 18 },
       },
     },
@@ -242,7 +230,7 @@ test('should get put query and sort first in aggregation pipeline', async (t) =>
   const expectedPipeline = [
     {
       $match: {
-        '\\$type': 'entry',
+        type: 'entry',
         'personalia\\_age': { $gt: 18 },
       },
     },
@@ -361,7 +349,7 @@ test('should get one page of items', async (t) => {
       },
     },
   }
-  const expectedQuery = { '\\$type': 'entry' }
+  const expectedQuery = {}
 
   const response = await getDocs(action, client)
 
@@ -398,7 +386,7 @@ test('should return params for next page', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50Mnw+', // entry:ent2|>
+      pageId: 'ZW50Mnw+', // ent2|>
       pageSize: 2,
     },
   }
@@ -421,9 +409,9 @@ test('should get second page of items', async (t) => {
     payload: {
       type: 'entry',
       pageSize: 2,
-      pageAfter: 'entry:ent2',
+      pageAfter: 'ent2',
       typePlural: 'entries',
-      pageId: 'ZW50cnk6ZW50Mnw+', // entry:ent2|>
+      pageId: 'ZW50Mnw+', // ent2|>
     },
     meta: {
       options: {
@@ -435,11 +423,11 @@ test('should get second page of items', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50NHw+', // entry:ent4|>
+      pageId: 'ZW50NHw+', // ent4|>
       pageSize: 2,
     },
   }
-  const expectedQuery = { '\\$type': 'entry', _id: { $gte: 'entry:ent2' } }
+  const expectedQuery = { id: { $gte: 'ent2' } }
 
   const response = await getDocs(action, client)
 
@@ -461,9 +449,9 @@ test('should get empty result when we have passed the last page', async (t) => {
     payload: {
       type: 'entry',
       pageSize: 2,
-      pageAfter: 'entry:ent4',
+      pageAfter: 'ent4',
       typePlural: 'entries',
-      query: [{ path: '_id', op: 'gte', value: 'entry:ent4' }],
+      query: [{ path: 'id', op: 'gte', value: 'ent4' }],
     },
     meta: {
       options: {
@@ -475,7 +463,7 @@ test('should get empty result when we have passed the last page', async (t) => {
   const expectedPaging = {
     next: undefined,
   }
-  const expectedQuery = { '\\$type': 'entry', _id: { $gte: 'entry:ent4' } }
+  const expectedQuery = { id: { $gte: 'ent4' } }
 
   const response = await getDocs(action, client)
 
@@ -494,9 +482,9 @@ test('should get empty result when the pageAfter doc is not found', async (t) =>
     payload: {
       type: 'entry',
       pageSize: 2,
-      pageAfter: 'entry:ent4',
+      pageAfter: 'ent4',
       typePlural: 'entries',
-      query: [{ path: '_id', op: 'gte', value: 'entry:ent4' }],
+      query: [{ path: 'id', op: 'gte', value: 'ent4' }],
     },
     meta: {
       options: {
@@ -508,7 +496,7 @@ test('should get empty result when the pageAfter doc is not found', async (t) =>
   const expectedPaging = {
     next: undefined,
   }
-  const expectedQuery = { '\\$type': 'entry', _id: { $gte: 'entry:ent4' } }
+  const expectedQuery = { id: { $gte: 'ent4' } }
 
   const response = await getDocs(action, client)
 
@@ -532,7 +520,7 @@ test('should get second page of items when there are documents before the pageAf
     payload: {
       type: 'entry',
       pageSize: 2,
-      pageId: 'ZW50cnk6ZW50MnxpbmRleD4x', // entry:ent2|index>1
+      pageId: 'ZW50MnxpbmRleD4x', // ent2|index>1
       typePlural: 'entries',
     },
     meta: {
@@ -546,11 +534,11 @@ test('should get second page of items when there are documents before the pageAf
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50NHxpbmRleD4z', // entry:ent4|index>3
+      pageId: 'ZW50NHxpbmRleD4z', // ent4|index>3
       pageSize: 2,
     },
   }
-  const expectedQuery = { '\\$type': 'entry', index: { $gte: 1 } }
+  const expectedQuery = { index: { $gte: 1 } }
 
   const response = await getDocs(action, client)
 
@@ -571,7 +559,7 @@ test('should support allowDiskUse for finds', async (t) => {
     type: 'GET',
     payload: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50MnxpbmRleD4x', // entry:ent2|index>1
+      pageId: 'ZW50MnxpbmRleD4x', // ent2|index>1
       typePlural: 'entries',
     },
     meta: {
@@ -593,7 +581,7 @@ test('should support allowDiskUse for finds', async (t) => {
 
 test('should support allowDiskUse for aggregation', async (t) => {
   const find = createCollectionMethod([])
-  const aggregate = createCollectionMethod([], true)
+  const aggregate = createCollectionMethod([])
   const client = createClient({ find, aggregate })
   const action = {
     type: 'GET',

@@ -35,7 +35,7 @@ test('should return mongo aggregation pipeline', (t) => {
     },
     {
       $match: {
-        '\\$type': 'entry',
+        type: 'entry',
         'personalia\\_age': { $gt: 18 },
       },
     },
@@ -216,7 +216,7 @@ test('should escape paths used as props', (t) => {
     },
     {
       $match: {
-        '\\$type': 'entry',
+        type: 'entry',
         'values.age': { $gt: 18 },
       },
     },

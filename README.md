@@ -28,9 +28,10 @@ import Integreat from 'integreat'
 import mongodb from 'integreat-transporter-mongodb'
 import defs from './config'
 
-const resources = Integreat.mergeResources(Integreat.resources(), {
+const resources = {
+  // ... you'll probably want to include other resources as well
   transporters: { mongodb },
-})
+}
 const great = Integreat.create(defs, resources)
 
 // ... and then dispatch actions as usual
@@ -60,6 +61,8 @@ Example service configuration:
 ```
 
 The `uri` is used as the uri to the database.
+
+#### Querying
 
 An endpoint may have a `query` property, which should be an array of path
 objects describing the query object used with MongoDB's `find()` method.
@@ -98,7 +101,7 @@ The query object will look like this, for a request for items of type `entry`:
 
 ```javascript
 {
-  $type: 'entry',
+  type: 'entry',
   'meta.status': 'draft',
   'meta.views': { $gt: 1000 }
 }
@@ -139,6 +142,18 @@ query: [
   ],
 ]
 ```
+
+When no query is specified and the action has an `id` param, the following query
+will be used by default (the value of `id` is `'ent1'` in this example):
+
+```javascript
+{
+  id: 'ent1',
+}
+
+```
+
+#### Pagination
 
 When the `pageSize` param is set in a request, it is taken as the max number of
 documents to return in the response. When nothing else is specified, the first
@@ -182,11 +197,7 @@ Example of an aggregation pipeline:
 }
 ```
 
-**Note 1:** This transporter is currently updating and deleting arrays of documents
-by calling `updateOne` and `deleteOne` for every item in the array. This is not
-the best method of doing it, so stay tuned for improvements.
-
-**Note 2:** As MongoDB does not allow keys with `.` in it or starting with `$`,
+**Note:** As MongoDB does not allow keys with `.` in it or starting with `$`,
 so these characters are mapped. `.` is always mapped to `\_`, and `$` is mapped
 to `\$` when used at the beginning of a key. Consequently, `\` is mapped to
 `\\` as well.

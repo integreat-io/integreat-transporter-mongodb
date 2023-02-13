@@ -32,7 +32,7 @@ const moveToData = async (cursor: AbstractCursor, pageAfter?: string) => {
   let doc
   do {
     doc = await cursor.next()
-  } while (doc && doc._id !== pageAfter)
+  } while (doc && doc.id !== pageAfter)
 
   return !!doc // false if the doc to start after is not found
 }
@@ -74,7 +74,7 @@ const getPage = async (
 ) => {
   const after = pageAfter || pageAfterFromPageId(atob(pageId))
 
-  // When pageAfter is set – loop until we find the doc with that _id
+  // When pageAfter is set – loop until we find the doc with that `id`
   debugMongo('Moving to cursor %s', after)
   const foundFirst = await moveToData(cursor, after)
 

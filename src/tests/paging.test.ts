@@ -25,7 +25,7 @@ test.beforeEach(async (t) => {
 
 test.afterEach.always(async (t) => {
   const { client, collection } = t.context
-  await deleteDocuments(collection, { '\\$type': 'entry' })
+  await deleteDocuments(collection, {})
   closeMongo(client)
 })
 
@@ -34,9 +34,9 @@ test.afterEach.always(async (t) => {
 test('should get one page of documents with params for next page', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
-    { _id: 'entry:ent1', id: 'ent1', '\\$type': 'entry' },
-    { _id: 'entry:ent2', id: 'ent2', '\\$type': 'entry' },
-    { _id: 'entry:ent3', id: 'ent2', '\\$type': 'entry' },
+    { _id: '12345', id: 'ent1' },
+    { _id: '12346', id: 'ent2' },
+    { _id: '12347', id: 'ent2' },
   ])
   const action = {
     type: 'GET',
@@ -54,7 +54,7 @@ test('should get one page of documents with params for next page', async (t) => 
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50Mnw+',
+      pageId: 'ZW50Mnw+',
       pageSize: 2,
     },
   }
@@ -79,16 +79,16 @@ test('should get one page of documents with params for next page', async (t) => 
 test('should get second page of documents', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
-    { _id: 'entry:ent1', id: 'ent1', '\\$type': 'entry' },
-    { _id: 'entry:ent2', id: 'ent2', '\\$type': 'entry' },
-    { _id: 'entry:ent3', id: 'ent3', '\\$type': 'entry' },
-    { _id: 'entry:ent4', id: 'ent4', '\\$type': 'entry' },
+    { _id: '12345', id: 'ent1' },
+    { _id: '12346', id: 'ent2' },
+    { _id: '12347', id: 'ent3' },
+    { _id: '12348', id: 'ent4' },
   ])
   const action = {
     type: 'GET',
     payload: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50Mnw+',
+      pageId: 'ZW50Mnw+',
       pageSize: 2,
     },
     meta: {
@@ -101,7 +101,7 @@ test('should get second page of documents', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50NHw+',
+      pageId: 'ZW50NHw+',
       pageSize: 2,
     },
   }
@@ -119,7 +119,6 @@ test('should get second page of documents', async (t) => {
   const data = response.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent3')
-  t.is(data[0].$type, 'entry')
   t.is(data[1].id, 'ent4')
   t.deepEqual(response.paging, expectedPaging)
 })
@@ -128,15 +127,13 @@ test('should get second page of documents using date index', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
     {
-      _id: 'entry:ent1',
+      _id: '12345',
       id: 'ent1',
-      '\\$type': 'entry',
       date: new Date('2021-01-18T10:44:07Z'),
     },
     {
-      _id: 'entry:ent2',
+      _id: '12346',
       id: 'ent2',
-      '\\$type': 'entry',
       date: new Date('2021-01-18T11:05:16Z'),
     },
   ])
@@ -144,7 +141,7 @@ test('should get second page of documents using date index', async (t) => {
     type: 'GET',
     payload: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50MXxkYXRlPjIwMjEtMDEtMThUMTA6NDQ6MDcuMDAwWg',
+      pageId: 'ZW50MXxkYXRlPjIwMjEtMDEtMThUMTA6NDQ6MDcuMDAwWg',
       pageSize: 1,
     },
     meta: {
@@ -158,7 +155,7 @@ test('should get second page of documents using date index', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50MnxkYXRlPjIwMjEtMDEtMThUMTE6MDU6MTYuMDAwWg',
+      pageId: 'ZW50MnxkYXRlPjIwMjEtMDEtMThUMTE6MDU6MTYuMDAwWg',
       pageSize: 1,
     },
   }
@@ -176,22 +173,21 @@ test('should get second page of documents using date index', async (t) => {
   const data = response.data as TypedData[]
   t.is(data.length, 1)
   t.is(data[0].id, 'ent2')
-  t.is(data[0].$type, 'entry')
   t.deepEqual(response.paging, expectedPaging)
 })
 
 test('should return less than a full page at the end', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
-    { _id: 'entry:ent1', id: 'ent1', '\\$type': 'entry' },
-    { _id: 'entry:ent2', id: 'ent2', '\\$type': 'entry' },
-    { _id: 'entry:ent3', id: 'ent3', '\\$type': 'entry' },
+    { _id: '12345', id: 'ent1' },
+    { _id: '12346', id: 'ent2' },
+    { _id: '12347', id: 'ent3' },
   ])
   const action = {
     type: 'GET',
     payload: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50Mnw+',
+      pageId: 'ZW50Mnw+',
       pageSize: 2,
     },
     meta: {
@@ -224,17 +220,17 @@ test('should return less than a full page at the end', async (t) => {
 test('should return empty array when past last page', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
-    { _id: 'entry:ent1', id: 'ent1', '\\$type': 'entry' },
-    { _id: 'entry:ent2', id: 'ent2', '\\$type': 'entry' },
-    { _id: 'entry:ent3', id: 'ent3', '\\$type': 'entry' },
-    { _id: 'entry:ent4', id: 'ent4', '\\$type': 'entry' },
+    { _id: '12345', id: 'ent1' },
+    { _id: '12346', id: 'ent2' },
+    { _id: '12347', id: 'ent3' },
+    { _id: '12348', id: 'ent4' },
   ])
   const action = {
     type: 'GET',
     payload: {
       type: 'entry',
-      query: [{ path: '_id', op: 'gte', value: 'entry:ent4' }],
-      pageId: 'ZW50cnk6ZW50NHw+',
+      query: [{ path: '_id', op: 'gte', value: 'ent4' }],
+      pageId: 'ZW50NHw+',
       pageSize: 2,
     },
     meta: {
@@ -266,14 +262,14 @@ test('should return empty array when past last page', async (t) => {
 test('should not throw when pageId does not exist', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
-    { _id: 'entry:ent1', id: 'ent1', '\\$type': 'entry' },
-    { _id: 'entry:ent2', id: 'ent2', '\\$type': 'entry' },
+    { _id: '12345', id: 'ent1' },
+    { _id: '12346', id: 'ent2' },
   ])
   const action = {
     type: 'GET',
     payload: {
       type: 'entry',
-      query: [{ path: '_id', op: 'gte', value: 'entry:ent3' }],
+      query: [{ path: 'id', op: 'gte', value: 'ent3' }],
       pageSize: 2,
     },
     meta: {
@@ -306,27 +302,23 @@ test('should get second page of documents when sorting', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
     {
-      _id: 'entry:ent1',
+      _id: '12345',
       id: 'ent1',
-      '\\$type': 'entry',
       attributes: { index: 3 },
     },
     {
-      _id: 'entry:ent2',
+      _id: '12346',
       id: 'ent2',
-      '\\$type': 'entry',
       attributes: { index: 1 },
     },
     {
-      _id: 'entry:ent3',
+      _id: '12347',
       id: 'ent3',
-      '\\$type': 'entry',
       attributes: { index: 2 },
     },
     {
-      _id: 'entry:ent4',
+      _id: '12348',
       id: 'ent4',
-      '\\$type': 'entry',
       attributes: { index: 4 },
     },
   ])
@@ -334,7 +326,7 @@ test('should get second page of documents when sorting', async (t) => {
     type: 'GET',
     payload: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50M3xhdHRyaWJ1dGVzLmluZGV4PjI',
+      pageId: 'ZW50M3xhdHRyaWJ1dGVzLmluZGV4PjI',
       pageSize: 2,
     },
     meta: {
@@ -348,7 +340,7 @@ test('should get second page of documents when sorting', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50NHxhdHRyaWJ1dGVzLmluZGV4PjQ',
+      pageId: 'ZW50NHxhdHRyaWJ1dGVzLmluZGV4PjQ',
       pageSize: 2,
     },
   }
@@ -374,27 +366,23 @@ test('should get second page of documents when sorting descending', async (t) =>
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
     {
-      _id: 'entry:ent1',
+      _id: '12345',
       id: 'ent1',
-      '\\$type': 'entry',
       attributes: { index: 3 },
     },
     {
-      _id: 'entry:ent2',
+      _id: '12346',
       id: 'ent2',
-      '\\$type': 'entry',
       attributes: { index: 1 },
     },
     {
-      _id: 'entry:ent3',
+      _id: '12347',
       id: 'ent3',
-      '\\$type': 'entry',
       attributes: { index: 2 },
     },
     {
-      _id: 'entry:ent4',
+      _id: '12348',
       id: 'ent4',
-      '\\$type': 'entry',
       attributes: { index: 4 },
     },
   ])
@@ -402,7 +390,7 @@ test('should get second page of documents when sorting descending', async (t) =>
     type: 'GET',
     payload: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50MXxhdHRyaWJ1dGVzLmluZGV4PDM',
+      pageId: 'ZW50MXxhdHRyaWJ1dGVzLmluZGV4PDM',
       pageSize: 2,
     },
     meta: {
@@ -416,7 +404,7 @@ test('should get second page of documents when sorting descending', async (t) =>
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50MnxhdHRyaWJ1dGVzLmluZGV4PDE',
+      pageId: 'ZW50MnxhdHRyaWJ1dGVzLmluZGV4PDE',
       pageSize: 2,
     },
   }
@@ -442,27 +430,23 @@ test('should return page params when sorting by two dimensions', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
     {
-      _id: 'entry:ent1',
+      _id: '12345',
       id: 'ent1',
-      '\\$type': 'entry',
       attributes: { timestamp: 1584211391000, index: 3 }, // 3
     },
     {
-      _id: 'entry:ent2',
+      _id: '12346',
       id: 'ent2',
-      '\\$type': 'entry',
       attributes: { timestamp: 1584211391000, index: 1 }, // 2
     },
     {
-      _id: 'entry:ent3',
+      _id: '12347',
       id: 'ent3',
-      '\\$type': 'entry',
       attributes: { timestamp: 1584211390083, index: 2 }, // 4
     },
     {
-      _id: 'entry:ent4',
+      _id: '12348',
       id: 'ent4',
-      '\\$type': 'entry',
       attributes: { timestamp: 1584211393300, index: 4 }, // 1
     },
   ])
@@ -484,7 +468,7 @@ test('should return page params when sorting by two dimensions', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50MnxhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkxMDAw',
+      pageId: 'ZW50MnxhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkxMDAw',
       pageSize: 2,
     },
   }
@@ -510,27 +494,23 @@ test('should get second page of documents when sorting key is not unique', async
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
     {
-      _id: 'entry:ent1',
+      _id: '12345',
       id: 'ent1',
-      '\\$type': 'entry',
       attributes: { index: 2 },
     },
     {
-      _id: 'entry:ent2',
+      _id: '12346',
       id: 'ent2',
-      '\\$type': 'entry',
       attributes: { index: 1 },
     },
     {
-      _id: 'entry:ent3',
+      _id: '12347',
       id: 'ent3',
-      '\\$type': 'entry',
       attributes: { index: 1 },
     },
     {
-      _id: 'entry:ent4',
+      _id: '12348',
       id: 'ent4',
-      '\\$type': 'entry',
       attributes: { index: 3 },
     },
   ])
@@ -538,7 +518,7 @@ test('should get second page of documents when sorting key is not unique', async
     type: 'GET',
     payload: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50M3xhdHRyaWJ1dGVzLmluZGV4PjE',
+      pageId: 'ZW50M3xhdHRyaWJ1dGVzLmluZGV4PjE',
       pageSize: 2,
     },
     meta: {
@@ -552,7 +532,7 @@ test('should get second page of documents when sorting key is not unique', async
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50cnk6ZW50NHxhdHRyaWJ1dGVzLmluZGV4PjM',
+      pageId: 'ZW50NHxhdHRyaWJ1dGVzLmluZGV4PjM',
       pageSize: 2,
     },
   }
@@ -578,27 +558,23 @@ test('should keep existing queries', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
     {
-      _id: 'entry:ent1',
+      _id: '12345',
       id: 'ent1',
-      '\\$type': 'entry',
       attributes: { timestamp: 1584211391000, index: 3 }, // 3
     },
     {
-      _id: 'entry:ent2',
+      _id: '12346',
       id: 'ent2',
-      '\\$type': 'entry',
       attributes: { timestamp: 1584211391000, index: 1 }, // 2
     },
     {
-      _id: 'entry:ent3',
+      _id: '12347',
       id: 'ent3',
-      '\\$type': 'entry',
       attributes: { timestamp: 1584211390083, index: 2 }, // 4
     },
     {
-      _id: 'entry:ent4',
+      _id: '12348',
       id: 'ent4',
-      '\\$type': 'entry',
       attributes: { timestamp: 1584211393300, index: 4 }, // 1
     },
   ])
@@ -622,7 +598,7 @@ test('should keep existing queries', async (t) => {
     next: {
       type: 'entry',
       query: [{ path: 'attributes.index', op: 'lt', value: 3 }],
-      pageId: 'ZW50cnk6ZW50M3xhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkwMDgz',
+      pageId: 'ZW50M3xhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkwMDgz',
       pageSize: 2,
     },
   }

@@ -32,8 +32,7 @@ const createConnection = (collection: unknown) => ({
 const createFind = (items: TypedData[]) => {
   const docs = items.map(({ $type, ...item }) => ({
     ...item,
-    _id: `${$type}:${item.id}`,
-    '\\$type': $type,
+    id: item.id,
   }))
   const it = docs[Symbol.iterator]()
 
@@ -75,9 +74,7 @@ test('should get items', async (t) => {
   const data = response?.data as TypedData[]
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
-  t.is(data[0].$type, 'entry')
   t.is(data[1].id, 'ent2')
-  t.true(find.calledWith({ '\\$type': 'entry' }))
 })
 
 test('should update one item', async (t) => {
@@ -101,7 +98,6 @@ test('should update one item', async (t) => {
   const expectedData = { modifiedCount: 1, insertedCount: 0, deletedCount: 0 }
   const expectedSet = {
     $set: {
-      _id: 'entry:ent1',
       id: 'ent1',
       '\\$type': 'entry',
       title: 'Entry 1',
@@ -113,7 +109,7 @@ test('should update one item', async (t) => {
   t.is(response?.status, 'ok')
   t.deepEqual(response?.data, expectedData)
   t.is(updateOne.callCount, 1)
-  t.deepEqual(updateOne.args[0][0], { _id: 'entry:ent1' })
+  t.deepEqual(updateOne.args[0][0], { id: 'ent1' })
   t.deepEqual(updateOne.args[0][1], expectedSet)
 })
 
@@ -142,7 +138,6 @@ test('should update items', async (t) => {
   const expectedData = { modifiedCount: 2, insertedCount: 0, deletedCount: 0 }
   const expectedSet1 = {
     $set: {
-      _id: 'entry:ent1',
       id: 'ent1',
       '\\$type': 'entry',
       title: 'Entry 1',
@@ -150,7 +145,6 @@ test('should update items', async (t) => {
   }
   const expectedSet2 = {
     $set: {
-      _id: 'entry:ent2',
       id: 'ent2',
       '\\$type': 'entry',
       title: 'Entry 2',
@@ -159,14 +153,14 @@ test('should update items', async (t) => {
   const expectedBulkWrite = [
     {
       updateOne: {
-        filter: { _id: 'entry:ent1' },
+        filter: { id: 'ent1' },
         update: expectedSet1,
         upsert: true,
       },
     },
     {
       updateOne: {
-        filter: { _id: 'entry:ent2' },
+        filter: { id: 'ent2' },
         update: expectedSet2,
         upsert: true,
       },
@@ -202,7 +196,7 @@ test('should update object data (not Integreat typed)', async (t) => {
   }
   const expectedData = { modifiedCount: 0, insertedCount: 1, deletedCount: 0 }
   const expectedSet = {
-    $set: { _id: 'ent1', id: 'ent1', title: 'Entry 1' },
+    $set: { id: 'ent1', title: 'Entry 1' },
   }
 
   const response = await send(action, connection)
@@ -210,7 +204,7 @@ test('should update object data (not Integreat typed)', async (t) => {
   t.is(response?.status, 'ok')
   t.deepEqual(response?.data, expectedData)
   t.is(updateOne.callCount, 1)
-  t.deepEqual(updateOne.args[0][0], { _id: 'ent1' })
+  t.deepEqual(updateOne.args[0][0], { id: 'ent1' })
   t.deepEqual(updateOne.args[0][1], expectedSet)
 })
 
@@ -235,7 +229,7 @@ test('should return error when data cannot be updated', async (t) => {
       insertedCount: 0,
       deletedCount: 0,
     },
-    error: "Error updating item 'entry:ent1' in mongodb: Mongo error",
+    error: "Error updating item 'ent1' in mongodb: Mongo error",
   }
 
   const response = await send(action, connection)
@@ -276,7 +270,7 @@ test('should return error when some of the items cannot be updated', async (t) =
     status: 'error',
     data: { modifiedCount: 1, insertedCount: 0, deletedCount: 0 },
     error:
-      "Error updating items 'entry:ent2', 'entry:ent3' in mongodb: Bad data! | Bader data!",
+      "Error updating items 'ent2', 'ent3' in mongodb: Bad data! | Bader data!",
   }
 
   const response = await send(action, connection)
@@ -304,9 +298,8 @@ test('should insert one item', async (t) => {
     },
   }
   const expectedData = { modifiedCount: 0, insertedCount: 1, deletedCount: 0 }
-  const _id = 'entry:ent3'
   const expectedSet = {
-    $set: { _id, id: 'ent3', '\\$type': 'entry', title: 'Entry 3' },
+    $set: { id: 'ent3', '\\$type': 'entry', title: 'Entry 3' },
   }
 
   const response = await send(action, connection)
@@ -314,7 +307,7 @@ test('should insert one item', async (t) => {
   t.is(response?.status, 'ok')
   t.deepEqual(response?.data, expectedData)
   t.is(updateOne.callCount, 1)
-  t.deepEqual(updateOne.args[0][0], { _id: 'entry:ent3' })
+  t.deepEqual(updateOne.args[0][0], { id: 'ent3' })
   t.deepEqual(updateOne.args[0][1], expectedSet)
   t.deepEqual(updateOne.args[0][2], { upsert: true })
 })
@@ -397,7 +390,7 @@ test('should delete one item', async (t) => {
   t.is(response?.status, 'ok')
   t.deepEqual(response?.data, expectedData)
   t.is(deleteOne.callCount, 1)
-  t.true(deleteOne.calledWith({ _id: 'entry:ent1' }))
+  t.true(deleteOne.calledWith({ id: 'ent1' }))
 })
 
 test('should return error when the item cannot be deleted', async (t) => {
@@ -424,7 +417,7 @@ test('should return error when the item cannot be deleted', async (t) => {
       insertedCount: 0,
       deletedCount: 0,
     },
-    error: "Error deleting item 'entry:ent3' in mongodb: Mongo error",
+    error: "Error deleting item 'ent3' in mongodb: Mongo error",
   }
 
   const response = await send(action, connection)
@@ -458,8 +451,8 @@ test('should delete items', async (t) => {
   }
   const expectedData = { modifiedCount: 0, insertedCount: 0, deletedCount: 2 }
   const expectedBulkWrite = [
-    { deleteOne: { filter: { _id: 'entry:ent1' } } },
-    { deleteOne: { filter: { _id: 'entry:ent2' } } },
+    { deleteOne: { filter: { id: 'ent1' } } },
+    { deleteOne: { filter: { id: 'ent2' } } },
   ]
 
   const response = await send(action, connection)
@@ -506,7 +499,7 @@ test('should return error when one of the items cannot be deleted', async (t) =>
   const expectedResponse = {
     status: 'error',
     data: { modifiedCount: 0, insertedCount: 0, deletedCount: 1 },
-    error: "Error deleting item 'entry:ent4' in mongodb: Keeping it",
+    error: "Error deleting item 'ent4' in mongodb: Keeping it",
   }
 
   const response = await send(action, connection)

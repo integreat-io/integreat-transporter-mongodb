@@ -10,7 +10,7 @@ export interface Paging {
 }
 
 const isDataWithMongoId = (value: unknown): value is TypedData =>
-  isObject(value) && typeof value._id === 'string' // Not quite right typing
+  isObject(value) && typeof value.id === 'string'
 
 const encodeValue = (value: unknown) =>
   typeof value === 'string'
@@ -33,7 +33,7 @@ const createPageId = (
   sort?: Record<string, number>
 ): string =>
   [
-    lastItem._id,
+    lastItem.id,
     ...(sort
       ? Object.entries(sort).slice(0, 1).map(createSortString(lastItem))
       : ['>']),

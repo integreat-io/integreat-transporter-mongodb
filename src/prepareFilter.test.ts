@@ -4,21 +4,21 @@ import prepareFilter from './prepareFilter.js'
 
 // Tests
 
-test('should return type filter', (t) => {
+test('should return no filter when no query or no id is specified', (t) => {
   const type = 'entry'
   const query = undefined
-  const expected = { '\\$type': 'entry' }
+  const expected = {}
 
   const ret = prepareFilter(query, { type })
 
   t.deepEqual(ret, expected)
 })
 
-test('should return _id filter', (t) => {
+test('should return id filter', (t) => {
   const type = 'entry'
   const id = 'ent1'
   const query = undefined
-  const expected = { _id: 'entry:ent1' }
+  const expected = { id: 'ent1' }
 
   const ret = prepareFilter(query, { type, id })
 
@@ -41,7 +41,7 @@ test('should use options.query as filter', (t) => {
     { path: 'jobs', op: 'isArray' },
   ]
   const expected = {
-    '\\$type': 'other',
+    type: 'other',
     'meta.parentType': 'entry',
     'meta.views': { $gt: 300 },
     completedAt: { $eq: null },
@@ -71,7 +71,7 @@ test('should add request query to options query filter', (t) => {
     { path: 'meta\\.parentType', param: 'type' },
   ]
   const expected = {
-    '\\$type': 'other',
+    type: 'other',
     'meta\\_parentType': 'entry',
     'meta.section': 'news',
     'meta.views': { $gt: 300 },
@@ -95,7 +95,7 @@ test('should add request query object to options query filter', (t) => {
     { path: 'meta\\.parentType', param: 'type' },
   ]
   const expected = {
-    '\\$type': 'other',
+    type: 'other',
     'meta\\_parentType': 'entry',
     'meta.section': 'news',
     'meta.views': { $gt: 300 },
@@ -113,7 +113,6 @@ test('should add request query to type filter', (t) => {
   }
   const query = undefined
   const expected = {
-    '\\$type': 'entry',
     'meta.section': 'news',
   }
 
@@ -130,7 +129,7 @@ test('should add request query to id filter', (t) => {
   }
   const query = undefined
   const expected = {
-    _id: 'entry:ent1',
+    id: 'ent1',
     'meta.section': 'news',
   }
 
@@ -240,7 +239,6 @@ test('should cast date strings as Date', (t) => {
   }
   const query = undefined
   const expected = {
-    '\\$type': 'entry',
     'meta.updatedAt': new Date('2017-11-13T18:43:01.000Z'),
   }
 
@@ -256,7 +254,6 @@ test('should cast date strings without microseconds as Date', (t) => {
   }
   const query = undefined
   const expected = {
-    '\\$type': 'entry',
     'meta.updatedAt': new Date('2017-11-13T18:43:01Z'),
   }
 
@@ -272,7 +269,6 @@ test('should cast date strings with other time zone as Date', (t) => {
   }
   const query = undefined
   const expected = {
-    '\\$type': 'entry',
     'meta.updatedAt': new Date('2017-11-13T18:43:01.000+01:00'),
   }
 
@@ -290,7 +286,6 @@ test('should not touch Date object when casting', (t) => {
   }
   const query = undefined
   const expected = {
-    '\\$type': 'entry',
     'meta.updatedAt': new Date('2017-11-13T18:43:01.000Z'),
   }
 
@@ -302,12 +297,11 @@ test('should not touch Date object when casting', (t) => {
 test('should not touch arrays when casting', (t) => {
   const params = {
     type: 'entry',
-    query: [{ path: '_id', op: 'in', value: ['entry:ent1', 'entry:ent2'] }],
+    query: [{ path: '_id', op: 'in', value: ['ent1', 'ent2'] }],
   }
   const query = undefined
   const expected = {
-    '\\$type': 'entry',
-    _id: { $in: ['entry:ent1', 'entry:ent2'] },
+    _id: { $in: ['ent1', 'ent2'] },
   }
 
   const ret = prepareFilter(query, params)
@@ -347,13 +341,13 @@ test('should expand pageId to queries', (t) => {
   const params = {
     type: 'entry',
     id: 'ent1',
-    pageId: 'ZW50cnk6ZW50Mnw+', // entry:ent2|>
+    pageId: 'ZW50Mnw+', // ent2|>
     query: [{ path: 'meta.section', value: 'news' }],
   }
   const expected = {
     'meta.views': { $gt: 300 },
     'meta.section': 'news',
-    _id: { $gte: 'entry:ent2' },
+    id: { $gte: 'ent2' },
   }
 
   const ret = prepareFilter(query, params)
@@ -367,7 +361,7 @@ test('should expand pageId with removed padding to queries', (t) => {
     type: 'entry',
     id: 'ent1',
     pageId:
-      'ZW50cnk6ZW50MnxhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkxMDAwfGF0dHJpYnV0ZXMuaW5kZXg+MQ', // entry:ent2|attributes.timestamp<1584211391000|attributes.index>1
+      'ZW50MnxhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkxMDAwfGF0dHJpYnV0ZXMuaW5kZXg+MQ', // ent2|attributes.timestamp<1584211391000|attributes.index>1
     query: [{ path: 'meta.section', value: 'news' }],
   }
   const expected = {
@@ -387,7 +381,7 @@ test('should expand pageId with sort filter to queries', (t) => {
   const params = {
     type: 'entry',
     id: 'ent1',
-    pageId: 'ZW50cnk6ZW50MnxpbmRleDwxfGlkPiJlbnQyIg', // entry:ent2|index<1|id>"ent2"
+    pageId: 'ZW50MnxpbmRleDwxfGlkPiJlbnQyIg', // ent2|index<1|id>"ent2"
     query: [{ path: 'meta.section', value: 'news' }],
   }
   const expected = {
@@ -407,7 +401,7 @@ test('should expand pageId with encoded string', (t) => {
   const params = {
     type: 'entry',
     id: 'ent1',
-    pageId: 'ZW50cnk6ZW50MnxpbmRleDwxfG1lc3NhZ2U8IkVzY2FwZSUyMCUyMm1lJTIyIg', // entry:ent2|index<1|message<"Escape%20%22me%22"
+    pageId: 'ZW50MnxpbmRleDwxfG1lc3NhZ2U8IkVzY2FwZSUyMCUyMm1lJTIyIg', // ent2|index<1|message<"Escape%20%22me%22"
     query: [{ path: 'meta.section', value: 'news' }],
   }
   const expected = {
@@ -427,7 +421,7 @@ test('should expand pageId with unencoded string', (t) => {
   const params = {
     type: 'entry',
     id: 'ent1',
-    pageId: 'ZW50cnk6ZW50MnxpbmRleDwxfGlkPmVudDI', // entry:ent2|index<1|id>ent2
+    pageId: 'ZW50MnxpbmRleDwxfGlkPmVudDI', // ent2|index<1|id>ent2
     query: [{ path: 'meta.section', value: 'news' }],
   }
   const expected = {
@@ -447,7 +441,7 @@ test('should expand pageId with date string', (t) => {
   const params = {
     type: 'entry',
     id: 'ent1',
-    pageId: 'ZW50cnk6ZW50M3xkYXRlPjIwMjEtMDEtMThUMTI6MDU6MTEuMDAwWg', // entry:ent3|date>2021-01-18T12:05:11.000Z
+    pageId: 'ZW50M3xkYXRlPjIwMjEtMDEtMThUMTI6MDU6MTEuMDAwWg', // ent3|date>2021-01-18T12:05:11.000Z
     query: [{ path: 'meta.section', value: 'news' }],
   }
   const expected = {

@@ -25,25 +25,23 @@ test.beforeEach(async (t) => {
 
 test.afterEach.always(async (t) => {
   const { client, collection } = t.context
-  await deleteDocuments(collection, { '\\$type': 'entry' })
+  await deleteDocuments(collection, {})
   closeMongo(client)
 })
 
 // Tests
 
-test('should get a document by type and id', async (t) => {
+test('should get a document by id', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
     {
-      _id: 'entry:ent1',
+      _id: '12345',
       id: 'ent1',
-      '\\$type': 'entry',
       date: new Date('2021-03-14T18:43:11Z'),
     },
     {
-      _id: 'entry:ent2',
+      _id: '12346',
       id: 'ent2',
-      '\\$type': 'entry',
       date: new Date('2021-03-14T18:51:09Z'),
     },
   ])
@@ -81,8 +79,8 @@ test('should get a document by type and id', async (t) => {
 test('should get documents by type', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
-    { _id: 'entry:ent1', id: 'ent1', '\\$type': 'entry' },
-    { _id: 'entry:ent2', id: 'ent2', '\\$type': 'entry' },
+    { _id: '12345', id: 'ent1', type: 'entry' },
+    { _id: '12346', id: 'ent2', type: 'entry' },
   ])
   const action = {
     type: 'GET',
@@ -118,15 +116,15 @@ test('should get a document with endpoint query', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
     {
-      _id: 'entry:ent1',
+      _id: '12345',
       id: 'ent1',
-      '\\$type': 'entry',
+      type: 'entry',
       attributes: { title: 'Entry 1' },
     },
     {
-      _id: 'entry:ent2',
+      _id: '12346',
       id: 'ent2',
-      '\\$type': 'entry',
+      type: 'entry',
       attributes: { title: 'Entry 2' },
     },
   ])
@@ -167,21 +165,21 @@ test('should sort documents', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
     {
-      _id: 'entry:ent1',
+      _id: '12345',
       id: 'ent1',
-      '\\$type': 'entry',
+      type: 'entry',
       attributes: { index: 2 },
     },
     {
-      _id: 'entry:ent2',
+      _id: '12346',
       id: 'ent2',
-      '\\$type': 'entry',
+      type: 'entry',
       attributes: { index: 3 },
     },
     {
-      _id: 'entry:ent3',
+      _id: '12347',
       id: 'ent3',
-      '\\$type': 'entry',
+      type: 'entry',
       attributes: { index: 1 },
     },
   ])

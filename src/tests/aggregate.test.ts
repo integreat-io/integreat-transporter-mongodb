@@ -24,7 +24,7 @@ test.beforeEach(async (t) => {
 
 test.afterEach.always(async (t) => {
   const { client, collection } = t.context
-  await deleteDocuments(collection, { '\\$type': 'entry' })
+  await deleteDocuments(collection, {})
   closeMongo(client)
 })
 
@@ -34,21 +34,21 @@ test('should get a document by type and id', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
     {
-      _id: 'entry:ent1',
+      _id: '12345',
       id: 'ent1',
-      '\\$type': 'entry',
+      type: 'entry',
       values: { category: 'news', count: 3 },
     },
     {
-      _id: 'entry:ent2',
+      _id: '12346',
       id: 'ent2',
-      '\\$type': 'entry',
+      type: 'entry',
       values: { category: 'sports', count: 2 },
     },
     {
-      _id: 'entry:ent3',
+      _id: '12347',
       id: 'ent3',
-      '\\$type': 'entry',
+      type: 'entry',
       values: { category: 'news', count: 8 },
     },
   ])

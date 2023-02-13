@@ -25,7 +25,7 @@ test.beforeEach(async (t) => {
 
 test.afterEach.always(async (t) => {
   const { client, collection } = t.context
-  await deleteDocuments(collection, { '\\$type': 'entry' })
+  await deleteDocuments(collection, {})
   closeMongo(client)
 })
 
@@ -60,7 +60,7 @@ test('should set one document', async (t) => {
 
   t.is(response.status, 'ok', response.error)
   const docs = (await getDocuments(collection, {
-    _id: 'entry:ent1',
+    id: 'ent1',
   })) as Record<string, unknown>[]
   t.is(docs.length, 1)
   t.is(docs[0].id, 'ent1')
@@ -94,20 +94,16 @@ test('should set array of documents', async (t) => {
   await transporter.disconnect(connection)
 
   t.is(response.status, 'ok', response.error)
-  const docs = (await getDocuments(collection, {
-    '\\$type': 'entry',
-  })) as Record<string, unknown>[]
+  const docs = (await getDocuments(collection, {})) as Record<string, unknown>[]
   t.is(docs.length, 2)
-  t.true(docs.some((doc) => doc._id === 'entry:ent1'))
-  t.true(docs.some((doc) => doc._id === 'entry:ent2'))
+  t.true(docs.some((doc) => doc.id === 'ent1'))
+  t.true(docs.some((doc) => doc.id === 'ent2'))
 })
 
 test('should update existing document', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocument(collection, {
-    _id: 'entry:ent1',
     id: 'ent1',
-    '\\$type': 'entry',
     title: 'Entry 1',
     theOld: true,
     meta: { section: 'news', 'archived\\_flag': false },
@@ -142,9 +138,7 @@ test('should update existing document', async (t) => {
   await transporter.disconnect(connection)
 
   t.is(response.status, 'ok', response.error)
-  const docs = (await getDocuments(collection, {
-    '\\$type': 'entry',
-  })) as Record<string, unknown>[]
+  const docs = (await getDocuments(collection, {})) as Record<string, unknown>[]
   t.is(docs.length, 1)
   t.is(docs[0].id, 'ent1')
   t.true(docs[0].theNew)

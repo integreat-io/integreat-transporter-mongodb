@@ -26,7 +26,7 @@ test.beforeEach(async (t) => {
 
 test.afterEach.always(async (t) => {
   const { client, collection } = t.context
-  await deleteDocuments(collection, { '\\$type': 'entry' })
+  await deleteDocuments(collection, {})
   closeMongo(client)
 })
 
@@ -35,8 +35,8 @@ test.afterEach.always(async (t) => {
 test('should delete one document', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
-    { _id: 'entry:ent1', id: 'ent1', '\\$type': 'entry' },
-    { _id: 'entry:ent2', id: 'ent2', '\\$type': 'entry' },
+    { _id: '12345', id: 'ent1', '\\$type': 'entry' },
+    { _id: '12346', id: 'ent2', '\\$type': 'entry' },
   ])
   const action = {
     type: 'DELETE',
@@ -75,8 +75,8 @@ test('should delete one document', async (t) => {
 test('should delete array of documents', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
-    { _id: 'entry:ent1', id: 'ent1', '\\$type': 'entry' },
-    { _id: 'entry:ent2', id: 'ent2', '\\$type': 'entry' },
+    { _id: '12345', id: 'ent1', '\\$type': 'entry' },
+    { _id: '12346', id: 'ent2', '\\$type': 'entry' },
   ])
   const action = {
     type: 'DELETE',

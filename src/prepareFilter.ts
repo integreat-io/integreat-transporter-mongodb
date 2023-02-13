@@ -15,18 +15,6 @@ export interface Params extends Record<string, unknown> {
 const isObject = (value: unknown): value is Record<string, unknown> =>
   Object.prototype.toString.call(value) === '[object Object]'
 
-const setTypeOrId = (
-  query: Record<string, unknown>,
-  type?: string | string[],
-  id?: string | string[] | number
-) => {
-  if (id) {
-    query._id = [type, String(id)].filter(Boolean).join(':')
-  } else if (type) {
-    query['\\$type'] = type
-  }
-}
-
 const dateStringRegex =
   /^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d\d\d)?([+-]\d\d:\d\d|Z)$/
 const isDateString = (value: unknown): value is string =>
@@ -100,13 +88,7 @@ function setMongoSelectorFromQueryObj(
 
     if (isValidValue(targetValue, op)) {
       const targetPath = [
-        expr
-          ? '$expr'
-          : op === 'isArray'
-          ? undefined
-          : path === 'type'
-          ? '\\$type'
-          : serializePath(path),
+        expr ? '$expr' : op === 'isArray' ? undefined : serializePath(path),
         mapOp(op),
       ]
         .filter(Boolean)
@@ -168,7 +150,7 @@ function expandPageIdAsQuery(pageId?: string) {
   const parts = pageId?.split('|')
   if (Array.isArray(parts) && parts.length > 0) {
     if (parts.length === 2 && parts[1] === '>') {
-      return [{ path: '_id', op: 'gte', value: parts[0] }]
+      return [{ path: 'id', op: 'gte', value: parts[0] }]
     } else {
       return parts
         .slice(1)
@@ -186,7 +168,6 @@ export default function prepareFilter(
   queryArray: QueryArray = [],
   params: Params = {}
 ): Record<string, unknown> {
-  const { type, id } = params
   // Create query object from array of props
   const pageQuery = expandPageIdAsQuery(atob(params.pageId))
   const query = mongoSelectorFromQuery(
@@ -194,9 +175,9 @@ export default function prepareFilter(
     mergeQueries(queryArray, params.query, pageQuery)
   )
 
-  // Set query props from id and type if no query was provided
-  if (queryArray.length === 0) {
-    setTypeOrId(query, type, id)
+  // Query for id if no query was provided and this is a member action
+  if (queryArray.length === 0 && params.id) {
+    query.id = String(params.id)
   }
 
   return castDates(query)

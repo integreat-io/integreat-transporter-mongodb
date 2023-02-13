@@ -114,15 +114,14 @@ const createOperation = (action: Action) =>
       payload: { data, ...params },
     } = action
     const options = action.meta?.options as MongoOptions | undefined
-    const id = [item.$type, item.id].filter(Boolean).join(':')
+    const id = String(item.id)
 
     const filter = prepareFilter(options?.query, {
       ...params,
-      type: item.$type,
       id: item.id,
     })
     const update = {
-      $set: { ...(serializeItem(item) as Record<string, unknown>), _id: id },
+      $set: { ...(serializeItem(item) as Record<string, unknown>), id },
     }
 
     return { filter, update, id }
