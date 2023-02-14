@@ -66,6 +66,8 @@ export interface AggregationObjectLookUp {
   type: 'lookup'
   collection: string
   field: string
+  path: string
+  setPath?: string
   variables?: Record<string, string>
   pipeline?: AggregationObject | AggregationObject[]
 }

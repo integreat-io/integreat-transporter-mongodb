@@ -123,12 +123,21 @@ const prepareLookupValues = (variables: Record<string, string>) =>
   )
 
 const lookupToMongo = (
-  { collection, field, variables, pipeline }: AggregationObjectLookUp,
+  {
+    collection,
+    field,
+    path,
+    setPath,
+    variables,
+    pipeline,
+  }: AggregationObjectLookUp,
   params: Record<string, unknown>
 ) => ({
   $lookup: {
     from: collection,
-    as: field,
+    foreignField: field,
+    localField: path,
+    as: setPath ?? path,
     ...(variables && {
       let: prepareLookupValues(variables),
     }),

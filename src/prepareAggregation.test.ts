@@ -59,7 +59,8 @@ test('should return mongo aggregation with lookup', (t) => {
     {
       type: 'lookup' as const,
       collection: 'projects',
-      field: 'included',
+      field: 'id',
+      path: 'included',
       variables: { ids: 'include' },
       pipeline: [
         {
@@ -83,7 +84,65 @@ test('should return mongo aggregation with lookup', (t) => {
     {
       $lookup: {
         from: 'projects',
+        foreignField: 'id',
+        localField: 'included',
         as: 'included',
+        let: { ids: '$include' },
+        pipeline: [
+          {
+            $match: { $expr: { $in: ['$id', '$$ids'] } },
+          },
+          { $sort: { updatedAt: -1 } },
+          {
+            $group: {
+              _id: { id: '$id' },
+              jobs: { $first: '$definitions.jobs' },
+            },
+          },
+        ],
+      },
+    },
+  ]
+
+  const ret = prepareAggregation(aggregation, { type: 'entry' })
+
+  t.deepEqual(ret, expected)
+})
+
+test('should return mongo aggregation with lookup with set path', (t) => {
+  const aggregation = [
+    {
+      type: 'lookup' as const,
+      collection: 'projects',
+      field: 'id',
+      path: 'included',
+      setPath: 'projects',
+      variables: { ids: 'include' },
+      pipeline: [
+        {
+          type: 'query' as const,
+          query: [
+            { path: 'id', op: 'in' as const, variable: 'ids', expr: true },
+          ],
+        },
+        { type: 'sort' as const, sortBy: { updatedAt: -1 as const } },
+        {
+          type: 'group' as const,
+          groupBy: ['id'],
+          values: {
+            jobs: { op: 'first' as const, path: 'definitions.jobs' },
+          },
+        },
+      ],
+    },
+  ]
+  const expected = [
+    {
+      $lookup: {
+        from: 'projects',
+        foreignField: 'id',
+        localField: 'included',
+        as: 'projects',
         let: { ids: '$include' },
         pipeline: [
           {
