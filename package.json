@@ -1,6 +1,6 @@
 {
   "name": "integreat-transporter-mongodb",
-  "version": "0.12.1",
+  "version": "0.12.2",
   "description": "Integreat transporter for mongodb",
   "author": "Kjell-Morten Bratsberg Thorsen <post@kjellmorten.no>",
   "license": "ISC",
@@ -20,6 +20,7 @@
     "test:watch": "npm run dev",
     "dev": "ava --watch",
     "build": "tsc",
+    "prepublish": "npm run lint && npm run build",
     "coverage": "c8 report",
     "lint": "eslint --ext .ts src"
   },
