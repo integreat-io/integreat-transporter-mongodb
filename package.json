@@ -32,7 +32,7 @@
   },
   "homepage": "https://github.com/integreat-io/integreat-transporter-mongodb#readme",
   "engines": {
-    "node": ">= 14.19"
+    "node": ">= 18"
   },
   "dependencies": {
     "@types/object-hash": "^3.0.2",
@@ -42,7 +42,7 @@
     "object-hash": "^3.0.0"
   },
   "devDependencies": {
-    "@integreat/ts-dev-setup": "^4.0.0",
+    "@integreat/ts-dev-setup": "^4.0.1",
     "@types/sinon": "^10.0.13",
     "integreat": "0.8.0-beta.26",
     "sinon": "^15.0.1"
