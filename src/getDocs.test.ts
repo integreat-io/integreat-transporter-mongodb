@@ -183,6 +183,7 @@ test('should get with aggregation', async (t) => {
         'personalia\\_age': { $gt: 18 },
       },
     },
+    { $sort: { _id: 1 } },
   ]
   const expectedData = [
     {
@@ -248,6 +249,7 @@ test('should get put query and sort first in aggregation pipeline', async (t) =>
         status: { $first: '$status' },
       },
     },
+    { $sort: { _id: 1 } },
   ]
 
   await getDocs(action, client)
@@ -258,41 +260,131 @@ test('should get put query and sort first in aggregation pipeline', async (t) =>
   t.deepEqual(arg, expectedPipeline)
 })
 
-test('should return badrequest when combining aggregation and paging', async (t) => {
+test('should return one page of the aggregated result', async (t) => {
   const find = createCollectionMethod([])
-  const aggregate = createCollectionMethod([])
+  const aggregate = createCollectionMethod([
+    {
+      _id: { 'values\\_account': '1501', id: 'ent1' },
+      updatedAt: '2021-01-18T00:00:00Z',
+      'values.status': 'inactive',
+    },
+    {
+      _id: { 'values\\_account': '3000', id: 'ent2' },
+      updatedAt: '2021-01-19T00:00:00Z',
+      'values.status': 'active',
+    },
+    {
+      _id: { 'values\\_account': '3000', id: 'ent3' },
+      updatedAt: '2021-01-23T00:00:00Z',
+      'values.status': 'active',
+    },
+  ])
   const client = createClient({ find, aggregate })
   const action = {
     type: 'GET',
     payload: {
       type: 'entry',
-      pageSize: 100,
       typePlural: 'entries',
+      pageSize: 2,
     },
     meta: {
       options: {
         collection: 'documents',
         db: 'database',
-        query: [
-          { path: 'type', param: 'type' },
-          { path: 'personalia\\.age', op: 'gt', value: 18 },
-        ],
-        sort: { updatedAt: -1 },
         aggregation: [
+          { type: 'sort', sortBy: { updatedAt: -1 } },
           {
             type: 'group',
-            groupBy: ['account', 'id'],
-            values: { updatedAt: 'first', status: 'first' },
+            groupBy: ['values.account', 'id'],
+            values: { updatedAt: 'first', 'values.status': 'first' },
           },
         ],
       },
     },
   }
+  const expectedData = [
+    {
+      'values.account': '1501',
+      id: 'ent1',
+      updatedAt: '2021-01-18T00:00:00Z',
+      'values.status': 'inactive',
+    },
+    {
+      'values.account': '3000',
+      id: 'ent2',
+      updatedAt: '2021-01-19T00:00:00Z',
+      'values.status': 'active',
+    },
+  ]
 
   const ret = await getDocs(action, client)
 
-  t.is(ret.status, 'badrequest')
-  t.is(typeof ret.error, 'string')
+  t.is(ret.status, 'ok', ret.error)
+  t.is(find.callCount, 0)
+  t.is(aggregate.callCount, 1)
+  t.deepEqual(ret.data, expectedData)
+  t.is(ret.meta?.totalCount, 2)
+})
+
+test('should return the aggregated result from a page offset', async (t) => {
+  const find = createCollectionMethod([])
+  const aggregate = createCollectionMethod([
+    {
+      _id: { 'values\\_account': '1501', id: 'ent1' },
+      updatedAt: '2021-01-18T00:00:00Z',
+      'values.status': 'inactive',
+    },
+    {
+      _id: { 'values\\_account': '3000', id: 'ent2' },
+      updatedAt: '2021-01-19T00:00:00Z',
+      'values.status': 'active',
+    },
+    {
+      _id: { 'values\\_account': '3000', id: 'ent3' },
+      updatedAt: '2021-01-23T00:00:00Z',
+      'values.status': 'active',
+    },
+  ])
+  const client = createClient({ find, aggregate })
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      typePlural: 'entries',
+      pageSize: 2,
+      pageOffset: 2,
+    },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+        aggregation: [
+          { type: 'sort', sortBy: { updatedAt: -1 } },
+          {
+            type: 'group',
+            groupBy: ['values.account', 'id'],
+            values: { updatedAt: 'first', 'values.status': 'first' },
+          },
+        ],
+      },
+    },
+  }
+  const expectedData = [
+    {
+      'values.account': '3000',
+      id: 'ent3',
+      updatedAt: '2021-01-23T00:00:00Z',
+      'values.status': 'active',
+    },
+  ]
+
+  const ret = await getDocs(action, client)
+
+  t.is(ret.status, 'ok', ret.error)
+  t.is(find.callCount, 0)
+  t.is(aggregate.callCount, 1)
+  t.deepEqual(ret.data, expectedData)
+  t.is(ret.meta?.totalCount, 1)
 })
 
 test('should convert mongodb _id to string', async (t) => {

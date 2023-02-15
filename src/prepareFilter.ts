@@ -1,7 +1,7 @@
 import { setProperty } from 'dot-prop'
 import { QueryObject } from './types.js'
 import { serializePath } from './escapeKeys.js'
-import { atob } from './utils/base64.js'
+import { DecodedPageId } from './utils/pageId.js'
 
 type QueryArray = (QueryObject | QueryArray)[]
 
@@ -121,58 +121,18 @@ const mongoSelectorFromQuery = (
     .concat(query)
     .reduce(setMongoSelectorFromQuery(allParams), {})
 
-function decodePartValue(value: string) {
-  if (value.startsWith('"')) {
-    return decodeURIComponent(value.slice(1, value.lastIndexOf('"')))
-  } else {
-    try {
-      return JSON.parse(value)
-    } catch {
-      return value
-    }
-  }
-}
-
-const partRegex = /^(.+)([\<\>])(.+)$/
-
-function createQueryObjectFromPageIdPart(part: string) {
-  const match = partRegex.exec(part)
-  return match
-    ? {
-        path: match[1],
-        op: match[2] === '>' ? 'gte' : 'lte',
-        value: decodePartValue(match[3]),
-      }
-    : undefined
-}
-
-function expandPageIdAsQuery(pageId?: string) {
-  const parts = pageId?.split('|')
-  if (Array.isArray(parts) && parts.length > 0) {
-    if (parts.length === 2 && parts[1] === '>') {
-      return [{ path: 'id', op: 'gte', value: parts[0] }]
-    } else {
-      return parts
-        .slice(1)
-        .map(createQueryObjectFromPageIdPart)
-        .filter(Boolean) as QueryObject[]
-    }
-  }
-  return undefined
-}
-
 /**
  * Generate the right query object as a filter for finding docs in the database.
  */
 export default function prepareFilter(
   queryArray: QueryArray = [],
-  params: Params = {}
+  params: Params = {},
+  pageId?: DecodedPageId
 ): Record<string, unknown> {
   // Create query object from array of props
-  const pageQuery = expandPageIdAsQuery(atob(params.pageId))
   const query = mongoSelectorFromQuery(
     params,
-    mergeQueries(queryArray, params.query, pageQuery)
+    mergeQueries(queryArray, params.query, pageId?.filter)
   )
 
   // Query for id if no query was provided and this is a member action

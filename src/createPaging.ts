@@ -1,6 +1,7 @@
+/* eslint-disable security/detect-object-injection */
 import { getProperty } from 'dot-prop'
 import { TypedData } from 'integreat'
-import { Payload } from './types.js'
+import { Payload, AggregationObject, AggregationObjectSort } from './types.js'
 import { btoa, removePadding } from './utils/base64.js'
 import { isObject } from './utils/is.js'
 
@@ -9,8 +10,21 @@ export interface Paging {
   prev?: Payload
 }
 
-const isDataWithMongoId = (value: unknown): value is TypedData =>
+interface MongoData extends Record<string, unknown> {
+  _id: string | Record<string, unknown>
+}
+
+const isMongoData = (value: unknown): value is MongoData =>
+  isObject(value) && !!value._id
+
+const isTypedData = (value: unknown): value is TypedData =>
   isObject(value) && typeof value.id === 'string'
+
+const isSortAggregation = (
+  aggregation: AggregationObject
+): aggregation is AggregationObjectSort => aggregation.type === 'sort'
+const isRegroupingAggregation = (aggregation: AggregationObject) =>
+  aggregation.type === 'group'
 
 const encodeValue = (value: unknown) =>
   typeof value === 'string'
@@ -19,8 +33,14 @@ const encodeValue = (value: unknown) =>
     ? value.toISOString()
     : value
 
+const preparePageParams = (
+  { data, target, typePlural, pageAfter, ...params }: Record<string, unknown>,
+  type?: string | string[],
+  id?: string | string[]
+) => ({ ...(type && { type }), ...(id && { id }), ...params })
+
 const createSortString =
-  (lastItem: TypedData) =>
+  (lastItem: Record<string, unknown>) =>
   ([path, direction]: [string, number]) =>
     [
       path,
@@ -28,27 +48,60 @@ const createSortString =
       encodeValue(getProperty(lastItem, path)),
     ].join('')
 
-const createPageId = (
+const generateSortParts = (
+  lastItem: Record<string, unknown>,
+  sort?: Record<string, number>
+): string[] =>
+  sort
+    ? Object.entries(sort).slice(0, 1).map(createSortString(lastItem))
+    : ['>']
+
+const generatePageIdFromId = (
   lastItem: TypedData,
+  sort?: Record<string, number>
+): string => [lastItem.id, ...generateSortParts(lastItem, sort)].join('|')
+
+const generatePageIdFromMongoId = (
+  lastItem: MongoData,
   sort?: Record<string, number>
 ): string =>
   [
-    lastItem.id,
-    ...(sort
-      ? Object.entries(sort).slice(0, 1).map(createSortString(lastItem))
-      : ['>']),
+    ...(isObject(lastItem._id)
+      ? Object.entries(lastItem._id).map((entry) => entry.join('|'))
+      : lastItem._id),
+    '', // To get a double pipe
+    ...generateSortParts(lastItem, sort),
   ].join('|')
 
-const preparePageParams = (
-  { data, target, typePlural, pageAfter, ...params }: Record<string, unknown>,
-  type?: string | string[],
-  id?: string | string[]
-) => ({ ...(type && { type }), ...(id && { id }), ...params })
+function generatePageId(
+  lastItem: unknown,
+  sort?: Record<string, number>,
+  aggregation?: AggregationObject[]
+) {
+  if (aggregation) {
+    if (isMongoData(lastItem)) {
+      const sortIndex = aggregation.findLastIndex(isSortAggregation)
+      const groupIndex = aggregation.findLastIndex(isRegroupingAggregation)
+      const aggSort =
+        sortIndex > groupIndex
+          ? (aggregation[sortIndex] as AggregationObjectSort | undefined)
+              ?.sortBy
+          : undefined
+      return generatePageIdFromMongoId(lastItem, aggSort)
+    }
+  } else if (isTypedData(lastItem)) {
+    return generatePageIdFromId(lastItem, sort)
+  }
+  return undefined
+}
+
+const encodeId = (id?: string) => (id ? removePadding(btoa(id)) : undefined)
 
 export default function createPaging(
   data: unknown[],
   { type, id, pageOffset, pageSize, ...params }: Payload,
-  sort?: Record<string, number>
+  sort?: Record<string, number>,
+  aggregation?: AggregationObject[]
 ): Paging {
   if (data.length === 0 || pageSize === undefined || data.length < pageSize) {
     return { next: undefined }
@@ -64,10 +117,7 @@ export default function createPaging(
     }
   } else {
     const lastItem = data[data.length - 1]
-    const pageId = isDataWithMongoId(lastItem)
-      ? removePadding(btoa(createPageId(lastItem, sort)))
-      : undefined
-
+    const pageId = encodeId(generatePageId(lastItem, sort, aggregation))
     return {
       next: {
         ...preparePageParams(params, type, id),

@@ -1,9 +1,10 @@
 import test from 'ava'
 import { TypedData } from 'integreat'
+import { AggregationObject } from './types.js'
 
 import createPaging from './createPaging.js'
 
-// Helpers
+// Setup
 
 const prepareData = (data: TypedData[]) =>
   data.map((item) => ({ ...item, _id: `id_${item.id}` }))
@@ -19,6 +20,8 @@ test('should return next: null when no data', (t) => {
 
   t.deepEqual(ret, expected)
 })
+
+// Tests -- query
 
 test('should return paging for first page', (t) => {
   const data = prepareData([
@@ -360,6 +363,189 @@ test('should not touch when not typed data', (t) => {
   }
 
   const ret = createPaging(data, request)
+
+  t.deepEqual(ret, expected)
+})
+
+// Tests -- aggregation
+
+test('should return paging for first page of aggregated data', (t) => {
+  const data = [
+    { _id: { account: 'acc1', id: 'proj1' }, amount: 35 },
+    { _id: { account: 'acc1', id: 'proj2' }, amount: 2 },
+  ]
+  const request = {
+    type: 'project',
+    pageSize: 2,
+    archived: true,
+    target: 'crm',
+  }
+  const aggregation: AggregationObject[] = [
+    {
+      type: 'group',
+      groupBy: ['account', 'id'],
+      values: { amount: 'sum' },
+    },
+  ]
+  const expected = {
+    next: {
+      type: 'project',
+      pageId: 'YWNjb3VudHxhY2MxfGlkfHByb2oyfHw+', // account|acc1|id|proj2||>
+      pageSize: 2,
+      archived: true,
+    },
+  }
+
+  const ret = createPaging(data, request, undefined, aggregation)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should return paging for the second page of aggregated data', (t) => {
+  const data = [
+    { _id: { account: 'acc2', id: 'proj1' }, amount: 72 },
+    { _id: { account: 'acc3', id: 'proj1' }, amount: 14 },
+  ]
+  const request = {
+    type: 'project',
+    pageId: 'YWNjb3VudHxhY2MxfGlkfHByb2oyfHw+', // account|acc1|id|proj2||>
+    pageSize: 2,
+    archived: true,
+  }
+  const aggregation: AggregationObject[] = [
+    {
+      type: 'group',
+      groupBy: ['account', 'id'],
+      values: { amount: 'sum' },
+    },
+  ]
+  const expected = {
+    next: {
+      type: 'project',
+      pageId: 'YWNjb3VudHxhY2MzfGlkfHByb2oxfHw+', // account|acc3|id|proj1||>
+      pageSize: 2,
+      archived: true,
+    },
+  }
+
+  const ret = createPaging(data, request, undefined, aggregation)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should not return paging when aggregated data size is smaller than page size', (t) => {
+  const data = [{ _id: { account: 'acc3', id: 'proj2' }, amount: 4 }]
+  const request = {
+    type: 'project',
+    pageId: 'YWNjb3VudHxhY2MzfGlkfHByb2oxfHw+', // account|acc3|id|proj1||>
+    pageSize: 2,
+    archived: true,
+  }
+  const aggregation: AggregationObject[] = [
+    {
+      type: 'group',
+      groupBy: ['account', 'id'],
+      values: { amount: 'sum' },
+    },
+  ]
+  const expected = {
+    next: undefined,
+  }
+
+  const ret = createPaging(data, request, undefined, aggregation)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should return paging for first page of aggregated data - using pageOffset', (t) => {
+  // The `pageOffset` branch runs the same code as non-aggregation, so test only the first case
+  const data = [
+    { _id: { account: 'acc1', id: 'proj1' }, amount: 35 },
+    { _id: { account: 'acc1', id: 'proj2' }, amount: 2 },
+  ]
+  const request = {
+    type: 'project',
+    pageOffset: 0,
+    pageSize: 2,
+    archived: true,
+    target: 'crm',
+  }
+  const expected = {
+    next: {
+      type: 'project',
+      pageOffset: 2,
+      pageSize: 2,
+      archived: true,
+    },
+  }
+
+  const ret = createPaging(data, request)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should return paging for aggregated data when sorting', (t) => {
+  const data = [
+    { _id: { account: 'acc1', id: 'proj2' }, amount: 2 },
+    { _id: { account: 'acc1', id: 'proj1' }, amount: 35 },
+  ]
+  const request = {
+    type: 'project',
+    pageSize: 2,
+    archived: true,
+    target: 'crm',
+  }
+  const aggregation: AggregationObject[] = [
+    {
+      type: 'group',
+      groupBy: ['account', 'id'],
+      values: { amount: 'sum' },
+    },
+    { type: 'sort', sortBy: { amount: 1 } },
+  ]
+  const expected = {
+    next: {
+      type: 'project',
+      pageId: 'YWNjb3VudHxhY2MxfGlkfHByb2oxfHxhbW91bnQ+MzU', // account|acc1|id|proj1||amount>35
+      pageSize: 2,
+      archived: true,
+    },
+  }
+
+  const ret = createPaging(data, request, undefined, aggregation)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should use default sorting when aggregated sorting is done before group', (t) => {
+  const data = [
+    { _id: { account: 'acc1', id: 'proj1' }, amount: 35 },
+    { _id: { account: 'acc1', id: 'proj2' }, amount: 2 },
+  ]
+  const request = {
+    type: 'project',
+    pageSize: 2,
+    archived: true,
+    target: 'crm',
+  }
+  const aggregation: AggregationObject[] = [
+    { type: 'sort', sortBy: { amount: 1 } },
+    {
+      type: 'group',
+      groupBy: ['account', 'id'],
+      values: { amount: 'sum' },
+    },
+  ]
+  const expected = {
+    next: {
+      type: 'project',
+      pageId: 'YWNjb3VudHxhY2MxfGlkfHByb2oyfHw+', // account|acc1|id|proj2||>
+      pageSize: 2,
+      archived: true,
+    },
+  }
+
+  const ret = createPaging(data, request, undefined, aggregation)
 
   t.deepEqual(ret, expected)
 })

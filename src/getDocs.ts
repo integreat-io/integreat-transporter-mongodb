@@ -6,7 +6,7 @@ import prepareAggregation from './prepareAggregation.js'
 import createPaging from './createPaging.js'
 import { normalizeItem } from './escapeKeys.js'
 import { getCollection } from './send.js'
-import { atob } from './utils/base64.js'
+import { decodePageId, DecodedPageId } from './utils/pageId.js'
 import { isObject } from './utils/is.js'
 import {
   MongoOptions,
@@ -25,7 +25,10 @@ interface ItemWithIdObject extends Record<string, unknown> {
 
 // Move the cursor to the first doc after the `pageAfter`
 // When no `pageAfter`, just start from the beginning
-const moveToData = async (cursor: Cursor, pageAfter?: string) => {
+const moveToData = async (
+  cursor: Cursor,
+  pageAfter?: string | Record<string, unknown>
+) => {
   if (!pageAfter) {
     // Start from the beginning
     return true
@@ -35,6 +38,7 @@ const moveToData = async (cursor: Cursor, pageAfter?: string) => {
   do {
     doc = await cursor.next()
   } while (doc && doc.id !== pageAfter)
+  // TODO: Compare objects with deep equal
 
   return !!doc // false if the doc to start after is not found
 }
@@ -67,17 +71,16 @@ const getData = async (cursor: Cursor, pageSize: number) => {
 
   return data
 }
-const pageAfterFromPageId = (pageId?: string) =>
-  typeof pageId === 'string' ? pageId.split('|')[0] : undefined
 
 const getPage = async (
   cursor: Cursor,
-  { pageSize = Infinity, pageOffset, pageAfter, pageId }: Payload
+  { pageSize = Infinity, pageOffset, pageAfter }: Payload,
+  pageId?: DecodedPageId
 ) => {
   if (typeof pageOffset === 'number') {
     cursor.skip(pageOffset)
   } else {
-    const after = pageAfter || pageAfterFromPageId(atob(pageId))
+    const after = pageAfter || pageId?.id
 
     // When pageAfter is set – loop until we find the doc with that `id`
     debugMongo('Moving to cursor %s', after)
@@ -120,58 +123,54 @@ export default async function getDocs(
     }
   }
 
-  const request = action.payload
-  const options = action.meta?.options as MongoOptions
-  const params = paramsFromPayload(action.payload)
+  const { payload, meta: { options } = {} } = action
+  const params = paramsFromPayload(payload)
+  const pageId = decodePageId(payload.pageId)
 
   debugMongo('Incoming options %o', options)
   debugMongo('Incoming params %o', params)
 
-  const filter = prepareFilter(options.query, params)
-  const sort = options.sort
-  const allowDiskUse = options.allowDiskUse || false
+  const {
+    query,
+    sort,
+    allowDiskUse = false,
+    aggregation: aggregationObjects,
+  } = options as MongoOptions
+  const filter = prepareFilter(query, params, pageId)
 
-  const aggregation = options.aggregation
+  const aggregation = aggregationObjects
     ? prepareAggregation(
-        appendToAggregation(options.aggregation, options.query, options.sort),
-        params
+        appendToAggregation(aggregationObjects, query, sort),
+        params,
+        true // addDefaultSorting
       )
     : undefined
 
   let cursor
   if (aggregation) {
-    if (typeof request.pageSize === 'number') {
-      return {
-        ...action.response,
-        status: 'badrequest',
-        error: 'Paging is not allowed with aggregations',
-      }
-    }
     debugMongo('Starting query with aggregation %o', aggregation)
     cursor = collection.aggregate(aggregation, { allowDiskUse })
   } else {
     debugMongo('Starting query with filter %o', filter)
     cursor = collection.find(filter, { allowDiskUse })
-    if (sort) {
-      debugMongo('Sorting with %o', sort)
-      cursor = cursor.sort(sort)
-    }
+    debugMongo('Sorting with %o', sort)
+    cursor = cursor.sort(sort ?? { _id: 1 })
   }
 
   debugMongo('Getting page')
-  const data = await getPage(cursor, request)
+  const data = await getPage(cursor, payload, pageId)
   debugMongo('Got result page with %s items', data.length)
 
-  if (data.length === 0 && request.id) {
+  if (data.length === 0 && payload.id) {
     return {
       ...action.response,
       status: 'notfound',
-      error: `Could not find '${request.id}' of type '${request.type}'`,
+      error: `Could not find '${payload.id}' of type '${payload.type}'`,
     }
   }
 
   let totalCount = data.length
-  if (!aggregation && typeof request.pageSize === 'number') {
+  if (!aggregation && typeof payload.pageSize === 'number') {
     debugMongo('Counting documents')
     totalCount = await collection.countDocuments(filter)
   }
@@ -186,9 +185,9 @@ export default async function getDocs(
     meta: { totalCount },
   }
 
-  if (request.pageSize) {
+  if (payload.pageSize) {
     debugMongo('Creating paging')
-    response.paging = createPaging(data, request, options.sort)
+    response.paging = createPaging(data, payload, sort, aggregationObjects)
   }
 
   return response

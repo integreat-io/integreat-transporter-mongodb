@@ -714,3 +714,108 @@ test('should get second page of documents - using pageOffset', async (t) => {
   t.is(data[1].id, 'ent4')
   t.deepEqual(response.paging, expectedPaging)
 })
+
+test('should get one page of aggregated documents with params for next page - using pageOffset', async (t) => {
+  const { collection, collectionName } = t.context
+  await insertDocuments(collection, [
+    { _id: '12345', id: 'ent1', amount: 52, type: 'fish' },
+    { _id: '12346', id: 'ent2', amount: 34, type: 'meat' },
+    { _id: '12347', id: 'ent2', amount: 70, type: 'fish' },
+    { _id: '12348', id: 'ent3', amount: 4, type: 'veggis' },
+  ])
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      pageOffset: 0,
+      pageSize: 2,
+    },
+    meta: {
+      options: {
+        collection: collectionName,
+        aggregation: [
+          {
+            type: 'group',
+            groupBy: ['type'],
+            values: { amount: 'sum', type: 'first' },
+          },
+          { type: 'sort', sortBy: { type: 1 } },
+        ],
+        db: 'test',
+      },
+    },
+  }
+  const expectedData = [
+    { amount: 122, type: 'fish' },
+    { amount: 34, type: 'meat' },
+  ]
+  const expectedPaging = {
+    next: {
+      type: 'entry',
+      pageOffset: 2,
+      pageSize: 2,
+    },
+  }
+
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit
+  )
+  const response = await transporter.send(action, connection)
+  await transporter.disconnect(connection)
+
+  t.is(response.status, 'ok', response.error)
+  const data = response.data as TypedData[]
+  t.deepEqual(data, expectedData)
+  t.deepEqual(response.paging, expectedPaging)
+})
+
+test('should get second page of aggregated documents with params for next page - using pageOffset', async (t) => {
+  const { collection, collectionName } = t.context
+  await insertDocuments(collection, [
+    { _id: '12345', id: 'ent1', amount: 52, type: 'fish' },
+    { _id: '12346', id: 'ent2', amount: 34, type: 'meat' },
+    { _id: '12347', id: 'ent2', amount: 70, type: 'fish' },
+    { _id: '12348', id: 'ent3', amount: 4, type: 'veggis' },
+  ])
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      pageOffset: 2,
+      pageSize: 2,
+    },
+    meta: {
+      options: {
+        collection: collectionName,
+        aggregation: [
+          {
+            type: 'group',
+            groupBy: ['type'],
+            values: { amount: 'sum', type: 'first' },
+          },
+          { type: 'sort', sortBy: { type: 1 } },
+        ],
+        db: 'test',
+      },
+    },
+  }
+  const expectedData = [{ amount: 4, type: 'veggis' }]
+  const expectedPaging = { next: undefined }
+
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit
+  )
+  const response = await transporter.send(action, connection)
+  await transporter.disconnect(connection)
+
+  t.is(response.status, 'ok', response.error)
+  const data = response.data as TypedData[]
+  t.deepEqual(data, expectedData)
+  t.deepEqual(response.paging, expectedPaging)
+})

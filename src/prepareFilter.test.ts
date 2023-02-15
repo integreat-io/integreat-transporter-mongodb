@@ -1,4 +1,5 @@
 import test from 'ava'
+import { decodePageId } from './utils/pageId.js'
 
 import prepareFilter from './prepareFilter.js'
 
@@ -344,13 +345,14 @@ test('should expand pageId to queries', (t) => {
     pageId: 'ZW50Mnw+', // ent2|>
     query: [{ path: 'meta.section', value: 'news' }],
   }
+  const pageId = decodePageId('ZW50Mnw+')
   const expected = {
     'meta.views': { $gt: 300 },
     'meta.section': 'news',
     id: { $gte: 'ent2' },
   }
 
-  const ret = prepareFilter(query, params)
+  const ret = prepareFilter(query, params, pageId)
 
   t.deepEqual(ret, expected)
 })
@@ -364,6 +366,9 @@ test('should expand pageId with removed padding to queries', (t) => {
       'ZW50MnxhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkxMDAwfGF0dHJpYnV0ZXMuaW5kZXg+MQ', // ent2|attributes.timestamp<1584211391000|attributes.index>1
     query: [{ path: 'meta.section', value: 'news' }],
   }
+  const pageId = decodePageId(
+    'ZW50MnxhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkxMDAwfGF0dHJpYnV0ZXMuaW5kZXg+MQ'
+  )
   const expected = {
     'meta.views': { $gt: 300 },
     'meta.section': 'news',
@@ -371,7 +376,7 @@ test('should expand pageId with removed padding to queries', (t) => {
     'attributes.index': { $gte: 1 },
   }
 
-  const ret = prepareFilter(query, params)
+  const ret = prepareFilter(query, params, pageId)
 
   t.deepEqual(ret, expected)
 })
@@ -384,6 +389,7 @@ test('should expand pageId with sort filter to queries', (t) => {
     pageId: 'ZW50MnxpbmRleDwxfGlkPiJlbnQyIg', // ent2|index<1|id>"ent2"
     query: [{ path: 'meta.section', value: 'news' }],
   }
+  const pageId = decodePageId('ZW50MnxpbmRleDwxfGlkPiJlbnQyIg')
   const expected = {
     'meta.views': { $gt: 300 },
     'meta.section': 'news',
@@ -391,7 +397,7 @@ test('should expand pageId with sort filter to queries', (t) => {
     id: { $gte: 'ent2' },
   }
 
-  const ret = prepareFilter(query, params)
+  const ret = prepareFilter(query, params, pageId)
 
   t.deepEqual(ret, expected)
 })
@@ -404,6 +410,9 @@ test('should expand pageId with encoded string', (t) => {
     pageId: 'ZW50MnxpbmRleDwxfG1lc3NhZ2U8IkVzY2FwZSUyMCUyMm1lJTIyIg', // ent2|index<1|message<"Escape%20%22me%22"
     query: [{ path: 'meta.section', value: 'news' }],
   }
+  const pageId = decodePageId(
+    'ZW50MnxpbmRleDwxfG1lc3NhZ2U8IkVzY2FwZSUyMCUyMm1lJTIyIg'
+  )
   const expected = {
     'meta.views': { $gt: 300 },
     'meta.section': 'news',
@@ -411,7 +420,7 @@ test('should expand pageId with encoded string', (t) => {
     message: { $lte: 'Escape "me"' },
   }
 
-  const ret = prepareFilter(query, params)
+  const ret = prepareFilter(query, params, pageId)
 
   t.deepEqual(ret, expected)
 })
@@ -424,6 +433,7 @@ test('should expand pageId with unencoded string', (t) => {
     pageId: 'ZW50MnxpbmRleDwxfGlkPmVudDI', // ent2|index<1|id>ent2
     query: [{ path: 'meta.section', value: 'news' }],
   }
+  const pageId = decodePageId('ZW50MnxpbmRleDwxfGlkPmVudDI')
   const expected = {
     'meta.views': { $gt: 300 },
     'meta.section': 'news',
@@ -431,7 +441,7 @@ test('should expand pageId with unencoded string', (t) => {
     id: { $gte: 'ent2' },
   }
 
-  const ret = prepareFilter(query, params)
+  const ret = prepareFilter(query, params, pageId)
 
   t.deepEqual(ret, expected)
 })
@@ -444,13 +454,14 @@ test('should expand pageId with date string', (t) => {
     pageId: 'ZW50M3xkYXRlPjIwMjEtMDEtMThUMTI6MDU6MTEuMDAwWg', // ent3|date>2021-01-18T12:05:11.000Z
     query: [{ path: 'meta.section', value: 'news' }],
   }
+  const pageId = decodePageId('ZW50M3xkYXRlPjIwMjEtMDEtMThUMTI6MDU6MTEuMDAwWg')
   const expected = {
     'meta.views': { $gt: 300 },
     'meta.section': 'news',
     date: { $gte: new Date('2021-01-18T12:05:11.000Z') },
   }
 
-  const ret = prepareFilter(query, params)
+  const ret = prepareFilter(query, params, pageId)
 
   t.deepEqual(ret, expected)
 })

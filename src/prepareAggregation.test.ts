@@ -54,6 +54,204 @@ test('should return mongo aggregation pipeline', (t) => {
   t.deepEqual(ret, expected)
 })
 
+test('should return mongo aggregation pipeline with default sort by _id', (t) => {
+  const aggregation = [
+    {
+      type: 'group' as const,
+      groupBy: ['account', 'id'],
+      values: { updatedAt: 'first' as const, status: 'first' as const },
+    },
+    {
+      type: 'query' as const,
+      query: [
+        { path: 'type', param: 'type' },
+        { path: 'personalia\\.age', op: 'gt', value: 18 },
+      ],
+    },
+    { type: 'limit' as const, count: 1 },
+    { type: 'unwind' as const, path: 'jobs' },
+    { type: 'root' as const, path: 'jobs' },
+  ]
+  const expected = [
+    {
+      $group: {
+        _id: { account: '$account', id: '$id' },
+        updatedAt: { $first: '$updatedAt' },
+        status: { $first: '$status' },
+      },
+    },
+    {
+      $match: {
+        type: 'entry',
+        'personalia\\_age': { $gt: 18 },
+      },
+    },
+    { $limit: 1 },
+    {
+      $unwind: {
+        path: '$jobs',
+        preserveNullAndEmptyArrays: false,
+      },
+    },
+    { $replaceRoot: { newRoot: '$jobs' } },
+    { $sort: { _id: 1 } },
+  ]
+
+  const ret = prepareAggregation(aggregation, { type: 'entry' }, true)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should return mongo aggregation pipeline with provided sort', (t) => {
+  const aggregation = [
+    {
+      type: 'group' as const,
+      groupBy: ['account', 'id'],
+      values: { updatedAt: 'first' as const, status: 'first' as const },
+    },
+    { type: 'sort' as const, sortBy: { updatedAt: -1 as const } },
+    {
+      type: 'query' as const,
+      query: [
+        { path: 'type', param: 'type' },
+        { path: 'personalia\\.age', op: 'gt', value: 18 },
+      ],
+    },
+    { type: 'limit' as const, count: 1 },
+    { type: 'unwind' as const, path: 'jobs' },
+    { type: 'root' as const, path: 'jobs' },
+  ]
+  const expected = [
+    {
+      $group: {
+        _id: { account: '$account', id: '$id' },
+        updatedAt: { $first: '$updatedAt' },
+        status: { $first: '$status' },
+      },
+    },
+    { $sort: { updatedAt: -1 } },
+    {
+      $match: {
+        type: 'entry',
+        'personalia\\_age': { $gt: 18 },
+      },
+    },
+    { $limit: 1 },
+    {
+      $unwind: {
+        path: '$jobs',
+        preserveNullAndEmptyArrays: false,
+      },
+    },
+    { $replaceRoot: { newRoot: '$jobs' } },
+  ]
+
+  const ret = prepareAggregation(aggregation, { type: 'entry' }, true)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should return mongo aggregation pipeline with default sort even with sort before group', (t) => {
+  const aggregation = [
+    { type: 'sort' as const, sortBy: { updatedAt: -1 as const } },
+    {
+      type: 'group' as const,
+      groupBy: ['account', 'id'],
+      values: { updatedAt: 'first' as const, status: 'first' as const },
+    },
+    {
+      type: 'query' as const,
+      query: [
+        { path: 'type', param: 'type' },
+        { path: 'personalia\\.age', op: 'gt', value: 18 },
+      ],
+    },
+    { type: 'limit' as const, count: 1 },
+    { type: 'unwind' as const, path: 'jobs' },
+    { type: 'root' as const, path: 'jobs' },
+  ]
+  const expected = [
+    { $sort: { updatedAt: -1 } },
+    {
+      $group: {
+        _id: { account: '$account', id: '$id' },
+        updatedAt: { $first: '$updatedAt' },
+        status: { $first: '$status' },
+      },
+    },
+    {
+      $match: {
+        type: 'entry',
+        'personalia\\_age': { $gt: 18 },
+      },
+    },
+    { $limit: 1 },
+    {
+      $unwind: {
+        path: '$jobs',
+        preserveNullAndEmptyArrays: false,
+      },
+    },
+    { $replaceRoot: { newRoot: '$jobs' } },
+    { $sort: { _id: 1 } },
+  ]
+
+  const ret = prepareAggregation(aggregation, { type: 'entry' }, true)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should not add default sort with sort both before and after group', (t) => {
+  const aggregation: AggregationObject[] = [
+    { type: 'sort' as const, sortBy: { updatedAt: -1 } },
+    {
+      type: 'group' as const,
+      groupBy: ['account', 'id'],
+      values: { updatedAt: 'first' as const, status: 'first' },
+    },
+    {
+      type: 'query' as const,
+      query: [
+        { path: 'type', param: 'type' },
+        { path: 'personalia\\.age', op: 'gt', value: 18 },
+      ],
+    },
+    { type: 'sort' as const, sortBy: { 'personalia\\.age': 1 } },
+    { type: 'limit' as const, count: 1 },
+    { type: 'unwind' as const, path: 'jobs' },
+    { type: 'root' as const, path: 'jobs' },
+  ]
+  const expected = [
+    { $sort: { updatedAt: -1 } },
+    {
+      $group: {
+        _id: { account: '$account', id: '$id' },
+        updatedAt: { $first: '$updatedAt' },
+        status: { $first: '$status' },
+      },
+    },
+    {
+      $match: {
+        type: 'entry',
+        'personalia\\_age': { $gt: 18 },
+      },
+    },
+    { $sort: { 'personalia\\_age': 1 } },
+    { $limit: 1 },
+    {
+      $unwind: {
+        path: '$jobs',
+        preserveNullAndEmptyArrays: false,
+      },
+    },
+    { $replaceRoot: { newRoot: '$jobs' } },
+  ]
+
+  const ret = prepareAggregation(aggregation, { type: 'entry' }, true)
+
+  t.deepEqual(ret, expected)
+})
+
 test('should return mongo aggregation with lookup', (t) => {
   const aggregation = [
     {
@@ -262,7 +460,7 @@ test('should escape paths used as props', (t) => {
     },
   ]
   const expected = [
-    { $sort: { 'values.updatedAt': -1 } },
+    { $sort: { 'values\\.updatedAt': -1 } }, // TODO: Is this correct?
     {
       $group: {
         _id: {

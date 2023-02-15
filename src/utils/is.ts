@@ -9,3 +9,5 @@ export const isObject = (value: unknown): value is Record<string, unknown> =>
 export const isObjectWithId = (value: unknown): value is ObjectWithId =>
   isObject(value) &&
   (typeof value.id === 'string' || typeof value.id === 'number')
+
+export const isNotEmpty = <T>(value: T): value is NonNullable<T> => !!value

@@ -36,14 +36,17 @@ const createFind = (items: TypedData[]) => {
   }))
   const it = docs[Symbol.iterator]()
 
-  return sinon.stub().returns({
+  const cursor = {
     // toArray returns all docs
     toArray: async () => docs,
     // Mimick limit method
     limit: (size: number) => ({ toArray: async () => docs.slice(0, size) }),
     // Mimick next()
     next: async () => it.next().value,
-  })
+    sort: () => cursor,
+  }
+
+  return sinon.stub().returns(cursor)
 }
 
 // Tests
