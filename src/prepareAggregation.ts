@@ -16,7 +16,6 @@ import {
 } from './types.js'
 import { isObject, isNotEmpty } from './utils/is.js'
 import { ensureArray, dearrayIfPossible } from './utils/array.js'
-import { serializePath } from './escapeKeys.js'
 import prepareFilter from './prepareFilter.js'
 
 export interface Aggregation extends Record<string, unknown> {
@@ -42,12 +41,6 @@ const isAggregation = (
   isAggregationObject(expr)
 
 const serializeFieldKey = (key: string) => key.replace('.', '\\\\_')
-
-// TODO: Double check that this is the behavior we want for aggregation objects
-const serializeObjecKeys = (obj: Record<string, unknown>) =>
-  Object.fromEntries(
-    Object.entries(obj).map(([key, value]) => [serializePath(key), value])
-  )
 
 const prepareGroupId = (fields: string[]) =>
   fields.reduce(
@@ -86,7 +79,7 @@ const groupToMongo = ({ groupBy, values }: AggregationObjectGroup) =>
 
 const sortToMongo = ({ sortBy }: AggregationObjectSort) =>
   isObject(sortBy) && Object.keys(sortBy).length > 0
-    ? { $sort: serializeObjecKeys(sortBy) }
+    ? { $sort: sortBy }
     : undefined
 
 const queryToMongo = (

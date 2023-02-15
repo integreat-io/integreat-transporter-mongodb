@@ -236,7 +236,7 @@ test('should not add default sort with sort both before and after group', (t) =>
         'personalia\\_age': { $gt: 18 },
       },
     },
-    { $sort: { 'personalia\\_age': 1 } },
+    { $sort: { 'personalia\\.age': 1 } },
     { $limit: 1 },
     {
       $unwind: {
@@ -460,7 +460,7 @@ test('should escape paths used as props', (t) => {
     },
   ]
   const expected = [
-    { $sort: { 'values\\.updatedAt': -1 } }, // TODO: Is this correct?
+    { $sort: { 'values.updatedAt': -1 } }, // TODO: Is this correct?
     {
       $group: {
         _id: {
