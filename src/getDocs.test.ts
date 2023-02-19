@@ -279,7 +279,8 @@ test('should return one page of the aggregated result', async (t) => {
       'values.status': 'active',
     },
   ])
-  const client = createClient({ find, aggregate })
+  const countDocuments = async () => 3
+  const client = createClient({ find, aggregate, countDocuments })
   const action = {
     type: 'GET',
     payload: {
@@ -323,7 +324,7 @@ test('should return one page of the aggregated result', async (t) => {
   t.is(find.callCount, 0)
   t.is(aggregate.callCount, 1)
   t.deepEqual(ret.data, expectedData)
-  t.is(ret.meta?.totalCount, 2)
+  t.is(ret.meta?.totalCount, 3)
 })
 
 test('should return the aggregated result from a page offset', async (t) => {
@@ -345,7 +346,8 @@ test('should return the aggregated result from a page offset', async (t) => {
       'values.status': 'active',
     },
   ])
-  const client = createClient({ find, aggregate })
+  const countDocuments = async () => 3
+  const client = createClient({ find, aggregate, countDocuments })
   const action = {
     type: 'GET',
     payload: {
@@ -384,7 +386,7 @@ test('should return the aggregated result from a page offset', async (t) => {
   t.is(find.callCount, 0)
   t.is(aggregate.callCount, 1)
   t.deepEqual(ret.data, expectedData)
-  t.is(ret.meta?.totalCount, 1)
+  t.is(ret.meta?.totalCount, 3)
 })
 
 test('should convert mongodb _id to string', async (t) => {

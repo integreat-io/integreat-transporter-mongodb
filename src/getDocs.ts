@@ -170,7 +170,7 @@ export default async function getDocs(
   }
 
   let totalCount = data.length
-  if (!aggregation && typeof payload.pageSize === 'number') {
+  if (typeof payload.pageSize === 'number') {
     debugMongo('Counting documents')
     totalCount = await collection.countDocuments(filter)
   }
