@@ -148,9 +148,9 @@ const lookupToMongo = (
 ) => ({
   $lookup: {
     from: collection,
-    foreignField: field,
-    localField: path,
-    as: setPath ?? path,
+    ...(typeof field === 'string' ? { foreignField: field } : {}),
+    ...(typeof path === 'string' ? { localField: path } : {}),
+    ...(typeof (setPath ?? path) === 'string' ? { as: setPath ?? path } : {}),
     ...(variables && {
       let: prepareLookupValues(variables),
     }),

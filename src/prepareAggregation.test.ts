@@ -259,6 +259,29 @@ test('should return mongo aggregation with lookup', (t) => {
       collection: 'projects',
       field: 'id',
       path: 'included',
+    },
+  ]
+  const expected = [
+    {
+      $lookup: {
+        from: 'projects',
+        foreignField: 'id',
+        localField: 'included',
+        as: 'included',
+      },
+    },
+  ]
+
+  const ret = prepareAggregation(aggregation, { type: 'entry' })
+
+  t.deepEqual(ret, expected)
+})
+
+test('should return mongo aggregation with lookup pipeline', (t) => {
+  const aggregation = [
+    {
+      type: 'lookup' as const,
+      collection: 'projects',
       variables: { ids: 'include' },
       pipeline: [
         {
@@ -282,9 +305,6 @@ test('should return mongo aggregation with lookup', (t) => {
     {
       $lookup: {
         from: 'projects',
-        foreignField: 'id',
-        localField: 'included',
-        as: 'included',
         let: { ids: '$include' },
         pipeline: [
           {
