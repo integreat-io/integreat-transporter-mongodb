@@ -6,23 +6,27 @@ import prepareAggregation from './prepareAggregation.js'
 // Tests
 
 test('should return mongo aggregation pipeline', (t) => {
-  const aggregation = [
-    { type: 'sort' as const, sortBy: { updatedAt: -1 as const } },
+  const aggregation: AggregationObject[] = [
+    { type: 'sort', sortBy: { updatedAt: -1 } },
     {
-      type: 'group' as const,
+      type: 'group',
       groupBy: ['account', 'id'],
-      values: { updatedAt: 'first' as const, status: 'first' as const },
+      values: {
+        updatedAt: 'first',
+        status: 'first',
+        children: { op: 'push', path: '$ROOT' },
+      },
     },
     {
-      type: 'query' as const,
+      type: 'query',
       query: [
         { path: 'type', param: 'type' },
         { path: 'personalia\\.age', op: 'gt', value: 18 },
       ],
     },
-    { type: 'limit' as const, count: 1 },
-    { type: 'unwind' as const, path: 'jobs' },
-    { type: 'root' as const, path: 'jobs' },
+    { type: 'limit', count: 1 },
+    { type: 'unwind', path: 'jobs' },
+    { type: 'root', path: 'jobs' },
   ]
   const expected = [
     { $sort: { updatedAt: -1 } },
@@ -31,6 +35,7 @@ test('should return mongo aggregation pipeline', (t) => {
         _id: { account: '$account', id: '$id' },
         updatedAt: { $first: '$updatedAt' },
         status: { $first: '$status' },
+        children: { $push: '$$ROOT' },
       },
     },
     {

@@ -15,7 +15,14 @@ export interface AggregationObjectSort {
   sortBy: Record<string, 1 | -1>
 }
 
-export type GroupMethod = 'first' | 'last' | 'sum' | 'avg' | 'max' | 'min'
+export type GroupMethod =
+  | 'first'
+  | 'last'
+  | 'sum'
+  | 'avg'
+  | 'max'
+  | 'min'
+  | 'push'
 
 export interface GroupObject {
   op: GroupMethod
