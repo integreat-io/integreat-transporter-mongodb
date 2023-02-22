@@ -1,6 +1,6 @@
 {
   "name": "integreat-transporter-mongodb",
-  "version": "0.12.4",
+  "version": "0.13.0",
   "description": "Integreat transporter for mongodb",
   "author": "Kjell-Morten Bratsberg Thorsen <post@kjellmorten.no>",
   "license": "ISC",
