@@ -51,11 +51,18 @@ test('should get a document by type and id', async (t) => {
       type: 'entry',
       values: { category: 'news', count: 8 },
     },
+    {
+      _id: '12348',
+      id: 'ent4',
+      type: 'entry',
+      values: { category: 'news', count: 5 },
+    },
   ])
   const action = {
     type: 'GET',
     payload: {
       type: 'entry',
+      pageSize: 2,
     },
     meta: {
       options: {
@@ -78,7 +85,7 @@ test('should get a document by type and id', async (t) => {
   const expectedData1 = {
     'values\\_category': 'news',
     id: 'ent1',
-    'values\\_count': 11,
+    'values\\_count': 16,
   }
   const expectedData2 = {
     'values\\_category': 'sports',
@@ -101,4 +108,5 @@ test('should get a document by type and id', async (t) => {
   t.is(data.length, 2)
   t.deepEqual(data[0], expectedData1)
   t.deepEqual(data[1], expectedData2)
+  t.deepEqual(response.meta?.totalCount, 2)
 })

@@ -11,7 +11,7 @@ as service.
 
 ### Prerequisits
 
-Requires at least node v12.9, Integreat v0.8, and MongoDb 3.6.
+Requires at least node v18, Integreat v0.8, and MongoDb 5.0.
 
 ### Installing and using
 

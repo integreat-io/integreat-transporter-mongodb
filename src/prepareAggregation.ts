@@ -229,7 +229,7 @@ function ensureSorting(pipeline: Aggregation[]) {
 export default function prepareAggregation(
   aggregation?: AggregationObject[],
   params: Record<string, unknown> = {},
-  addDefaultSorting = false
+  isTopLevelPipeline = false
 ): Aggregation[] | undefined {
   if (!Array.isArray(aggregation) || aggregation.length === 0) {
     return undefined
@@ -237,8 +237,11 @@ export default function prepareAggregation(
 
   const pipeline = aggregation.map(toMongo(params)).filter(isNotEmpty)
   return pipeline.length > 0
-    ? addDefaultSorting
-      ? ensureSorting(pipeline)
+    ? isTopLevelPipeline
+      ? [
+          ...ensureSorting(pipeline),
+          { $setWindowFields: { output: { __totalCount: { $count: {} } } } }, // Adds total count to every document
+        ]
       : pipeline
     : undefined
 }

@@ -21,6 +21,8 @@ export function serializePath(path: string): string {
   )
 }
 
+const shouldSkipProp = (key: string) => key === '__totalCount'
+
 export function serializeItem(item: unknown): unknown {
   if (Array.isArray(item)) {
     return item.map(serializeItem)
@@ -43,10 +45,13 @@ export function normalizeItem(item: unknown): unknown {
     return item
   }
   return Object.entries(item).reduce(
-    (obj, [key, value]) => ({
-      ...obj,
-      [normalizeKey(key)]: normalizeItem(value),
-    }),
+    (obj, [key, value]) =>
+      shouldSkipProp(key)
+        ? obj
+        : {
+            ...obj,
+            [normalizeKey(key)]: normalizeItem(value),
+          },
     {}
   )
 }

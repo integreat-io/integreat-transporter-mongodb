@@ -114,3 +114,19 @@ test('should escape escaped dots in paths', (t) => {
     'field\\_with\\.several\\_dots'
   )
 })
+
+test('should remove reserved property __totalCount', (t) => {
+  const data = {
+    id: 'ent1',
+    type: 'entry',
+    __totalCount: 3,
+  }
+  const expected = {
+    id: 'ent1',
+    type: 'entry',
+  }
+
+  const ret = normalizeItem(data)
+
+  t.deepEqual(ret, expected)
+})

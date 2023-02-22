@@ -3,6 +3,15 @@ import { AggregationObject } from './types.js'
 
 import prepareAggregation from './prepareAggregation.js'
 
+// Setup
+
+// A count stage is added to every aggregation on top level to return total
+// count of aggregated documents. It is added to every document and removed
+// before it is returned.
+const countStage = {
+  $setWindowFields: { output: { __totalCount: { $count: {} } } },
+}
+
 // Tests
 
 test('should return mongo aggregation pipeline', (t) => {
@@ -100,6 +109,7 @@ test('should return mongo aggregation pipeline with default sort by _id', (t) =>
     },
     { $replaceRoot: { newRoot: '$jobs' } },
     { $sort: { _id: 1 } },
+    countStage,
   ]
 
   const ret = prepareAggregation(aggregation, { type: 'entry' }, true)
@@ -149,6 +159,7 @@ test('should return mongo aggregation pipeline with provided sort', (t) => {
       },
     },
     { $replaceRoot: { newRoot: '$jobs' } },
+    countStage,
   ]
 
   const ret = prepareAggregation(aggregation, { type: 'entry' }, true)
@@ -199,6 +210,7 @@ test('should return mongo aggregation pipeline with default sort even with sort 
     },
     { $replaceRoot: { newRoot: '$jobs' } },
     { $sort: { _id: 1 } },
+    countStage,
   ]
 
   const ret = prepareAggregation(aggregation, { type: 'entry' }, true)
@@ -250,6 +262,7 @@ test('should not add default sort with sort both before and after group', (t) =>
       },
     },
     { $replaceRoot: { newRoot: '$jobs' } },
+    countStage,
   ]
 
   const ret = prepareAggregation(aggregation, { type: 'entry' }, true)

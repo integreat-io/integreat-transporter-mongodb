@@ -147,6 +147,7 @@ export default async function getDocs(
     : undefined
 
   let cursor
+  0
   if (aggregation) {
     debugMongo('Starting query with aggregation %o', aggregation)
     cursor = collection.aggregate(aggregation, { allowDiskUse })
@@ -172,7 +173,14 @@ export default async function getDocs(
   let totalCount = data.length
   if (typeof payload.pageSize === 'number') {
     debugMongo('Counting documents')
-    totalCount = await collection.countDocuments(filter)
+    if (aggregation) {
+      totalCount =
+        isObject(data[0]) && typeof data[0].__totalCount === 'number'
+          ? data[0].__totalCount // This is a special prop added in the aggregation
+          : 0
+    } else {
+      totalCount = await collection.countDocuments(filter)
+    }
   }
 
   debugMongo('Normalizing data')

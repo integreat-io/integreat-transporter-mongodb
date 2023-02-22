@@ -184,6 +184,7 @@ test('should get with aggregation', async (t) => {
       },
     },
     { $sort: { _id: 1 } },
+    { $setWindowFields: { output: { __totalCount: { $count: {} } } } }, // Adds total count to every document
   ]
   const expectedData = [
     {
@@ -250,6 +251,7 @@ test('should get put query and sort first in aggregation pipeline', async (t) =>
       },
     },
     { $sort: { _id: 1 } },
+    { $setWindowFields: { output: { __totalCount: { $count: {} } } } }, // Adds total count to every document
   ]
 
   await getDocs(action, client)
@@ -267,19 +269,22 @@ test('should return one page of the aggregated result', async (t) => {
       _id: { 'values\\_account': '1501', id: 'ent1' },
       updatedAt: '2021-01-18T00:00:00Z',
       'values.status': 'inactive',
+      __totalCount: 3,
     },
     {
       _id: { 'values\\_account': '3000', id: 'ent2' },
       updatedAt: '2021-01-19T00:00:00Z',
       'values.status': 'active',
+      __totalCount: 3,
     },
     {
       _id: { 'values\\_account': '3000', id: 'ent3' },
       updatedAt: '2021-01-23T00:00:00Z',
       'values.status': 'active',
+      __totalCount: 3,
     },
   ])
-  const countDocuments = async () => 3
+  const countDocuments = async () => 10
   const client = createClient({ find, aggregate, countDocuments })
   const action = {
     type: 'GET',
@@ -323,8 +328,8 @@ test('should return one page of the aggregated result', async (t) => {
   t.is(ret.status, 'ok', ret.error)
   t.is(find.callCount, 0)
   t.is(aggregate.callCount, 1)
-  t.deepEqual(ret.data, expectedData)
   t.is(ret.meta?.totalCount, 3)
+  t.deepEqual(ret.data, expectedData)
 })
 
 test('should return the aggregated result from a page offset', async (t) => {
@@ -334,19 +339,22 @@ test('should return the aggregated result from a page offset', async (t) => {
       _id: { 'values\\_account': '1501', id: 'ent1' },
       updatedAt: '2021-01-18T00:00:00Z',
       'values.status': 'inactive',
+      __totalCount: 3,
     },
     {
       _id: { 'values\\_account': '3000', id: 'ent2' },
       updatedAt: '2021-01-19T00:00:00Z',
       'values.status': 'active',
+      __totalCount: 3,
     },
     {
       _id: { 'values\\_account': '3000', id: 'ent3' },
       updatedAt: '2021-01-23T00:00:00Z',
       'values.status': 'active',
+      __totalCount: 3,
     },
   ])
-  const countDocuments = async () => 3
+  const countDocuments = async () => 10
   const client = createClient({ find, aggregate, countDocuments })
   const action = {
     type: 'GET',
