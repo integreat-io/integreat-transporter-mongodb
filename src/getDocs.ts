@@ -147,7 +147,6 @@ export default async function getDocs(
     : undefined
 
   let cursor
-  0
   if (aggregation) {
     debugMongo('Starting query with aggregation %o', aggregation)
     cursor = collection.aggregate(aggregation, { allowDiskUse })
