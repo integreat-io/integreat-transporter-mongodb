@@ -441,7 +441,7 @@ test('should get one page of items', async (t) => {
     { id: 'ent2', $type: 'entry' },
     { id: 'ent3', $type: 'entry' },
   ])
-  const countDocuments = async () => 3
+  const countDocuments = sinon.stub().resolves(3)
   const client = createClient({ find, countDocuments })
   const action = {
     type: 'GET',
@@ -466,8 +466,10 @@ test('should get one page of items', async (t) => {
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
   t.is(data[1].id, 'ent2')
-  t.is(response?.meta?.totalCount, 3)
   t.true(find.calledWith(expectedQuery))
+  t.is(response?.meta?.totalCount, 3)
+  t.is(countDocuments.callCount, 1)
+  t.deepEqual(countDocuments.args[0][0], {})
 })
 
 test('should return params for next page', async (t) => {
@@ -510,7 +512,7 @@ test('should get second page of items', async (t) => {
     { id: 'ent3', $type: 'entry' },
     { id: 'ent4', $type: 'entry' },
   ])
-  const countDocuments = async () => 3
+  const countDocuments = sinon.stub().resolves(3)
   const client = createClient({ find, countDocuments })
   const action = {
     type: 'GET',
@@ -546,6 +548,9 @@ test('should get second page of items', async (t) => {
   t.is(data[0].id, 'ent3')
   t.is(data[1].id, 'ent4')
   t.deepEqual(response?.paging, expectedPaging)
+  t.is(response?.meta?.totalCount, 3)
+  t.is(countDocuments.callCount, 1)
+  t.deepEqual(countDocuments.args[0][0], {}) // Should not use pageId filters in total count
 })
 
 test('should get empty result when we have passed the last page', async (t) => {

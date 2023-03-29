@@ -178,7 +178,8 @@ export default async function getDocs(
           ? data[0].__totalCount // This is a special prop added in the aggregation
           : 0
     } else {
-      totalCount = await collection.countDocuments(filter)
+      const countFilter = prepareFilter(query, params)
+      totalCount = await collection.countDocuments(countFilter)
     }
   }
 
