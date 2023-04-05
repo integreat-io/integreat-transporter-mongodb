@@ -38,11 +38,10 @@ function filterFromParts(
 ): QueryObject[] {
   if (parts.length === 1 && parts[0] === '>') {
     return [{ path: 'id', op: 'gte', value: id }]
-  } else if (parts.length >= 1) {
-    const filter = createQueryObjectFromPageIdPart(parts[0])
-    return filter ? [filter] : []
   } else {
-    return []
+    return parts
+      .map(createQueryObjectFromPageIdPart)
+      .filter(Boolean) as QueryObject[]
   }
 }
 

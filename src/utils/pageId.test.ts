@@ -16,12 +16,15 @@ test('should decode pageId with default sorting', (t) => {
   t.deepEqual(ret, expected)
 })
 
-test('should decode pageId with sorting fields, using only the first field as a filter', (t) => {
+test('should decode pageId with sorting fields', (t) => {
   const pageId =
     'ZW50MnxhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkxMDAwfGF0dHJpYnV0ZXMuaW5kZXg+MQ' // ent2|attributes.timestamp<1584211391000|attributes.index>1
   const expected = {
     id: 'ent2',
-    filter: [{ path: 'attributes.timestamp', op: 'lte', value: 1584211391000 }],
+    filter: [
+      { path: 'attributes.timestamp', op: 'lte', value: 1584211391000 },
+      { path: 'attributes.index', op: 'gte', value: 1 },
+    ],
   }
 
   const ret = decodePageId(pageId)
@@ -30,10 +33,13 @@ test('should decode pageId with sorting fields, using only the first field as a 
 })
 
 test('should decode pageId with encoded string', (t) => {
-  const pageId = 'ZW50MnxtZXNzYWdlPCJFc2NhcGUlMjAlMjJtZSUyMiI' // ent2|message<"Escape%20%22me%22"
+  const pageId = 'ZW50MnxpbmRleDwxfG1lc3NhZ2U8IkVzY2FwZSUyMCUyMm1lJTIyIg' // ent2|index<1|message<"Escape%20%22me%22"
   const expected = {
     id: 'ent2',
-    filter: [{ path: 'message', op: 'lte', value: 'Escape "me"' }],
+    filter: [
+      { path: 'index', op: 'lte', value: 1 },
+      { path: 'message', op: 'lte', value: 'Escape "me"' },
+    ],
   }
 
   const ret = decodePageId(pageId)
@@ -42,10 +48,13 @@ test('should decode pageId with encoded string', (t) => {
 })
 
 test('should decode pageId with unencoded string', (t) => {
-  const pageId = 'ZW50MnxpZD5lbnQy' // ent2|id>ent2
+  const pageId = 'ZW50MnxpbmRleDwxfGlkPmVudDI' // ent2|index<1|id>ent2
   const expected = {
     id: 'ent2',
-    filter: [{ path: 'id', op: 'gte', value: 'ent2' }],
+    filter: [
+      { path: 'index', op: 'lte', value: 1 },
+      { path: 'id', op: 'gte', value: 'ent2' },
+    ],
   }
 
   const ret = decodePageId(pageId)

@@ -373,6 +373,7 @@ test('should expand pageId with removed padding to queries', (t) => {
     'meta.views': { $gt: 300 },
     'meta.section': 'news',
     'attributes.timestamp': { $lte: 1584211391000 },
+    'attributes.index': { $gte: 1 },
   }
 
   const ret = prepareFilter(query, params, pageId)
@@ -385,13 +386,14 @@ test('should expand pageId with sort filter to queries', (t) => {
   const params = {
     type: 'entry',
     id: 'ent1',
-    pageId: 'ZW50MnxpZD4iZW50MiI', // ent2|id>"ent2"
+    pageId: 'ZW50MnxpbmRleDwxfGlkPiJlbnQyIg', // ent2|index<1|id>"ent2"
     query: [{ path: 'meta.section', value: 'news' }],
   }
-  const pageId = decodePageId('ZW50MnxpZD4iZW50MiI')
+  const pageId = decodePageId('ZW50MnxpbmRleDwxfGlkPiJlbnQyIg')
   const expected = {
     'meta.views': { $gt: 300 },
     'meta.section': 'news',
+    index: { $lte: 1 },
     id: { $gte: 'ent2' },
   }
 
@@ -405,13 +407,16 @@ test('should expand pageId with encoded string', (t) => {
   const params = {
     type: 'entry',
     id: 'ent1',
-    pageId: 'ZW50MnxtZXNzYWdlPCJFc2NhcGUlMjAlMjJtZSUyMiI', // ent2|message<"Escape%20%22me%22"
+    pageId: 'ZW50MnxpbmRleDwxfG1lc3NhZ2U8IkVzY2FwZSUyMCUyMm1lJTIyIg', // ent2|index<1|message<"Escape%20%22me%22"
     query: [{ path: 'meta.section', value: 'news' }],
   }
-  const pageId = decodePageId('ZW50MnxtZXNzYWdlPCJFc2NhcGUlMjAlMjJtZSUyMiI')
+  const pageId = decodePageId(
+    'ZW50MnxpbmRleDwxfG1lc3NhZ2U8IkVzY2FwZSUyMCUyMm1lJTIyIg'
+  )
   const expected = {
     'meta.views': { $gt: 300 },
     'meta.section': 'news',
+    index: { $lte: 1 },
     message: { $lte: 'Escape "me"' },
   }
 
@@ -433,6 +438,7 @@ test('should expand pageId with unencoded string', (t) => {
     'meta.views': { $gt: 300 },
     'meta.section': 'news',
     index: { $lte: 1 },
+    id: { $gte: 'ent2' },
   }
 
   const ret = prepareFilter(query, params, pageId)
