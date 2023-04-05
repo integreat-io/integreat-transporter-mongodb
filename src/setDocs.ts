@@ -9,7 +9,7 @@ import {
   UpdateResult,
   DeleteResult,
 } from 'mongodb'
-import debug = require('debug')
+import debug from 'debug'
 import prepareFilter from './prepareFilter.js'
 import { serializeItem } from './escapeKeys.js'
 import { isObjectWithId } from './utils/is.js'
@@ -160,7 +160,7 @@ async function updateBulk(
 ) {
   try {
     debugMongo(
-      'Delete with filters %o',
+      isDelete ? 'Delete with filters %o' : 'Update with filters %o',
       operations.map((op) => op.filter)
     )
     const bulkOperations = operations.map(({ filter, update }) =>

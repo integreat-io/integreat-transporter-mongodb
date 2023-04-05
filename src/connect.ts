@@ -1,7 +1,7 @@
 /* eslint-disable security/detect-object-injection */
-import debug = require('debug')
+import debug from 'debug'
 import { MongoClient } from 'mongodb'
-import createHash = require('object-hash')
+import createHash from 'object-hash'
 import { MongoOptions, Connection, MongoClientObject } from './types.js'
 
 const debugMongo = debug('integreat:transporter:mongodb:client')

@@ -1,4 +1,4 @@
-import mongodb = require('mongodb')
+import mongodb from 'mongodb'
 import connect from './connect.js'
 import disconnect from './disconnect.js'
 import send from './send.js'

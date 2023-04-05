@@ -1,5 +1,5 @@
 import test from 'ava'
-import sinon = require('sinon')
+import sinon from 'sinon'
 import { MongoClient } from 'mongodb'
 import { MongoClientObject } from './types.js'
 

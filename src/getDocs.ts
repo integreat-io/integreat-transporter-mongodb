@@ -1,4 +1,4 @@
-import debug = require('debug')
+import debug from 'debug'
 import { FindCursor, AggregationCursor, MongoClient } from 'mongodb'
 import { Action, Response, TypedData } from 'integreat'
 import prepareFilter from './prepareFilter.js'

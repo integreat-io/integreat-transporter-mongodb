@@ -1,5 +1,5 @@
 import test from 'ava'
-import sinon = require('sinon')
+import sinon from 'sinon'
 import { TypedData } from 'integreat'
 import { Collection, MongoClient } from 'mongodb'
 

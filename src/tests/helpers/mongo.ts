@@ -1,4 +1,4 @@
-import mongodb = require('mongodb')
+import mongodb from 'mongodb'
 const mongo = mongodb.MongoClient
 
 export interface MongoElements {

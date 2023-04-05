@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import test from 'ava'
-import sinon = require('sinon')
+import sinon from 'sinon'
 import { MongoClient } from 'mongodb'
 
 import connect from './connect.js'
