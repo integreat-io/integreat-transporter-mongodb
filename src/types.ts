@@ -2,7 +2,7 @@ import { MongoClient } from 'mongodb'
 import { Connection as ConnectionBase, Payload as BasePayload } from 'integreat'
 
 export interface QueryObject {
-  path: string
+  path?: string
   op?: string
   param?: string
   value?: unknown

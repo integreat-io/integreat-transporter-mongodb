@@ -45,6 +45,7 @@ const validOps = [
   'in',
   'regex',
   'isArray',
+  'search',
   ...opsWithoutValue,
 ]
 const validValueTypes = ['string', 'number', 'boolean']
@@ -65,6 +66,8 @@ function mapOp(op: string) {
       return '$ne'
     case 'notset':
       return '$eq'
+    case 'search':
+      return '$text.$search'
     default:
       return `$${op}`
   }
@@ -88,7 +91,11 @@ function setMongoSelectorFromQueryObj(
 
     if (isValidValue(targetValue, op)) {
       const targetPath = [
-        expr ? '$expr' : op === 'isArray' ? undefined : serializePath(path),
+        expr
+          ? '$expr'
+          : op === 'isArray' || op === 'search' || typeof path !== 'string'
+          ? undefined
+          : serializePath(path),
         mapOp(op),
       ]
         .filter(Boolean)

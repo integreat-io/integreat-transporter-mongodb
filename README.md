@@ -97,6 +97,11 @@ default operand is `eq`, but you may also use `gt`, `gte`, `lt`, `lte`, or `in`.
 There are also two special operands: `isset` and `notset`. They will match when
 a field is set or not.
 
+To do a text search in the text index set up for th collection, use the `search`
+operand and set `value` to search string or `param` to the parameter that holds
+the search string. See MongoDb docs for more on
+[setting up a text index](https://www.mongodb.com/docs/drivers/node/current/fundamentals/crud/read-operations/text/).
+
 The query object will look like this, for a request for items of type `entry`:
 
 ```javascript

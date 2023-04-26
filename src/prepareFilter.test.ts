@@ -59,6 +59,32 @@ test('should use options.query as filter', (t) => {
   t.deepEqual(ret, expected)
 })
 
+test('should search text index', (t) => {
+  const type = 'entry'
+  const id = 'ent1'
+  const query = [{ op: 'search', value: 'cool nice' }]
+  const expected = {
+    $text: { $search: 'cool nice' },
+  }
+
+  const ret = prepareFilter(query, { type, id })
+
+  t.deepEqual(ret, expected)
+})
+
+test('should search text index with param', (t) => {
+  const type = 'entry'
+  const id = 'ent1'
+  const query = [{ op: 'search', param: 'q' }]
+  const expected = {
+    $text: { $search: 'cool nice' },
+  }
+
+  const ret = prepareFilter(query, { type, id, q: 'cool nice' })
+
+  t.deepEqual(ret, expected)
+})
+
 test('should add request query to options query filter', (t) => {
   const params = {
     type: 'entry',
