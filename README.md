@@ -11,7 +11,7 @@ as service.
 
 ### Prerequisits
 
-Requires at least node v18, Integreat v0.8, and MongoDb 5.0.
+Requires at least node v18, Integreat v1.0, and MongoDb 5.0.
 
 ### Installing and using
 
@@ -40,6 +40,10 @@ const great = Integreat.create(defs, resources)
 The data returns from `GET` actions will be the retrieved documents, while for
 `SET` and `DELETE` actions the data will be result stats in the form of
 `{ modifiedCount: 1, insertedCount: 2, deletedCount: 0 }`.
+
+`GET` actions will also return a `totalCount` in the `params` object of the
+response, with the total number of documents matching the query. This is useful
+for paged queries.
 
 After including the `mongodb` transporter in your resources object, you still
 need to configure your service to use it.
