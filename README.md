@@ -4,8 +4,8 @@ Transporter that lets
 [Integreat](https://github.com/integreat-io/integreat) use a MongoDB database
 as service.
 
-[![Build Status](https://travis-ci.org/integreat-io/integreat-transporter-mongodb.svg?branch=master)](https://travis-ci.org/integreat-io/integreat-transporter-mongodb)
-[![Coverage Status](https://coveralls.io/repos/github/integreat-io/integreat-transporter-mongodb/badge.svg?branch=master)](https://coveralls.io/github/integreat-io/integreat-transporter-mongodb?branch=master)
+[![npm Version](https://img.shields.io/npm/v/integreat-transporter-mongodb.svg)](https://www.npmjs.com/package/integreat-transporter-mongodb)
+[![Maintainability](https://api.codeclimate.com/v1/badges/4e1f602444ddb8b13527/maintainability)](https://codeclimate.com/github/integreat-io/integreat-transporter-mongodb/maintainability)
 
 ## Getting started
 
