@@ -190,7 +190,7 @@ export default async function getDocs(
     ...action.response,
     status: 'ok',
     data: normalizedData,
-    meta: { totalCount },
+    params: { totalCount },
   }
 
   if (payload.pageSize) {

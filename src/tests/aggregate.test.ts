@@ -108,5 +108,5 @@ test('should get a document by type and id', async (t) => {
   t.is(data.length, 2)
   t.deepEqual(data[0], expectedData1)
   t.deepEqual(data[1], expectedData2)
-  t.deepEqual(response.meta?.totalCount, 2)
+  t.deepEqual(response.params?.totalCount, 2)
 })

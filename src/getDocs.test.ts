@@ -68,7 +68,7 @@ test('should get items', async (t) => {
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
   t.is(data[1].id, 'ent2')
-  t.is(response?.meta?.totalCount, 2)
+  t.is(response?.params?.totalCount, 2)
   t.true(find.calledWith(expectedQuery))
 })
 
@@ -203,7 +203,7 @@ test('should get with aggregation', async (t) => {
   t.deepEqual(arg, expectedPipeline)
   t.is(ret.status, 'ok')
   t.deepEqual(ret.data, expectedData)
-  t.is(ret.meta?.totalCount, 1)
+  t.is(ret.params?.totalCount, 1)
 })
 
 test('should get put query and sort first in aggregation pipeline', async (t) => {
@@ -328,7 +328,7 @@ test('should return one page of the aggregated result', async (t) => {
   t.is(ret.status, 'ok', ret.error)
   t.is(find.callCount, 0)
   t.is(aggregate.callCount, 1)
-  t.is(ret.meta?.totalCount, 3)
+  t.is(ret.params?.totalCount, 3)
   t.deepEqual(ret.data, expectedData)
 })
 
@@ -394,7 +394,7 @@ test('should return the aggregated result from a page offset', async (t) => {
   t.is(find.callCount, 0)
   t.is(aggregate.callCount, 1)
   t.deepEqual(ret.data, expectedData)
-  t.is(ret.meta?.totalCount, 3)
+  t.is(ret.params?.totalCount, 3)
 })
 
 test('should convert mongodb _id to string', async (t) => {
@@ -467,7 +467,7 @@ test('should get one page of items', async (t) => {
   t.is(data[0].id, 'ent1')
   t.is(data[1].id, 'ent2')
   t.true(find.calledWith(expectedQuery))
-  t.is(response?.meta?.totalCount, 3)
+  t.is(response?.params?.totalCount, 3)
   t.is(countDocuments.callCount, 1)
   t.deepEqual(countDocuments.args[0][0], {})
 })
@@ -548,7 +548,7 @@ test('should get second page of items', async (t) => {
   t.is(data[0].id, 'ent3')
   t.is(data[1].id, 'ent4')
   t.deepEqual(response?.paging, expectedPaging)
-  t.is(response?.meta?.totalCount, 3)
+  t.is(response?.params?.totalCount, 3)
   t.is(countDocuments.callCount, 1)
   t.deepEqual(countDocuments.args[0][0], {}) // Should not use pageId filters in total count
 })
