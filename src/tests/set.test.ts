@@ -48,12 +48,13 @@ test('should set one document', async (t) => {
       },
     },
   }
+  const expectedData = { insertedCount: 1, modifiedCount: 0, deletedCount: 0 }
 
   const connection = await transporter.connect(
     options,
     authorization,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -64,6 +65,7 @@ test('should set one document', async (t) => {
   })) as Record<string, unknown>[]
   t.is(docs.length, 1)
   t.is(docs[0].id, 'ent1')
+  t.deepEqual(response.data, expectedData)
 })
 
 test('should set array of documents', async (t) => {
@@ -83,12 +85,13 @@ test('should set array of documents', async (t) => {
       },
     },
   }
+  const expectedData = { insertedCount: 2, modifiedCount: 0, deletedCount: 0 }
 
   const connection = await transporter.connect(
     options,
     authorization,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -98,6 +101,7 @@ test('should set array of documents', async (t) => {
   t.is(docs.length, 2)
   t.true(docs.some((doc) => doc.id === 'ent1'))
   t.true(docs.some((doc) => doc.id === 'ent2'))
+  t.deepEqual(response.data, expectedData)
 })
 
 test('should update existing document', async (t) => {
@@ -127,12 +131,13 @@ test('should update existing document', async (t) => {
       },
     },
   }
+  const expectedData = { insertedCount: 0, modifiedCount: 1, deletedCount: 0 }
 
   const connection = await transporter.connect(
     options,
     authorization,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -147,4 +152,5 @@ test('should update existing document', async (t) => {
   t.deepEqual(docs[0].date, new Date('2021-03-14T18:43:11Z'))
   t.is((docs[0].meta as Record<string, unknown>).section, 'oldies')
   t.is((docs[0].meta as Record<string, unknown>)['archived\\_flag'], true)
+  t.deepEqual(response.data, expectedData)
 })

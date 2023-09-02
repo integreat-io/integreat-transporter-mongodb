@@ -29,7 +29,7 @@ const castValueIfDate = (value: unknown): unknown =>
 const castDates = (query: Record<string, unknown>) =>
   Object.entries(query).reduce(
     (casted, [key, value]) => ({ ...casted, [key]: castValueIfDate(value) }),
-    {}
+    {},
   )
 
 const mergeQueries = (...queries: (QueryArray | QueryObject | undefined)[]) =>
@@ -76,7 +76,7 @@ function mapOp(op: string) {
 function setMongoSelectorFromQueryObj(
   allParams: Record<string, unknown>,
   { path, op = 'eq', value, param, variable, expr }: QueryObject,
-  filter = {}
+  filter = {},
 ) {
   if (isOpValid(op)) {
     let targetValue = variable
@@ -115,14 +115,14 @@ const setMongoSelectorFromQuery =
       ? {
           ...filter,
           $or: query.map((queryObj) =>
-            mongoSelectorFromQuery(allParams, queryObj)
+            mongoSelectorFromQuery(allParams, queryObj),
           ),
         }
       : setMongoSelectorFromQueryObj(allParams, query, filter)
 
 const mongoSelectorFromQuery = (
   allParams: Record<string, unknown>,
-  query: QueryObject | QueryObject[]
+  query: QueryObject | QueryObject[],
 ): Record<string, unknown> =>
   ([] as QueryObject[])
     .concat(query)
@@ -134,12 +134,12 @@ const mongoSelectorFromQuery = (
 export default function prepareFilter(
   queryArray: QueryArray = [],
   params: Params = {},
-  pageId?: DecodedPageId
+  pageId?: DecodedPageId,
 ): Record<string, unknown> {
   // Create query object from array of props
   const query = mongoSelectorFromQuery(
     params,
-    mergeQueries(queryArray, params.query, pageId?.filter)
+    mergeQueries(queryArray, params.query, pageId?.filter),
   )
 
   // Query for id if no query was provided and this is a member action
