@@ -7,7 +7,7 @@ export interface DecodedPageId {
   filter: QueryObject[]
 }
 
-const partRegex = /^(.+)([\<\>])(.+)$/
+const partRegex = /[\<\>]/
 
 function decodePartValue(value: string) {
   if (value.startsWith('"')) {
@@ -22,19 +22,19 @@ function decodePartValue(value: string) {
 }
 
 function createQueryObjectFromPageIdPart(part: string) {
-  const match = partRegex.exec(part)
-  return match
+  const match = part.split(partRegex)
+  return match.length === 2
     ? {
-        path: match[1],
-        op: match[2] === '>' ? 'gte' : 'lte',
-        value: decodePartValue(match[3]),
+        path: match[0],
+        op: part.includes('>') ? 'gte' : 'lte',
+        value: decodePartValue(match[1]),
       }
     : undefined
 }
 
 function filterFromParts(
   parts: string[],
-  id: string | Record<string, unknown>
+  id: string | Record<string, unknown>,
 ): QueryObject[] {
   if (parts.length === 1 && parts[0] === '>') {
     return [{ path: 'id', op: 'gte', value: id }]
@@ -46,7 +46,7 @@ function filterFromParts(
 }
 
 function extractIdAndParts(
-  pageId: string
+  pageId: string,
 ): [string | Record<string, unknown>, string[]] {
   const aggParts = pageId.split('||')
 
@@ -65,7 +65,7 @@ function extractIdAndParts(
 }
 
 export function decodePageId(
-  encodedPageId?: string
+  encodedPageId?: string,
 ): DecodedPageId | undefined {
   const pageId = atob(encodedPageId)
   if (typeof pageId !== 'string') {
