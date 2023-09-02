@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import test from 'ava'
 import sinon from 'sinon'
 import { MongoClient } from 'mongodb'
@@ -10,7 +9,7 @@ import connect from './connect.js'
 const createMockMongo = (
   constructSpy: sinon.SinonStub,
   connectSpy: sinon.SinonStub,
-  onSpy = () => undefined
+  onSpy = () => undefined,
 ) =>
   function MongoMock(uri: string, options: Record<string, unknown>) {
     constructSpy(uri, options)
@@ -31,7 +30,7 @@ test('should return connection with client', async (t) => {
   const ret = await connect(
     createMockMongo(constructSpy, connectSpy),
     options,
-    emit
+    emit,
   )
 
   t.is(ret.status, 'ok', ret.error)
@@ -104,12 +103,12 @@ test('should reuse client when connecting twice with same options', async (t) =>
   const ret1 = await connect(
     createMockMongo(constructSpy, connectSpy),
     options,
-    emit
+    emit,
   )
   const ret2 = await connect(
     createMockMongo(constructSpy, connectSpy),
     options,
-    emit
+    emit,
   )
 
   t.is(ret1.status, 'ok', ret1.error)
@@ -133,14 +132,14 @@ test('should create new client after disconnect', async (t) => {
   const ret1 = await connect(
     createMockMongo(constructSpy, connectSpy),
     options,
-    emit
+    emit,
   )
   ret1.mongo!.count = 0 // Mimicks disconnect
   ret1.mongo!.client = null // Mimicks disconnect
   const ret2 = await connect(
     createMockMongo(constructSpy, connectSpy),
     options,
-    emit
+    emit,
   )
 
   t.is(ret1.status, 'ok', ret1.error)
@@ -165,12 +164,12 @@ test('should create new client for different options', async (t) => {
   const ret1 = await connect(
     createMockMongo(constructSpy, connectSpy),
     options1,
-    emit
+    emit,
   )
   const ret2 = await connect(
     createMockMongo(constructSpy, connectSpy),
     options2,
-    emit
+    emit,
   )
 
   t.is(ret1.status, 'ok', ret1.error)
@@ -193,13 +192,13 @@ test('should create new client for different auths', async (t) => {
     createMockMongo(constructSpy, connectSpy),
     options,
     emit,
-    auth1
+    auth1,
   )
   const ret2 = await connect(
     createMockMongo(constructSpy, connectSpy),
     options,
     emit,
-    auth2
+    auth2,
   )
 
   t.is(ret1.status, 'ok', ret1.error)
@@ -223,7 +222,7 @@ test('should return the given connection', async (t) => {
     options,
     emit,
     null,
-    oldConnection
+    oldConnection,
   )
 
   t.is(ret, oldConnection)
@@ -242,7 +241,7 @@ test('should listen to error events', async (t) => {
   const ret = await connect(
     createMockMongo(constructSpy, connectSpy, onSpy),
     options,
-    emitSpy
+    emitSpy,
   )
 
   t.is(ret.status, 'ok', ret.error)
@@ -263,7 +262,7 @@ test('should return with error on missing uri', async (t) => {
   const ret = await connect(
     createMockMongo(constructSpy, connectSpy),
     options,
-    emit
+    emit,
   )
 
   t.is(ret.status, 'badrequest')
@@ -282,13 +281,13 @@ test('should return error when connect throws', async (t) => {
   const ret = await connect(
     createMockMongo(constructSpy, connectSpy),
     options,
-    emit
+    emit,
   )
 
   t.is(ret.status, 'error')
   t.is(
     ret.error,
-    'Could not connect to MongoDb on mongodb://db:27026/database. Error: Mongo error'
+    'Could not connect to MongoDb on mongodb://db:27026/database. Error: Mongo error',
   )
   t.falsy(ret.mongo?.client)
 })

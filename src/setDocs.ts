@@ -1,5 +1,4 @@
 /* eslint-disable security/detect-object-injection */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Action, Response } from 'integreat'
 import {
   Collection,
@@ -45,12 +44,12 @@ const summarizeResponses = (responses: ItemResponse[]) =>
       insertedCount: response.insertedCount + insertedCount,
       deletedCount: response.deletedCount + deletedCount,
     }),
-    { modifiedCount: 0, insertedCount: 0, deletedCount: 0 }
+    { modifiedCount: 0, insertedCount: 0, deletedCount: 0 },
   )
 
 const createErrorFromIds = (
   errors: (readonly [string | undefined, string | undefined])[],
-  actionName: string
+  actionName: string,
 ) =>
   `Error ${actionName} item${errors.length === 1 ? '' : 's'} ${errors
     .map(([id]) => `'${id ?? '<no id>'}'`)
@@ -59,7 +58,7 @@ const createErrorFromIds = (
 const createResponse = (
   oneOrMoreResponses: ItemResponse | ItemResponse[],
   action: Action,
-  isDelete: boolean
+  isDelete: boolean,
 ): Response => {
   const responses = ensureArray(oneOrMoreResponses)
   const errors = responses
@@ -86,7 +85,7 @@ const createOkResponse = (
   modifiedCount: number,
   insertedCount: number,
   deletedCount: number,
-  id?: string
+  id?: string,
 ) => ({
   id,
   modifiedCount,
@@ -130,13 +129,13 @@ const createOperation = (action: Action) =>
 async function updateOne(
   operation: Operation,
   collection: Collection,
-  isDelete: boolean
+  isDelete: boolean,
 ) {
   try {
     debugMongo(
       '%s with filter %o',
       isDelete ? 'Delete' : 'Update',
-      operation.filter
+      operation.filter,
     )
     const result = isDelete
       ? await collection.deleteOne(operation.filter)
@@ -146,7 +145,7 @@ async function updateOne(
     return createOkResponse(
       (result as UpdateResult).modifiedCount ?? 0,
       (result as UpdateResult).upsertedCount ?? 0,
-      (result as DeleteResult).deletedCount ?? 0
+      (result as DeleteResult).deletedCount ?? 0,
     )
   } catch (error) {
     return createErrorResponse('error', (error as Error).message, operation.id)
@@ -156,17 +155,17 @@ async function updateOne(
 async function updateBulk(
   operations: Operation[],
   collection: Collection,
-  isDelete: boolean
+  isDelete: boolean,
 ) {
   try {
     debugMongo(
       isDelete ? 'Delete with filters %o' : 'Update with filters %o',
-      operations.map((op) => op.filter)
+      operations.map((op) => op.filter),
     )
     const bulkOperations = operations.map(({ filter, update }) =>
       isDelete
         ? { deleteOne: { filter } }
-        : { updateOne: { filter, update, upsert: true } }
+        : { updateOne: { filter, update, upsert: true } },
     )
     const result = await collection.bulkWrite(bulkOperations, {
       ordered: false,
@@ -174,23 +173,23 @@ async function updateBulk(
     return createOkResponse(
       result.modifiedCount ?? 0,
       result.upsertedCount ?? 0,
-      result.deletedCount ?? 0
+      result.deletedCount ?? 0,
     )
   } catch (error) {
     const result = (error as MongoBulkWriteError).result
     const okResponse = createOkResponse(
       result.modifiedCount ?? 0,
       result.upsertedCount ?? 0,
-      result.deletedCount ?? 0
+      result.deletedCount ?? 0,
     )
     const errorResponses = ensureArray(
-      (error as MongoBulkWriteError).writeErrors as WriteError | WriteError[]
+      (error as MongoBulkWriteError).writeErrors as WriteError | WriteError[],
     ).map(({ index, errmsg }: WriteError) =>
       createErrorResponse(
         'error',
         errmsg || 'Unspecified MongoDB error',
-        operations[index].id
-      )
+        operations[index].id,
+      ),
     )
 
     return [okResponse, ...errorResponses]
@@ -201,7 +200,7 @@ async function updateBulk(
 async function update(
   operations: Operation[],
   collection: Collection,
-  isDelete: boolean
+  isDelete: boolean,
 ) {
   if (operations.length === 1) {
     return await updateOne(operations[0] as Operation, collection, isDelete)
@@ -213,7 +212,7 @@ async function update(
 export default async function setDocs(
   action: Action,
   client: MongoClient,
-  isDelete: boolean
+  isDelete: boolean,
 ): Promise<Response> {
   // Get the right collection
   const collection = getCollection(action, client)
@@ -227,7 +226,7 @@ export default async function setDocs(
 
   // Create operations from data
   const operations = ensureArray(action.payload.data).map(
-    createOperation(action)
+    createOperation(action),
   )
   if (operations.length === 0) {
     // No operations -- end right away
@@ -242,15 +241,15 @@ export default async function setDocs(
   // Check if there were any errors while creating operations
   const errors = operations.filter(
     (operation): operation is OperationError =>
-      typeof (operation as OperationError).error === 'string'
+      typeof (operation as OperationError).error === 'string',
   )
   if (errors.length > 0) {
     return createResponse(
       errors.map((operation) =>
-        createErrorResponse('badrequest', operation.error!)
+        createErrorResponse('badrequest', operation.error!),
       ),
       action,
-      isDelete
+      isDelete,
     )
   }
 
@@ -258,7 +257,7 @@ export default async function setDocs(
   const responses = await update(
     operations as Operation[],
     collection,
-    isDelete
+    isDelete,
   )
   return createResponse(responses, action, isDelete)
 }
