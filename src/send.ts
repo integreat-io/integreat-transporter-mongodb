@@ -6,7 +6,7 @@ import { Connection, MongoOptions } from './types.js'
 
 export const getCollection = (
   action: Action,
-  client: MongoClient
+  client: MongoClient,
 ): Collection | undefined => {
   const options = action.meta?.options as MongoOptions | undefined
   if (!options?.collection) {
@@ -18,7 +18,7 @@ export const getCollection = (
 
 export default async function send(
   action: Action,
-  connection: Connection | null
+  connection: Connection | null,
 ): Promise<Response> {
   if (!action.meta?.options) {
     return {
@@ -40,8 +40,9 @@ export default async function send(
     case 'GET':
       return getDocs(action, client)
     case 'SET':
+    case 'UPDATE':
     case 'DELETE':
-      return setDocs(action, client, action.type === 'DELETE')
+      return setDocs(action, client)
   }
 
   return { ...action.response, status: 'noaction' }
