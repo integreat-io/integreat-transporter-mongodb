@@ -16,6 +16,7 @@ const test = ava as TestFn<MongoElements>
 // Helpers
 
 const options = { uri }
+const optionsWithIdIsUnique = { ...options, idIsUnique: true }
 const authentication = null
 const emit = () => undefined
 
@@ -63,7 +64,7 @@ test('should get a document by id', async (t) => {
     options,
     authentication,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -99,7 +100,7 @@ test('should get documents by type', async (t) => {
     options,
     authentication,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -149,7 +150,7 @@ test('should get a document with endpoint query', async (t) => {
     options,
     authentication,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -159,6 +160,49 @@ test('should get a document with endpoint query', async (t) => {
   const data = response.data as TypedData[]
   t.is(data.length, 1)
   t.is(data[0].id, 'ent2')
+})
+
+test('should get a document by id when idIsUnique is true', async (t) => {
+  const { collection, collectionName } = t.context
+  await insertDocuments(collection, [
+    {
+      _id: 'ent4',
+      date: new Date('2021-03-14T18:43:11Z'),
+    },
+    {
+      _id: 'ent5',
+      date: new Date('2021-03-14T18:51:09Z'),
+    },
+  ])
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      id: 'ent4',
+    },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+      },
+    },
+  }
+
+  const connection = await transporter.connect(
+    optionsWithIdIsUnique,
+    authentication,
+    null,
+    emit,
+  )
+  const response = await transporter.send(action, connection)
+  await transporter.disconnect(connection)
+
+  t.truthy(response)
+  t.is(response.status, 'ok', response.error)
+  const data = response.data as TypedData[]
+  t.is(data.length, 1)
+  t.is(data[0].id, 'ent4')
+  t.deepEqual(data[0].date, new Date('2021-03-14T18:43:11Z'))
 })
 
 test('should sort documents', async (t) => {
@@ -203,7 +247,7 @@ test('should sort documents', async (t) => {
     options,
     authentication,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)

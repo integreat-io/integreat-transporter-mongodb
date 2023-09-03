@@ -393,7 +393,7 @@ test('should expand pageId with removed padding to queries', (t) => {
     query: [{ path: 'meta.section', value: 'news' }],
   }
   const pageId = decodePageId(
-    'ZW50MnxhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkxMDAwfGF0dHJpYnV0ZXMuaW5kZXg+MQ'
+    'ZW50MnxhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkxMDAwfGF0dHJpYnV0ZXMuaW5kZXg+MQ',
   )
   const expected = {
     'meta.views': { $gt: 300 },
@@ -437,7 +437,7 @@ test('should expand pageId with encoded string', (t) => {
     query: [{ path: 'meta.section', value: 'news' }],
   }
   const pageId = decodePageId(
-    'ZW50MnxpbmRleDwxfG1lc3NhZ2U8IkVzY2FwZSUyMCUyMm1lJTIyIg'
+    'ZW50MnxpbmRleDwxfG1lc3NhZ2U8IkVzY2FwZSUyMCUyMm1lJTIyIg',
   )
   const expected = {
     'meta.views': { $gt: 300 },

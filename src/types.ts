@@ -113,6 +113,7 @@ export interface MongoOptions extends Record<string, unknown> {
   mongo?: Record<string, unknown>
   allowDiskUse?: boolean
   throwAfterFailedHeartbeatCount?: number
+  idIsUnique?: boolean
 }
 
 export interface MongoClientObject {

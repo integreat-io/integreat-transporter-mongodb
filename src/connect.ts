@@ -8,7 +8,7 @@ const debugMongo = debug('integreat:transporter:mongodb:client')
 
 const prepareOptions = (
   options?: Record<string, unknown>,
-  auth?: Record<string, unknown> | null
+  auth?: Record<string, unknown> | null,
 ): Record<string, unknown> => ({
   ...options,
   ...(auth && typeof auth.key === 'string' && typeof auth.secret === 'string'
@@ -24,7 +24,7 @@ async function createOrReuseClient(
   mongoUri: string,
   options: Record<string, unknown>,
   emit: (eventType: string, ...args: unknown[]) => void,
-  throwAfterFailedHeartbeatCount?: number
+  throwAfterFailedHeartbeatCount?: number,
 ): Promise<MongoClientObject | undefined> {
   const hash = createHash({ mongoUri, ...options })
   let clientObject = clients[hash]
@@ -32,7 +32,7 @@ async function createOrReuseClient(
   if (clientObject && clientObject.client) {
     clientObject.count += 1
     debugMongo(
-      `*** MongoDb Client: Reusing client, count is ${clientObject.count}`
+      `*** MongoDb Client: Reusing client, count is ${clientObject.count}`,
     )
   } else {
     // Create client if it doesn't exist
@@ -64,7 +64,7 @@ async function createOrReuseClient(
         failedHeartbeatCount >= throwAfterFailedHeartbeatCount
       ) {
         throw new Error(
-          `MongoDb experienced ${failedHeartbeatCount} failed heartbeats`
+          `MongoDb experienced ${failedHeartbeatCount} failed heartbeats`,
         )
       }
     })
@@ -86,13 +86,19 @@ export default async function connect(
   options: MongoOptions,
   emit: (eventType: string, ...args: unknown[]) => void,
   auth?: Record<string, unknown> | null,
-  connection: Connection | null = null
+  connection: Connection | null = null,
 ): Promise<Connection> {
   if (connection) {
     return connection
   }
 
-  const { uri, baseUri, mongo, throwAfterFailedHeartbeatCount } = options
+  const {
+    uri,
+    baseUri,
+    mongo,
+    throwAfterFailedHeartbeatCount,
+    idIsUnique = false,
+  } = options
   const mongoUri = uri || baseUri
   if (!mongoUri) {
     return {
@@ -108,9 +114,9 @@ export default async function connect(
       mongoUri,
       prepareOptions(mongo, auth),
       emit,
-      throwAfterFailedHeartbeatCount
+      throwAfterFailedHeartbeatCount,
     )
-    return { status: 'ok', mongo: client }
+    return { status: 'ok', mongo: client, idIsUnique }
   } catch (error) {
     return {
       status: 'error',

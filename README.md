@@ -69,6 +69,18 @@ Example service configuration:
 
 The `uri` is used as the uri to the database.
 
+#### MongoDB's \_id field
+
+MongoDB uses an `_id` field as the primary key for documents. By default, we
+user let MongoDB generate this field and never touch it, but if you set
+`idIsUnique: true` in the option, signaling that the `id` of the data items
+you'll send to the mongodb transporter will always be unique, we'll map the `id`
+to `_id` and back again.
+
+One of the advantages of this is that, in addition to not have an extra id
+field, MongoDB will always create an index for `_id`, so this may speed up
+operations on the collection without any extra setup.
+
 #### Querying
 
 An endpoint may have a `query` property, which should be an array of path

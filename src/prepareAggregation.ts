@@ -35,66 +35,108 @@ const isAggregationObject = (expr: unknown): expr is AggregationObject =>
   isObject(expr) && typeof expr.type === 'string'
 
 const isAggregation = (
-  expr: unknown
+  expr: unknown,
 ): expr is AggregationObject | AggregationObject[] =>
   (Array.isArray(expr) && isAggregationObject(expr[0])) ||
   isAggregationObject(expr)
 
 const serializeFieldKey = (key: string) => key.replace('.', '\\\\_')
 
-const prepareGroupId = (fields: string[]) =>
+export const makeIdInternal = (key: string) => (key === 'id' ? '_id' : key)
+const makeIdInternalIf = (key: string, useIdAsInternalId: boolean) =>
+  useIdAsInternalId ? makeIdInternal(key) : key
+
+export const makeIdInternalInPath = <T extends { path?: string | string[] }>(
+  query: T,
+): T =>
+  typeof query.path === 'string'
+    ? {
+        ...query,
+        path: makeIdInternal(query.path),
+      }
+    : Array.isArray(query.path)
+    ? { ...query, path: query.path.map(makeIdInternal) }
+    : query
+
+const makeIdInternalOnObject = (obj: Record<string, unknown>) =>
+  Object.fromEntries(
+    Object.entries(obj).map(([key, value]) => [makeIdInternal(key), value]),
+  )
+
+const prepareGroupId = (fields: string[], useIdAsInternalId: boolean) =>
   fields.reduce(
-    (obj, field) => ({ ...obj, [serializeFieldKey(field)]: `$${field}` }),
-    {}
+    (obj, field) => ({
+      ...obj,
+      [makeIdInternalIf(
+        serializeFieldKey(field),
+        useIdAsInternalId,
+      )]: `$${makeIdInternalIf(field, useIdAsInternalId)}`,
+    }),
+    {},
   )
 
 const createFieldObject = (
   field: string,
-  method: GroupMethod | GroupObject
+  method: GroupMethod | GroupObject,
 ) => ({ [`$${method}`]: `$${field}` })
 
 const prepareGroupFields = (
-  fields: Record<string, GroupMethod | GroupObject>
+  fields: Record<string, GroupMethod | GroupObject>,
+  useIdAsInternalId: boolean,
 ) =>
   Object.entries(fields).reduce(
     (obj, [field, method]) => ({
       ...obj,
       [serializeFieldKey(field)]:
         typeof method === 'string'
-          ? createFieldObject(field, method)
-          : createFieldObject(method.path, method.op),
+          ? createFieldObject(
+              makeIdInternalIf(field, useIdAsInternalId),
+              method,
+            )
+          : createFieldObject(
+              makeIdInternalIf(method.path, useIdAsInternalId),
+              method.op,
+            ),
     }),
-    {}
+    {},
   )
 
-const groupToMongo = ({ groupBy, values }: AggregationObjectGroup) =>
+const groupToMongo = (
+  { groupBy, values }: AggregationObjectGroup,
+  useIdAsInternalId: boolean,
+) =>
   isObject(values)
     ? {
         $group: {
-          _id: prepareGroupId(groupBy),
-          ...prepareGroupFields(values),
+          _id: prepareGroupId(groupBy, useIdAsInternalId),
+          ...prepareGroupFields(values, useIdAsInternalId),
         },
       }
     : undefined
 
-const sortToMongo = ({ sortBy }: AggregationObjectSort) =>
+const sortToMongo = (
+  { sortBy }: AggregationObjectSort,
+  useIdAsInternalId: boolean,
+) =>
   isObject(sortBy) && Object.keys(sortBy).length > 0
-    ? { $sort: sortBy }
+    ? { $sort: useIdAsInternalId ? makeIdInternalOnObject(sortBy) : sortBy }
     : undefined
 
 const queryToMongo = (
   { query }: AggregationObjectQuery,
-  params: Record<string, unknown>
+  params: Record<string, unknown>,
+  useIdAsInternalId: boolean,
 ) =>
   Array.isArray(query) && query.length > 0
     ? {
-        $match: prepareFilter(query, params),
+        $match: prepareFilter(query, params, undefined, useIdAsInternalId),
       }
     : undefined
 
 const reduceToMongo = (
   { path, initialPath, pipeline }: AggregationObjectReduce,
-  params: Record<string, unknown>
+  params: Record<string, unknown>,
+  useIdAsInternalId: boolean,
 ) => ({
   $reduce: {
     input: `$${path}`,
@@ -102,15 +144,27 @@ const reduceToMongo = (
       typeof initialPath === 'string'
         ? `$${initialPath}`
         : dearrayIfPossible(
-            prepareAggregation(ensureArray(initialPath), params)
+            prepareAggregation(
+              ensureArray(initialPath),
+              params,
+              undefined,
+              useIdAsInternalId,
+            ),
           ),
-    in: dearrayIfPossible(prepareAggregation(ensureArray(pipeline), params)),
+    in: dearrayIfPossible(
+      prepareAggregation(
+        ensureArray(pipeline),
+        params,
+        undefined,
+        useIdAsInternalId,
+      ),
+    ),
   },
 })
 
 const expressionToMongo = (
   expr: AggregationObject | AggregationObject[] | unknown,
-  params: Record<string, unknown>
+  params: Record<string, unknown>,
 ) =>
   typeof expr === 'string'
     ? `$${expr}`
@@ -120,10 +174,18 @@ const expressionToMongo = (
 
 const ifToMongo = (
   { condition, then: thenArg, else: elseArg }: AggregationObjectIf,
-  params: Record<string, unknown>
+  params: Record<string, unknown>,
+  useIdAsInternalId: boolean,
 ) => ({
   $cond: {
-    if: dearrayIfPossible(prepareFilter(ensureArray(condition), params)),
+    if: dearrayIfPossible(
+      prepareFilter(
+        ensureArray(condition),
+        params,
+        undefined,
+        useIdAsInternalId,
+      ),
+    ),
     then: expressionToMongo(thenArg, params),
     else: expressionToMongo(elseArg, params),
   },
@@ -132,7 +194,7 @@ const ifToMongo = (
 const prepareLookupValues = (variables: Record<string, string>) =>
   Object.entries(variables).reduce(
     (obj, [key, value]) => ({ ...obj, [key]: `$${value}` }),
-    {}
+    {},
   )
 
 const lookupToMongo = (
@@ -144,11 +206,14 @@ const lookupToMongo = (
     variables,
     pipeline,
   }: AggregationObjectLookUp,
-  params: Record<string, unknown>
+  params: Record<string, unknown>,
+  useIdAsInternalId: boolean,
 ) => ({
   $lookup: {
     from: collection,
-    ...(typeof field === 'string' ? { foreignField: field } : {}),
+    ...(typeof field === 'string'
+      ? { foreignField: makeIdInternalIf(field, useIdAsInternalId) }
+      : {}),
     ...(typeof path === 'string' ? { localField: path } : {}),
     ...(typeof (setPath ?? path) === 'string' ? { as: setPath ?? path } : {}),
     ...(variables && {
@@ -156,7 +221,12 @@ const lookupToMongo = (
     }),
     ...(pipeline && {
       pipeline: dearrayIfPossible(
-        prepareAggregation(ensureArray(pipeline), params)
+        prepareAggregation(
+          ensureArray(pipeline),
+          params,
+          undefined,
+          useIdAsInternalId,
+        ),
       ),
     }),
   },
@@ -164,20 +234,31 @@ const lookupToMongo = (
 
 const projectToMongo = (
   { values }: AggregationObjectProject,
-  params: Record<string, unknown>
+  params: Record<string, unknown>,
+  useIdAsInternalId: boolean,
 ) => ({
   $project: Object.fromEntries(
     Object.entries(values).map(([key, value]) => [
       key,
-      dearrayIfPossible(prepareAggregation(ensureArray(value), params)),
-    ])
+      dearrayIfPossible(
+        prepareAggregation(
+          ensureArray(value),
+          params,
+          undefined,
+          useIdAsInternalId,
+        ),
+      ),
+    ]),
   ),
 })
 
 const limitToMongo = ({ count }: AggregationObjectLimit) => ({ $limit: count })
 
 const unwindToMongo = ({ path }: AggregationObjectUnwind) => ({
-  $unwind: { path: `$${path}`, preserveNullAndEmptyArrays: false },
+  $unwind: {
+    path: `$${path}`,
+    preserveNullAndEmptyArrays: false,
+  },
 })
 
 const rootToMongo = ({ path }: AggregationObjectRoot) => ({
@@ -188,31 +269,39 @@ const concatArraysToMongo = ({ path }: AggregationObjectConcatArrays) => ({
   $concatArrays: path.map((p) => `$$${p}`),
 })
 
-const toMongo = (params: Record<string, unknown>) =>
+const toMongo = (params: Record<string, unknown>, useIdAsInternalId = false) =>
   function toMongo(obj: AggregationObject) {
     switch (obj.type) {
       case 'group':
-        return groupToMongo(obj)
+        return groupToMongo(obj, useIdAsInternalId)
       case 'sort':
-        return sortToMongo(obj)
+        return sortToMongo(obj, useIdAsInternalId)
       case 'query':
-        return queryToMongo(obj, params)
+        return queryToMongo(obj, params, useIdAsInternalId)
       case 'reduce':
-        return reduceToMongo(obj, params)
+        return reduceToMongo(
+          makeIdInternalInPath(obj),
+          params,
+          useIdAsInternalId,
+        )
       case 'if':
-        return ifToMongo(obj, params)
+        return ifToMongo(obj, params, useIdAsInternalId)
       case 'lookup':
-        return lookupToMongo(obj, params)
+        return lookupToMongo(
+          makeIdInternalInPath(obj),
+          params,
+          useIdAsInternalId,
+        )
       case 'project':
-        return projectToMongo(obj, params)
+        return projectToMongo(obj, params, useIdAsInternalId)
       case 'limit':
         return limitToMongo(obj)
       case 'unwind':
-        return unwindToMongo(obj)
+        return unwindToMongo(makeIdInternalInPath(obj))
       case 'root':
-        return rootToMongo(obj)
+        return rootToMongo(makeIdInternalInPath(obj))
       case 'concatArrays':
-        return concatArraysToMongo(obj)
+        return concatArraysToMongo(makeIdInternalInPath(obj))
       default:
         return undefined
     }
@@ -229,13 +318,16 @@ function ensureSorting(pipeline: Aggregation[]) {
 export default function prepareAggregation(
   aggregation?: AggregationObject[],
   params: Record<string, unknown> = {},
-  isTopLevelPipeline = false
+  isTopLevelPipeline = false,
+  useIdAsInternalId = false,
 ): Aggregation[] | undefined {
   if (!Array.isArray(aggregation) || aggregation.length === 0) {
     return undefined
   }
 
-  const pipeline = aggregation.map(toMongo(params)).filter(isNotEmpty)
+  const pipeline = aggregation
+    .map(toMongo(params, useIdAsInternalId))
+    .filter(isNotEmpty)
   return pipeline.length > 0
     ? isTopLevelPipeline
       ? [

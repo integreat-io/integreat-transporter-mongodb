@@ -40,6 +40,26 @@ test('should return connection with client', async (t) => {
   t.is(constructSpy.callCount, 1)
   t.true(constructSpy.calledWith('mongodb://db:27027/database'))
   t.is(connectSpy.callCount, 1)
+  t.false(ret.idIsUnique) // Default value
+})
+
+test('should set idIsUnique on connection', async (t) => {
+  const options = {
+    uri: 'mongodb://db:27028/database',
+    idIsUnique: true,
+  }
+  const constructSpy = sinon.stub()
+  const connectSpy = sinon.stub()
+
+  const ret = await connect(
+    createMockMongo(constructSpy, connectSpy),
+    options,
+    emit,
+  )
+
+  t.is(ret.status, 'ok', ret.error)
+  t.true(ret.idIsUnique)
+  t.falsy(ret.error)
 })
 
 test('should use baseUri when uri is not supplied', async (t) => {

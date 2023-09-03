@@ -601,3 +601,156 @@ test('should return undefined when no aggregation', (t) => {
 
   t.is(ret, expected)
 })
+
+// Tests -- internal id
+
+test('should return mongo aggregation pipeline with id as _id', (t) => {
+  const useIdAsInternalId = true
+  const aggregation: AggregationObject[] = [
+    { type: 'sort', sortBy: { updatedAt: -1 } },
+    {
+      type: 'group',
+      groupBy: ['account', 'id'],
+      values: {
+        id: 'first',
+        updatedAt: 'first',
+      },
+    },
+    { type: 'unwind', path: 'id' },
+    { type: 'root', path: 'id' },
+  ]
+  const expected = [
+    { $sort: { updatedAt: -1 } },
+    {
+      $group: {
+        _id: { account: '$account', _id: '$_id' },
+        id: { $first: '$_id' },
+        updatedAt: { $first: '$updatedAt' },
+      },
+    },
+    {
+      $unwind: {
+        path: '$_id',
+        preserveNullAndEmptyArrays: false,
+      },
+    },
+    { $replaceRoot: { newRoot: '$_id' } },
+  ]
+
+  const ret = prepareAggregation(
+    aggregation,
+    { type: 'entry' },
+    undefined,
+    useIdAsInternalId,
+  )
+
+  t.deepEqual(ret, expected)
+})
+
+test('should return mongo aggregation with lookup with id as _id', (t) => {
+  const useIdAsInternalId = true
+  const aggregation = [
+    {
+      type: 'lookup' as const,
+      collection: 'projects',
+      field: 'id',
+      variables: { ids: 'include' },
+      pipeline: [
+        {
+          type: 'query' as const,
+          query: [
+            { path: 'id', op: 'in' as const, variable: 'ids', expr: true },
+          ],
+        },
+        { type: 'sort' as const, sortBy: { updatedAt: -1 as const } },
+        {
+          type: 'group' as const,
+          groupBy: ['id'],
+          values: {
+            jobs: { op: 'first' as const, path: 'definitions.jobs' },
+          },
+        },
+      ],
+    },
+  ]
+  const expected = [
+    {
+      $lookup: {
+        from: 'projects',
+        foreignField: '_id',
+        let: { ids: '$include' },
+        pipeline: [
+          {
+            $match: { $expr: { $in: ['$_id', '$$ids'] } },
+          },
+          { $sort: { updatedAt: -1 } },
+          {
+            $group: {
+              _id: { _id: '$_id' },
+              jobs: { $first: '$definitions.jobs' },
+            },
+          },
+        ],
+      },
+    },
+  ]
+
+  const ret = prepareAggregation(
+    aggregation,
+    { type: 'entry' },
+    undefined,
+    useIdAsInternalId,
+  )
+
+  t.deepEqual(ret, expected)
+})
+
+test('should return mongo aggregation with project with id as _id', (t) => {
+  const useIdAsInternalId = true
+  const aggregation = [
+    {
+      type: 'project' as const,
+      values: {
+        jobs: {
+          type: 'reduce' as const,
+          path: 'id',
+          initialPath: {
+            type: 'if' as const,
+            condition: { path: 'id', op: 'isArray' }, // We would never do this with id, but just for the test ...
+            then: 'definitions.jobs',
+            else: [],
+          },
+          pipeline: { type: 'concatArrays' as const, path: ['value', 'this'] },
+        },
+      },
+    },
+  ]
+  const expected = [
+    {
+      $project: {
+        jobs: {
+          $reduce: {
+            input: '$_id',
+            initialValue: {
+              $cond: {
+                if: { $isArray: '$_id' },
+                then: '$definitions.jobs',
+                else: [],
+              },
+            },
+            in: { $concatArrays: ['$$value', '$$this'] },
+          },
+        },
+      },
+    },
+  ]
+
+  const ret = prepareAggregation(
+    aggregation,
+    { type: 'entry' },
+    undefined,
+    useIdAsInternalId,
+  )
+
+  t.deepEqual(ret, expected)
+})

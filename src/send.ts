@@ -35,14 +35,15 @@ export default async function send(
       error: 'No valid connection',
     }
   }
+  const useIdAsInternalId = !!connection.idIsUnique
 
   switch (action.type) {
     case 'GET':
-      return getDocs(action, client)
+      return getDocs(action, client, useIdAsInternalId)
     case 'SET':
     case 'UPDATE':
     case 'DELETE':
-      return setDocs(action, client)
+      return setDocs(action, client, useIdAsInternalId)
   }
 
   return { ...action.response, status: 'noaction' }

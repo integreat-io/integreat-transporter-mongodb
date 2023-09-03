@@ -23,11 +23,16 @@ interface ItemWithIdObject extends Record<string, unknown> {
   _id: Record<string, unknown>
 }
 
+const normalizeId = (data: TypedData[], useIdAsInternalId: boolean) =>
+  useIdAsInternalId
+    ? data.map(({ _id, ...item }) => ({ ...item, id: _id }))
+    : data
+
 // Move the cursor to the first doc after the `pageAfter`
 // When no `pageAfter`, just start from the beginning
 const moveToData = async (
   cursor: Cursor,
-  pageAfter?: string | Record<string, unknown>
+  pageAfter?: string | Record<string, unknown>,
 ) => {
   if (!pageAfter) {
     // Start from the beginning
@@ -75,7 +80,7 @@ const getData = async (cursor: Cursor, pageSize: number) => {
 const getPage = async (
   cursor: Cursor,
   { pageSize = Infinity, pageOffset, pageAfter }: Payload,
-  pageId?: DecodedPageId
+  pageId?: DecodedPageId,
 ) => {
   if (typeof pageOffset === 'number') {
     cursor.skip(pageOffset)
@@ -99,7 +104,7 @@ const getPage = async (
 const appendToAggregation = (
   aggregation: AggregationObject[],
   query?: QueryObject[],
-  sort?: Record<string, 1 | -1>
+  sort?: Record<string, 1 | -1>,
 ) =>
   [
     query ? { type: 'query', query } : undefined,
@@ -111,7 +116,8 @@ const paramsFromPayload = ({ data, ...payload }: Payload) => payload
 
 export default async function getDocs(
   action: Action,
-  client: MongoClient
+  client: MongoClient,
+  useIdAsInternalId = false,
 ): Promise<Response> {
   const collection = getCollection(action, client)
   if (!collection) {
@@ -136,13 +142,14 @@ export default async function getDocs(
     allowDiskUse = false,
     aggregation: aggregationObjects,
   } = options as MongoOptions
-  const filter = prepareFilter(query, params, pageId)
+  const filter = prepareFilter(query, params, pageId, useIdAsInternalId)
 
   const aggregation = aggregationObjects
     ? prepareAggregation(
         appendToAggregation(aggregationObjects, query, sort),
         params,
-        true // addDefaultSorting
+        true, // addDefaultSorting,
+        useIdAsInternalId,
       )
     : undefined
 
@@ -184,7 +191,10 @@ export default async function getDocs(
   }
 
   debugMongo('Normalizing data')
-  const normalizedData = data.map(normalizeItem) as TypedData[]
+  const normalizedData = normalizeId(
+    data.map(normalizeItem) as TypedData[],
+    aggregation ? false : useIdAsInternalId, // We won't map `id` to `_id` for aggregations, as it would mess the compounded id
+  )
 
   const response = {
     ...action.response,

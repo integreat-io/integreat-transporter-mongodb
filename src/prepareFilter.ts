@@ -1,7 +1,10 @@
 import { setProperty } from 'dot-prop'
 import { QueryObject } from './types.js'
 import { serializePath } from './escapeKeys.js'
+import { isObject } from './utils/is.js'
 import { DecodedPageId } from './utils/pageId.js'
+import { ensureArray } from './utils/array.js'
+import { makeIdInternalInPath } from './prepareAggregation.js'
 
 type QueryArray = (QueryObject | QueryArray)[]
 
@@ -12,11 +15,13 @@ export interface Params extends Record<string, unknown> {
   pageId?: string
 }
 
-const isObject = (value: unknown): value is Record<string, unknown> =>
-  Object.prototype.toString.call(value) === '[object Object]'
+const makeIdInternalInPathIf = (
+  query: QueryObject[],
+  useIdAsInternalId: boolean,
+) => (useIdAsInternalId ? query.map(makeIdInternalInPath) : query)
 
 const dateStringRegex =
-  /^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d\d\d)?([+-]\d\d:\d\d|Z)$/
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d\d\d)?([+-]\d{2}:\d{2}|Z)$/
 const isDateString = (value: unknown): value is string =>
   typeof value === 'string' && dateStringRegex.test(value)
 const castValueIfDate = (value: unknown): unknown =>
@@ -124,9 +129,7 @@ const mongoSelectorFromQuery = (
   allParams: Record<string, unknown>,
   query: QueryObject | QueryObject[],
 ): Record<string, unknown> =>
-  ([] as QueryObject[])
-    .concat(query)
-    .reduce(setMongoSelectorFromQuery(allParams), {})
+  ensureArray(query).reduce(setMongoSelectorFromQuery(allParams), {})
 
 /**
  * Generate the right query object as a filter for finding docs in the database.
@@ -135,16 +138,23 @@ export default function prepareFilter(
   queryArray: QueryArray = [],
   params: Params = {},
   pageId?: DecodedPageId,
+  useIdAsInternalId = false,
 ): Record<string, unknown> {
   // Create query object from array of props
-  const query = mongoSelectorFromQuery(
-    params,
+  const queries = makeIdInternalInPathIf(
     mergeQueries(queryArray, params.query, pageId?.filter),
+    useIdAsInternalId,
   )
+  const query = mongoSelectorFromQuery(params, queries)
 
   // Query for id if no query was provided and this is a member action
   if (queryArray.length === 0 && params.id) {
-    query.id = String(params.id)
+    const id = String(params.id)
+    if (useIdAsInternalId) {
+      query._id = id
+    } else {
+      query.id = id
+    }
   }
 
   return castDates(query)

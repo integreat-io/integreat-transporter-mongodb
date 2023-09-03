@@ -13,7 +13,7 @@ import send from './send.js'
 
 // Helpers
 
-const createConnection = (collection: unknown) => ({
+const createConnection = (collection: unknown, idIsUnique = false) => ({
   status: 'ok',
   mongo: {
     client: {
@@ -27,6 +27,7 @@ const createConnection = (collection: unknown) => ({
     } as MongoClient,
     count: 1,
   },
+  idIsUnique,
 })
 
 const createFind = (items: TypedData[]) => {
@@ -76,6 +77,37 @@ test('should get items', async (t) => {
   t.is(response?.status, 'ok')
   const data = response?.data as TypedData[]
   t.is(data.length, 2)
+  t.is(data[0].id, 'ent1')
+  t.is(data[1].id, 'ent2')
+})
+
+test('should get items with id as internal id', async (t) => {
+  const idIsUnique = true
+  const find = createFind([
+    { _id: 'ent1', $type: 'entry' },
+    { _id: 'ent2', $type: 'entry' },
+  ])
+  const connection = createConnection({ find }, idIsUnique)
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      typePlural: 'entries',
+    },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
+    },
+  }
+
+  const response = await send(action, connection)
+
+  t.is(response?.status, 'ok')
+  const data = response?.data as TypedData[]
+  t.is(data.length, 2)
+  t.falsy(data[0]._id) // Should not pass on internal id
   t.is(data[0].id, 'ent1')
   t.is(data[1].id, 'ent2')
 })
@@ -211,6 +243,70 @@ test('should update object data (not Integreat typed)', async (t) => {
   t.deepEqual(updateOne.args[0][1], expectedSet)
 })
 
+test('should update items with id as internal id', async (t) => {
+  const idIsUnique = true
+  const updateOne = sinon.stub().returns({})
+  const bulkWrite = sinon.stub().returns({
+    matchedCount: 2,
+    modifiedCount: 2,
+    upsertedCount: 0,
+  })
+  const connection = createConnection({ updateOne, bulkWrite }, idIsUnique)
+  const data = [
+    { id: 'ent1', $type: 'entry', title: 'Entry 1' },
+    { id: 'ent2', $type: 'entry', title: 'Entry 2' },
+  ]
+  const action = {
+    type: 'SET',
+    payload: { data },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
+    },
+  }
+  const expectedData = { modifiedCount: 2, insertedCount: 0, deletedCount: 0 }
+  const expectedSet1 = {
+    $set: {
+      _id: 'ent1',
+      '\\$type': 'entry',
+      title: 'Entry 1',
+    },
+  }
+  const expectedSet2 = {
+    $set: {
+      _id: 'ent2',
+      '\\$type': 'entry',
+      title: 'Entry 2',
+    },
+  }
+  const expectedBulkWrite = [
+    {
+      updateOne: {
+        filter: { _id: 'ent1' },
+        update: expectedSet1,
+        upsert: true,
+      },
+    },
+    {
+      updateOne: {
+        filter: { _id: 'ent2' },
+        update: expectedSet2,
+        upsert: true,
+      },
+    },
+  ]
+
+  const response = await send(action, connection)
+
+  t.is(response?.status, 'ok')
+  t.is(updateOne.callCount, 0)
+  t.is(bulkWrite.callCount, 1)
+  t.deepEqual(bulkWrite.args[0][0], expectedBulkWrite)
+  t.deepEqual(response?.data, expectedData)
+})
+
 test('should return error when data cannot be updated', async (t) => {
   const updateOne = sinon.stub().throws(new Error('Mongo error'))
   const connection = createConnection({ updateOne })
@@ -249,7 +345,7 @@ test('should return error when some of the items cannot be updated', async (t) =
       code: 52,
       writeErrors: [error1, error2],
     },
-    { matchedCount: 3, modifiedCount: 1, upsertedCount: 0 } as BulkWriteResult
+    { matchedCount: 3, modifiedCount: 1, upsertedCount: 0 } as BulkWriteResult,
   )
   const bulkWrite = sinon.stub()
   bulkWrite.throws(mongoError)
@@ -364,7 +460,7 @@ test('should return badrequest when trying to set non-object', async (t) => {
   t.is(response?.status, 'badrequest')
   t.is(
     response?.error,
-    "Error updating item '<no id>' in mongodb: Only object data with an id may be sent to MongoDB"
+    "Error updating item '<no id>' in mongodb: Only object data with an id may be sent to MongoDB",
   )
   t.is(updateOne.callCount, 0)
 })
@@ -479,7 +575,7 @@ test('should return error when one of the items cannot be deleted', async (t) =>
       modifiedCount: 0,
       upsertedCount: 0,
       deletedCount: 1,
-    } as BulkWriteResult
+    } as BulkWriteResult,
   )
   const bulkWrite = sinon.stub()
   bulkWrite.throws(mongoError)

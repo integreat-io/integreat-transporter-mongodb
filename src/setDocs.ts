@@ -12,7 +12,7 @@ import {
 import debug from 'debug'
 import prepareFilter from './prepareFilter.js'
 import { serializeItem } from './escapeKeys.js'
-import { isObjectWithId } from './utils/is.js'
+import { ObjectWithId, isObjectWithId } from './utils/is.js'
 import { ensureArray } from './utils/array.js'
 import { getCollection } from './send.js'
 import { MongoOptions } from './types.js'
@@ -113,7 +113,9 @@ const createErrorResponse = (
   error,
 })
 
-const createOperation = (action: Action) =>
+const removeId = ({ id, ...item }: ObjectWithId) => item
+
+const createOperation = (action: Action, useIdAsInternalId: boolean) =>
   function createOperation(item: unknown): Operation | OperationError {
     if (!isObjectWithId(item)) {
       return { error: 'Only object data with an id may be sent to MongoDB' }
@@ -124,13 +126,22 @@ const createOperation = (action: Action) =>
     } = action
     const options = action.meta?.options as MongoOptions | undefined
     const id = String(item.id)
+    const idKey = useIdAsInternalId ? '_id' : 'id'
 
-    const filter = prepareFilter(options?.query, {
-      ...params,
-      id: item.id,
-    })
+    const filter = prepareFilter(
+      options?.query,
+      {
+        ...params,
+        id: item.id,
+      },
+      undefined,
+      useIdAsInternalId,
+    )
     const update = {
-      $set: { ...(serializeItem(item) as Record<string, unknown>), id },
+      $set: {
+        ...(serializeItem(removeId(item)) as Record<string, unknown>),
+        [idKey]: id,
+      },
     }
 
     return { filter, update, id }
@@ -237,6 +248,7 @@ async function update(
 export default async function setDocs(
   action: Action,
   client: MongoClient,
+  useIdAsInternalId = false,
 ): Promise<Response> {
   // Get the right collection
   const collection = getCollection(action, client)
@@ -250,7 +262,7 @@ export default async function setDocs(
 
   // Create operations from data
   const operations = ensureArray(action.payload.data).map(
-    createOperation(action),
+    createOperation(action, useIdAsInternalId),
   )
   if (operations.length === 0) {
     // No operations -- end right away
