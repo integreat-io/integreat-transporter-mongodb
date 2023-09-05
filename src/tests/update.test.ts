@@ -38,6 +38,7 @@ test('should update document', async (t) => {
     id: 'ent1',
     title: 'Entry 1',
     theOld: true,
+    comments: [{ id: 'com1', text: 'Comment 1' }],
     meta: { section: 'news', 'archived\\_flag': false },
   })
   const action = {
@@ -49,7 +50,12 @@ test('should update document', async (t) => {
         title: 'Updated entry 1',
         theNew: true,
         date: new Date('2021-03-14T18:43:11Z'),
-        meta: { section: 'oldies', 'archived.flag': true },
+        text: undefined, // Should not set `undefined` values
+        meta: {
+          section: 'oldies',
+          'archived.flag': true,
+          isDeleted: undefined, // Should not set `undefined` values
+        },
       },
     },
     meta: {
@@ -60,6 +66,7 @@ test('should update document', async (t) => {
     },
   }
   const expectedData = { insertedCount: 0, modifiedCount: 1, deletedCount: 0 }
+  const expectedMeta = { section: 'oldies', 'archived\\_flag': true }
 
   const connection = await transporter.connect(
     options,
@@ -74,12 +81,16 @@ test('should update document', async (t) => {
   const docs = (await getDocuments(collection, {})) as Record<string, unknown>[]
   t.is(docs.length, 1)
   t.is(docs[0].id, 'ent1')
+  t.is(docs[0].title, 'Updated entry 1')
   t.true(docs[0].theNew)
   t.true(docs[0].theOld)
-  t.is(docs[0].title, 'Updated entry 1')
+  t.deepEqual(docs[0].comments, [{ id: 'com1', text: 'Comment 1' }])
   t.deepEqual(docs[0].date, new Date('2021-03-14T18:43:11Z'))
-  t.is((docs[0].meta as Record<string, unknown>).section, 'oldies')
-  t.is((docs[0].meta as Record<string, unknown>)['archived\\_flag'], true)
+  t.deepEqual(docs[0].meta, expectedMeta)
+  t.false(
+    docs[0].hasOwnProperty('text'),
+    `'text' was ${docs[0].title}, but should not be set`,
+  )
   t.deepEqual(response.data, expectedData)
 })
 
