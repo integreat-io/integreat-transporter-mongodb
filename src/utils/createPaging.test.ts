@@ -1,6 +1,6 @@
 import test from 'ava'
 import { TypedData } from 'integreat'
-import { AggregationObject } from './types.js'
+import { AggregationObject } from '../types.js'
 
 import createPaging from './createPaging.js'
 

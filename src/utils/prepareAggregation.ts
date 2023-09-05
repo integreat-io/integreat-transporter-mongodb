@@ -13,9 +13,9 @@ import {
   AggregationObjectProject,
   AggregationObjectConcatArrays,
   AggregationObjectIf,
-} from './types.js'
-import { isObject, isNotEmpty } from './utils/is.js'
-import { ensureArray, dearrayIfPossible } from './utils/array.js'
+} from '../types.js'
+import { isObject, isNotEmpty } from './is.js'
+import { ensureArray, dearrayIfPossible } from './array.js'
 import prepareFilter from './prepareFilter.js'
 
 export interface Aggregation extends Record<string, unknown> {

@@ -1,9 +1,9 @@
 import { setProperty } from 'dot-prop'
-import { QueryObject } from './types.js'
-import { serializePath } from './escapeKeys.js'
-import { isObject } from './utils/is.js'
-import { DecodedPageId } from './utils/pageId.js'
-import { ensureArray } from './utils/array.js'
+import { QueryObject } from '../types.js'
+import { serializePath } from './serialize.js'
+import { isObject } from './is.js'
+import { DecodedPageId } from './pageId.js'
+import { ensureArray } from './array.js'
 import { makeIdInternalInPath } from './prepareAggregation.js'
 
 type QueryArray = (QueryObject | QueryArray)[]

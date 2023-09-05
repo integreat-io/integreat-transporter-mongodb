@@ -10,8 +10,8 @@ import {
   BulkWriteResult,
 } from 'mongodb'
 import debug from 'debug'
-import prepareFilter from './prepareFilter.js'
-import { serializeItem } from './escapeKeys.js'
+import prepareFilter from './utils/prepareFilter.js'
+import { serializeItem } from './utils/serialize.js'
 import { ObjectWithId, isObjectWithId } from './utils/is.js'
 import { ensureArray } from './utils/array.js'
 import { getCollection } from './send.js'

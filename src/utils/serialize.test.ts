@@ -1,6 +1,6 @@
 import test from 'ava'
 
-import { serializeItem, normalizeItem, serializePath } from './escapeKeys.js'
+import { serializeItem, normalizeItem, serializePath } from './serialize.js'
 
 test('should escape reserved characters and remove undefined values on serialization', (t) => {
   const data = {
