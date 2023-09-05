@@ -47,6 +47,36 @@ test('should escape reserved characters and remove undefined values on serializa
   t.deepEqual(ret, expected)
 })
 
+test('should keep undefined values on serialization when keepUndefined is true', (t) => {
+  const keepUndefined = true
+  const data = {
+    id: 'ent1',
+    $type: 'entry',
+    title: undefined,
+    entry_author: {
+      id: 'johnf',
+      $type: 'author',
+      'authored\\.entries': ['ent1', 'ent3', undefined],
+      name: undefined,
+    },
+  }
+  const expected = {
+    id: 'ent1',
+    '\\$type': 'entry',
+    title: undefined,
+    entry_author: {
+      id: 'johnf',
+      '\\$type': 'author',
+      'authored\\\\\\_entries': ['ent1', 'ent3', undefined],
+      name: undefined,
+    },
+  }
+
+  const ret = serializeItem(data, keepUndefined)
+
+  t.deepEqual(ret, expected)
+})
+
 test('should remove escape characters on normalization', (t) => {
   const data = {
     id: 'ent1',

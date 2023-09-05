@@ -123,6 +123,7 @@ const createOperation = (action: Action, useIdAsInternalId: boolean) =>
 
     const {
       payload: { data, ...params },
+      meta: { options: { keepUndefined = false } = {} } = {},
     } = action
     const options = action.meta?.options as MongoOptions | undefined
     const id = String(item.id)
@@ -139,7 +140,10 @@ const createOperation = (action: Action, useIdAsInternalId: boolean) =>
     )
     const update = {
       $set: {
-        ...(serializeItem(removeId(item)) as Record<string, unknown>),
+        ...(serializeItem(removeId(item), keepUndefined === true) as Record<
+          string,
+          unknown
+        >),
         [idKey]: id,
       },
     }

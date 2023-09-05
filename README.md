@@ -81,6 +81,24 @@ One of the advantages of this is that, in addition to not have an extra id
 field, MongoDB will always create an index for `_id`, so this may speed up
 operations on the collection without any extra setup.
 
+#### Serializing and normalizing
+
+Some characters are not allowed in MongoDB keys, so we have to escape them when
+setting data to MongoDB. Leading `$` is escape with a `\`, and `.` is escaped
+with a `\_`. This is done automatically by the transporter, and reverted when
+values are fetched, but you will see it if you query data directly from the
+database.
+
+Also, we remove all properties with a `undefined` value, to not fill the
+database with empty values. This also means that existing values are not
+overwritten with `undefined` when updating documents. This is usually what you
+want when updating data from Integreat, and it's easy to end up with unintended
+`undefined` values from mutation pipelines, but if you actually want to set
+`undefined` values, you can do so by setting the `keepUndefined` option to
+`true`. Note that `undefined` values in an array are always preserved, e.g.
+`['ent1', undefined, 'ent3']`. Also, note that MongoDb will turn `undefined`
+into `null`.
+
 #### Querying
 
 An endpoint may have a `query` property, which should be an array of path
