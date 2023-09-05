@@ -1,9 +1,9 @@
 /* eslint-disable security/detect-object-injection */
 import { getProperty } from 'dot-prop'
 import { TypedData } from 'integreat'
-import { Payload, AggregationObject, AggregationObjectSort } from './types.js'
-import { btoa, removePadding } from './utils/base64.js'
-import { isObject } from './utils/is.js'
+import { Payload, AggregationObject, AggregationObjectSort } from '../types.js'
+import { btoa, removePadding } from './base64.js'
+import { isObject } from './is.js'
 
 export interface Paging {
   next?: Payload
@@ -21,7 +21,7 @@ const isTypedData = (value: unknown): value is TypedData =>
   isObject(value) && typeof value.id === 'string'
 
 const isSortAggregation = (
-  aggregation: AggregationObject
+  aggregation: AggregationObject,
 ): aggregation is AggregationObjectSort => aggregation.type === 'sort'
 const isRegroupingAggregation = (aggregation: AggregationObject) =>
   aggregation.type === 'group'
@@ -36,7 +36,7 @@ const encodeValue = (value: unknown) =>
 const preparePageParams = (
   { data, target, typePlural, pageAfter, ...params }: Record<string, unknown>,
   type?: string | string[],
-  id?: string | string[]
+  id?: string | string[],
 ) => ({ ...(type && { type }), ...(id && { id }), ...params })
 
 const createSortString =
@@ -50,7 +50,7 @@ const createSortString =
 
 const generateSortParts = (
   lastItem: Record<string, unknown>,
-  sort?: Record<string, number>
+  sort?: Record<string, number>,
 ): string[] =>
   sort
     ? Object.entries(sort).slice(0, 1).map(createSortString(lastItem))
@@ -58,12 +58,12 @@ const generateSortParts = (
 
 const generatePageIdFromId = (
   lastItem: TypedData,
-  sort?: Record<string, number>
+  sort?: Record<string, number>,
 ): string => [lastItem.id, ...generateSortParts(lastItem, sort)].join('|')
 
 const generatePageIdFromMongoId = (
   lastItem: MongoData,
-  sort?: Record<string, number>
+  sort?: Record<string, number>,
 ): string =>
   [
     ...(isObject(lastItem._id)
@@ -76,7 +76,7 @@ const generatePageIdFromMongoId = (
 function generatePageId(
   lastItem: unknown,
   sort?: Record<string, number>,
-  aggregation?: AggregationObject[]
+  aggregation?: AggregationObject[],
 ) {
   if (aggregation) {
     if (isMongoData(lastItem)) {
@@ -101,7 +101,7 @@ export default function createPaging(
   data: unknown[],
   { type, id, pageOffset, pageSize, ...params }: Payload,
   sort?: Record<string, number>,
-  aggregation?: AggregationObject[]
+  aggregation?: AggregationObject[],
 ): Paging {
   if (data.length === 0 || pageSize === undefined || data.length < pageSize) {
     return { next: undefined }

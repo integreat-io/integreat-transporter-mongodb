@@ -1,5 +1,5 @@
 import test from 'ava'
-import { decodePageId } from './utils/pageId.js'
+import { decodePageId } from './pageId.js'
 
 import prepareFilter from './prepareFilter.js'
 

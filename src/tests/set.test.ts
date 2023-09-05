@@ -40,6 +40,7 @@ test('should set one document', async (t) => {
       data: {
         $type: 'entry',
         id: 'ent1',
+        title: undefined, // Should not set `undefined` values
       },
     },
     meta: {
@@ -66,6 +67,11 @@ test('should set one document', async (t) => {
   })) as Record<string, unknown>[]
   t.is(docs.length, 1)
   t.is(docs[0].id, 'ent1')
+  t.is(docs[0]['\\$type'], 'entry') // Should escape `$type` key
+  t.false(
+    docs[0].hasOwnProperty('title'),
+    `'title' was ${docs[0].title}, but should not be set`,
+  )
   t.deepEqual(response.data, expectedData)
 })
 
@@ -154,6 +160,47 @@ test('should update existing document', async (t) => {
   t.is((docs[0].meta as Record<string, unknown>).section, 'oldies')
   t.is((docs[0].meta as Record<string, unknown>)['archived\\_flag'], true)
   t.deepEqual(response.data, expectedData)
+})
+
+test('should keep undefined when keepUndefined is true', async (t) => {
+  const { collection, collectionName } = t.context
+  const action = {
+    type: 'SET',
+    payload: {
+      data: {
+        $type: 'entry',
+        id: 'ent1',
+        title: undefined,
+        meta: { section: 'news', archived: undefined },
+      },
+    },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        keepUndefined: true,
+      },
+    },
+  }
+
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit,
+  )
+  const response = await transporter.send(action, connection)
+  await transporter.disconnect(connection)
+
+  t.is(response.status, 'ok', response.error)
+  const docs = (await getDocuments(collection, {
+    id: 'ent1',
+  })) as Record<string, unknown>[]
+  t.is(docs.length, 1)
+  t.is(docs[0].id, 'ent1')
+  t.is(docs[0]['\\$type'], 'entry') // Should escape `$type` key
+  t.is(docs[0].title, null) // Mongo turns `undefined` into `null`
+  t.deepEqual(docs[0].meta, { section: 'news', archived: null })
 })
 
 test('should set id to _id when idIsUnique is true', async (t) => {

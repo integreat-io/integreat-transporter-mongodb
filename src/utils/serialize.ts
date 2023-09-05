@@ -1,4 +1,4 @@
-import { isObject } from './utils/is.js'
+import { isObject } from './is.js'
 
 const serializeDollarHead = (key: string) =>
   key.startsWith('$') ? `\\${key}` : key
@@ -17,41 +17,45 @@ export function serializePath(path: string): string {
     path
       .replace(/\\/g, '\\\\')
       .replace(/\\\\\./g, '\\_')
-      .replace(/\.([^\$])/g, '\\.$1')
+      .replace(/\.([^\$])/g, '\\.$1'),
   )
 }
 
 const shouldSkipProp = (key: string) => key === '__totalCount'
 
-export function serializeItem(item: unknown): unknown {
+/**
+ * Prepare data for MongoDB. We need to escape all dots and leading dollars in
+ * keys, as they are reserved. They will be unescaped in `normalizeItem`.
+ */
+export function serializeItem(item: unknown, keepUndefined = false): unknown {
   if (Array.isArray(item)) {
-    return item.map(serializeItem)
+    return item.map((it) => serializeItem(it, keepUndefined))
   } else if (!isObject(item)) {
     return item
   }
-  return Object.entries(item).reduce(
-    (obj, [key, value]) => ({
-      ...obj,
-      [serializeKey(key)]: serializeItem(value),
-    }),
-    {}
+  return Object.fromEntries(
+    Object.entries(item)
+      .filter(([, value]) => keepUndefined || value !== undefined) // Remove all `undefined` values
+      .map(([key, value]) => [
+        serializeKey(key),
+        serializeItem(value, keepUndefined),
+      ]),
   )
 }
 
+/**
+ * Normalize data from MongoDB. We unescape all dots and leading dollars in
+ * keys.
+ */
 export function normalizeItem(item: unknown): unknown {
   if (Array.isArray(item)) {
     return item.map(normalizeItem)
   } else if (!isObject(item)) {
     return item
   }
-  return Object.entries(item).reduce(
-    (obj, [key, value]) =>
-      shouldSkipProp(key)
-        ? obj
-        : {
-            ...obj,
-            [normalizeKey(key)]: normalizeItem(value),
-          },
-    {}
+  return Object.fromEntries(
+    Object.entries(item)
+      .filter(([key]) => !shouldSkipProp(key))
+      .map(([key, value]) => [normalizeKey(key), normalizeItem(value)]),
   )
 }

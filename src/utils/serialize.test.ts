@@ -1,17 +1,19 @@
 import test from 'ava'
 
-import { serializeItem, normalizeItem, serializePath } from './escapeKeys.js'
+import { serializeItem, normalizeItem, serializePath } from './serialize.js'
 
-test('should escape reserved characters on serialization', (t) => {
+test('should escape reserved characters and remove undefined values on serialization', (t) => {
   const data = {
     id: 'ent1',
     $type: 'entry',
     'stats.count': 3,
     channel$: 'news',
+    title: undefined,
     entry_author: {
       id: 'johnf',
       $type: 'author',
-      'authored\\.entries': ['ent1', 'ent3'],
+      'authored\\.entries': ['ent1', 'ent3', undefined],
+      name: undefined,
     },
     items: [
       {
@@ -29,7 +31,7 @@ test('should escape reserved characters on serialization', (t) => {
     entry_author: {
       id: 'johnf',
       '\\$type': 'author',
-      'authored\\\\\\_entries': ['ent1', 'ent3'],
+      'authored\\\\\\_entries': ['ent1', 'ent3', undefined],
     },
     items: [
       {
@@ -41,6 +43,36 @@ test('should escape reserved characters on serialization', (t) => {
   }
 
   const ret = serializeItem(data)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should keep undefined values on serialization when keepUndefined is true', (t) => {
+  const keepUndefined = true
+  const data = {
+    id: 'ent1',
+    $type: 'entry',
+    title: undefined,
+    entry_author: {
+      id: 'johnf',
+      $type: 'author',
+      'authored\\.entries': ['ent1', 'ent3', undefined],
+      name: undefined,
+    },
+  }
+  const expected = {
+    id: 'ent1',
+    '\\$type': 'entry',
+    title: undefined,
+    entry_author: {
+      id: 'johnf',
+      '\\$type': 'author',
+      'authored\\\\\\_entries': ['ent1', 'ent3', undefined],
+      name: undefined,
+    },
+  }
+
+  const ret = serializeItem(data, keepUndefined)
 
   t.deepEqual(ret, expected)
 })
@@ -100,7 +132,7 @@ test('should escape the escape character in path', (t) => {
 test('should escape dots in paths', (t) => {
   t.is(
     serializePath('field.with.several.dots'),
-    'field\\.with\\.several\\.dots'
+    'field\\.with\\.several\\.dots',
   )
 })
 
@@ -111,7 +143,7 @@ test('should no escape dots followed by dollar in paths', (t) => {
 test('should escape escaped dots in paths', (t) => {
   t.is(
     serializePath('field\\.with.several\\.dots'),
-    'field\\_with\\.several\\_dots'
+    'field\\_with\\.several\\_dots',
   )
 })
 
