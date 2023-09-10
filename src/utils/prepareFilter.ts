@@ -41,6 +41,7 @@ const mergeQueries = (...queries: (QueryArray | QueryObject | undefined)[]) =>
   queries.flat().filter(Boolean) as QueryObject[]
 
 const opsWithoutValue = ['isset', 'notset']
+const opsWithObject = ['match']
 const validOps = [
   'eq',
   'lt',
@@ -51,6 +52,7 @@ const validOps = [
   'regex',
   'isArray',
   'search',
+  ...opsWithObject,
   ...opsWithoutValue,
 ]
 const validValueTypes = ['string', 'number', 'boolean']
@@ -61,6 +63,7 @@ const isValidValue = (value: unknown, op: string): boolean =>
     ? value.every((value) => isValidValue(value, op))
     : validValueTypes.includes(typeof value) ||
       value instanceof Date ||
+      (opsWithObject.includes(op) && isObject(value)) ||
       (value === null && opsWithoutValue.includes(op))
 
 function mapOp(op: string) {
@@ -73,6 +76,8 @@ function mapOp(op: string) {
       return '$eq'
     case 'search':
       return '$text.$search'
+    case 'match':
+      return '$elemMatch'
     default:
       return `$${op}`
   }

@@ -40,6 +40,11 @@ test('should use options.query as filter', (t) => {
     { path: 'topic', op: 'in', value: ['news', 'sports'] },
     { path: 'status', op: 'in', variable: 'statuslist' },
     { path: 'jobs', op: 'isArray' },
+    {
+      path: 'tokens',
+      op: 'match',
+      value: { id: 'user1', issuer: 'rawreporting.io/googleaddon' },
+    },
   ]
   const expected = {
     type: 'other',
@@ -52,6 +57,9 @@ test('should use options.query as filter', (t) => {
     topic: { $in: ['news', 'sports'] },
     status: { $in: '$$statuslist' },
     $isArray: '$jobs',
+    tokens: {
+      $elemMatch: { id: 'user1', issuer: 'rawreporting.io/googleaddon' },
+    },
   }
 
   const ret = prepareFilter(query, { type, id })
