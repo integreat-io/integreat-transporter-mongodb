@@ -11,7 +11,7 @@ as service.
 
 ### Prerequisits
 
-Requires at least node v18, Integreat v1.0, and MongoDb 5.0.
+Requires at least node v18, Integreat v1.0, and MongoDB 5.0.
 
 ### Installing and using
 
@@ -101,7 +101,7 @@ want when updating data from Integreat, and it's easy to end up with unintended
 `undefined` values from mutation pipelines, but if you actually want to set
 `undefined` values, you can do so by setting the `keepUndefined` option to
 `true`. Note that `undefined` values in an array are always preserved, e.g.
-`['ent1', undefined, 'ent3']`. Also, note that MongoDb will turn `undefined`
+`['ent1', undefined, 'ent3']`. Also, note that MongoDB will turn `undefined`
 into `null`.
 
 #### Querying
@@ -146,7 +146,7 @@ the hood.
 
 To do a text search in the text index set up for th collection, use the `search`
 operand and set `value` to search string or `param` to the parameter that holds
-the search string. See MongoDb docs for more on
+the search string. See MongoDB docs for more on
 [setting up a text index](https://www.mongodb.com/docs/drivers/node/current/fundamentals/crud/read-operations/text/).
 
 The query object will look like this, for a request for items of type `entry`:
@@ -301,7 +301,7 @@ specify. The counter will reset for every sucessful heartbeat, so if
 heartbeat failures in a row.
 
 The point of this is to allow the server to restart after loosing contact with
-MongoDb.
+MongoDB.
 
 ### Running the tests
 
