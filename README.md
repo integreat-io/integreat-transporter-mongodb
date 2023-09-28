@@ -89,6 +89,11 @@ with a `\_`. This is done automatically by the transporter, and reverted when
 values are fetched, but you will see it if you query data directly from the
 database.
 
+Integreat accepts using an empty string `''` as a key in an object (as does
+JavaScript and JSON), but MongoDB does not. We therefore replace empty strings
+keys with the string `'**empty**'` when storing data in MongoDB, and normalizes
+it back when fetching data.
+
 Also, we remove all properties with a `undefined` value, to not fill the
 database with empty values. This also means that existing values are not
 overwritten with `undefined` when updating documents. This is usually what you

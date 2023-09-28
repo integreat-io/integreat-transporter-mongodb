@@ -39,6 +39,7 @@ test('should get a document by id', async (t) => {
       _id: '12345',
       id: 'ent1',
       date: new Date('2021-03-14T18:43:11Z'),
+      '**empty**': 'Empty',
     },
     {
       _id: '12346',
@@ -75,6 +76,8 @@ test('should get a document by id', async (t) => {
   t.is(data.length, 1)
   t.is(data[0].id, 'ent1')
   t.deepEqual(data[0].date, new Date('2021-03-14T18:43:11Z'))
+  t.is(data[0][''], 'Empty') // Should normalize `'**empty**'` to empty string when used as key
+  t.false(data[0].hasOwnProperty('**empty**'))
 })
 
 test('should get documents by type', async (t) => {

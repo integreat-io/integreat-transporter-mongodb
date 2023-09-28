@@ -41,6 +41,7 @@ test('should set one document', async (t) => {
         $type: 'entry',
         id: 'ent1',
         title: undefined, // Should not set `undefined` values
+        '': 'Empty',
       },
     },
     meta: {
@@ -68,6 +69,7 @@ test('should set one document', async (t) => {
   t.is(docs.length, 1)
   t.is(docs[0].id, 'ent1')
   t.is(docs[0]['\\$type'], 'entry') // Should escape `$type` key
+  t.is(docs[0]['**empty**'], 'Empty') // Should use replacement for empty string used as key
   t.false(
     docs[0].hasOwnProperty('title'),
     `'title' was ${docs[0].title}, but should not be set`,

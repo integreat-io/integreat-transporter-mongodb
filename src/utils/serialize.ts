@@ -6,11 +6,15 @@ const normalizeDollarHead = (key: string) =>
   key.startsWith('\\$') ? `${key.slice(1)}` : key
 
 const serializeKey = (key: string) =>
-  serializeDollarHead(key.replace(/\\/g, '\\\\').replace(/\./g, '\\_'))
+  key === ''
+    ? '**empty**'
+    : serializeDollarHead(key.replace(/\\/g, '\\\\').replace(/\./g, '\\_'))
 const normalizeKey = (key: string) =>
-  normalizeDollarHead(key)
-    .replace(/([^\\]|\\\\)\\_/g, '$1.')
-    .replace(/\\\\/g, '\\')
+  key === '**empty**'
+    ? ''
+    : normalizeDollarHead(key)
+        .replace(/([^\\]|\\\\)\\_/g, '$1.')
+        .replace(/\\\\/g, '\\')
 
 export function serializePath(path: string): string {
   return serializeDollarHead(

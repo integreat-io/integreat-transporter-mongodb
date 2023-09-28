@@ -22,6 +22,7 @@ test('should escape reserved characters and remove undefined values on serializa
     ],
     'field.with.several.dots': false,
     'escaped\\_underscore': 'why?',
+    '': 'Empty',
   }
   const expected = {
     id: 'ent1',
@@ -40,6 +41,7 @@ test('should escape reserved characters and remove undefined values on serializa
     ],
     'field\\_with\\_several\\_dots': false,
     'escaped\\\\_underscore': 'why?',
+    '**empty**': 'Empty',
   }
 
   const ret = serializeItem(data)
@@ -95,6 +97,7 @@ test('should remove escape characters on normalization', (t) => {
     ],
     'field\\_with\\_several\\_dots': false,
     'escaped\\\\_underscore': 'why?',
+    '**empty**': 'Empty',
   }
   const expected = {
     id: 'ent1',
@@ -113,6 +116,7 @@ test('should remove escape characters on normalization', (t) => {
     ],
     'field.with.several.dots': false,
     'escaped\\_underscore': 'why?',
+    '': 'Empty',
   }
 
   const ret = normalizeItem(data)
