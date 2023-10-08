@@ -36,7 +36,7 @@ test('should get one page of documents with params for next page', async (t) => 
   await insertDocuments(collection, [
     { _id: '12345', id: 'ent1' },
     { _id: '12346', id: 'ent2' },
-    { _id: '12347', id: 'ent2' },
+    { _id: '12347', id: 'ent3' },
   ])
   const action = {
     type: 'GET',
@@ -63,7 +63,7 @@ test('should get one page of documents with params for next page', async (t) => 
     options,
     authorization,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -110,7 +110,7 @@ test('should get second page of documents', async (t) => {
     options,
     authorization,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -164,7 +164,7 @@ test('should get second page of documents using date index', async (t) => {
     options,
     authorization,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -205,7 +205,7 @@ test('should return less than a full page at the end', async (t) => {
     options,
     authorization,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -248,7 +248,7 @@ test('should return empty array when past last page', async (t) => {
     options,
     authorization,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -256,6 +256,51 @@ test('should return empty array when past last page', async (t) => {
   t.is(response.status, 'ok', response.error)
   const data = response.data as TypedData[]
   t.is(data.length, 0)
+  t.deepEqual(response.paging, expectedPaging)
+})
+
+test('should create paging when idIsUnique is true', async (t) => {
+  const { collection, collectionName } = t.context
+  await insertDocuments(collection, [
+    { _id: 'ent1' }, // Id will be in `_id`
+    { _id: 'ent2' },
+    { _id: 'ent3' },
+  ])
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      pageSize: 2,
+    },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+      },
+    },
+  }
+  const expectedPaging = {
+    next: {
+      type: 'entry',
+      pageId: 'ZW50Mnw+',
+      pageSize: 2,
+    },
+  }
+
+  const connection = await transporter.connect(
+    { ...options, idIsUnique: true },
+    authorization,
+    null,
+    emit,
+  )
+  const response = await transporter.send(action, connection)
+  await transporter.disconnect(connection)
+
+  t.is(response.status, 'ok', response.error)
+  const data = response.data as TypedData[]
+  t.is(data.length, 2)
+  t.is(data[0].id, 'ent1')
+  t.is(data[1].id, 'ent2')
   t.deepEqual(response.paging, expectedPaging)
 })
 
@@ -287,7 +332,7 @@ test('should not throw when pageId does not exist', async (t) => {
     options,
     authorization,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -349,7 +394,7 @@ test('should get second page of documents when sorting', async (t) => {
     options,
     authorization,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -413,7 +458,7 @@ test('should get second page of documents when sorting descending', async (t) =>
     options,
     authorization,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -477,7 +522,7 @@ test('should return page params when sorting by two dimensions', async (t) => {
     options,
     authorization,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -541,7 +586,7 @@ test('should get second page of documents when sorting key is not unique', async
     options,
     authorization,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -607,7 +652,7 @@ test('should keep existing queries', async (t) => {
     options,
     authorization,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -655,7 +700,7 @@ test('should get one page of documents with params for next page - using pageOff
     options,
     authorization,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -702,7 +747,7 @@ test('should get second page of documents - using pageOffset', async (t) => {
     options,
     authorization,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -761,7 +806,7 @@ test('should get one page of aggregated documents with params for next page - us
     options,
     authorization,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -809,7 +854,7 @@ test('should get second page of aggregated documents with params for next page -
     options,
     authorization,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)

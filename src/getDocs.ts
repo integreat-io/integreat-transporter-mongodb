@@ -205,7 +205,12 @@ export default async function getDocs(
 
   if (payload.pageSize) {
     debugMongo('Creating paging')
-    response.paging = createPaging(data, payload, sort, aggregationObjects)
+    response.paging = createPaging(
+      normalizedData,
+      payload,
+      sort,
+      aggregationObjects,
+    )
   }
 
   return response
