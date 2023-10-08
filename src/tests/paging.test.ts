@@ -259,7 +259,7 @@ test('should return empty array when past last page', async (t) => {
   t.deepEqual(response.paging, expectedPaging)
 })
 
-test('should create paging when idIsUnique is true', async (t) => {
+test('should get first page when idIsUnique is true', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
     { _id: 'ent1' }, // Id will be in `_id`
@@ -301,6 +301,57 @@ test('should create paging when idIsUnique is true', async (t) => {
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
   t.is(data[1].id, 'ent2')
+  t.deepEqual(response.paging, expectedPaging)
+})
+
+test('should get second page when idIsUnique is true', async (t) => {
+  const { collection, collectionName } = t.context
+  await insertDocuments(collection, [
+    {
+      _id: 'ent1',
+      date: new Date('2021-01-18T10:44:07Z'),
+    },
+    {
+      _id: 'ent2',
+      date: new Date('2021-01-18T11:05:16Z'),
+    },
+  ])
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      pageId: 'ZW50MXxkYXRlPjIwMjEtMDEtMThUMTA6NDQ6MDcuMDAwWg',
+      pageSize: 1,
+    },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        sort: { date: 1 },
+      },
+    },
+  }
+  const expectedPaging = {
+    next: {
+      type: 'entry',
+      pageId: 'ZW50MnxkYXRlPjIwMjEtMDEtMThUMTE6MDU6MTYuMDAwWg',
+      pageSize: 1,
+    },
+  }
+
+  const connection = await transporter.connect(
+    { ...options, idIsUnique: true },
+    authorization,
+    null,
+    emit,
+  )
+  const response = await transporter.send(action, connection)
+  await transporter.disconnect(connection)
+
+  t.is(response.status, 'ok', response.error)
+  const data = response.data as TypedData[]
+  t.is(data.length, 1)
+  t.is(data[0].id, 'ent2')
   t.deepEqual(response.paging, expectedPaging)
 })
 

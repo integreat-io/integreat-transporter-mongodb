@@ -28,10 +28,14 @@ const normalizeId = (data: TypedData[], useIdAsInternalId: boolean) =>
     ? data.map(({ _id, ...item }) => ({ ...item, id: _id }))
     : data
 
+const getId = (data: Record<string, unknown>, useIdAsInternalId: boolean) =>
+  useIdAsInternalId ? data._id : data.id
+
 // Move the cursor to the first doc after the `pageAfter`
 // When no `pageAfter`, just start from the beginning
 const moveToData = async (
   cursor: Cursor,
+  useIdAsInternalId: boolean,
   pageAfter?: string | Record<string, unknown>,
 ) => {
   if (!pageAfter) {
@@ -42,7 +46,7 @@ const moveToData = async (
   let doc
   do {
     doc = await cursor.next()
-  } while (doc && doc.id !== pageAfter)
+  } while (doc && getId(doc, useIdAsInternalId) !== pageAfter)
   // TODO: Compare objects with deep equal
 
   return !!doc // false if the doc to start after is not found
@@ -79,6 +83,7 @@ const getData = async (cursor: Cursor, pageSize: number) => {
 
 const getPage = async (
   cursor: Cursor,
+  useIdAsInternalId: boolean,
   { pageSize = Infinity, pageOffset, pageAfter }: Payload,
   pageId?: DecodedPageId,
 ) => {
@@ -89,7 +94,7 @@ const getPage = async (
 
     // When pageAfter is set – loop until we find the doc with that `id`
     debugMongo('Moving to cursor %s', after)
-    const foundFirst = await moveToData(cursor, after)
+    const foundFirst = await moveToData(cursor, useIdAsInternalId, after)
 
     if (!foundFirst) {
       return []
@@ -165,7 +170,7 @@ export default async function getDocs(
   }
 
   debugMongo('Getting page')
-  const data = await getPage(cursor, payload, pageId)
+  const data = await getPage(cursor, useIdAsInternalId, payload, pageId)
   debugMongo('Got result page with %s items', data.length)
 
   if (data.length === 0 && payload.id) {
