@@ -25,7 +25,7 @@ interface ItemWithIdObject extends Record<string, unknown> {
 
 const normalizeId = (data: TypedData[], useIdAsInternalId: boolean) =>
   useIdAsInternalId
-    ? data.map(({ _id, ...item }) => ({ ...item, id: _id }))
+    ? data.map(({ _id, id, ...item }) => ({ ...item, id: _id ?? id })) // Fall back to `id` if `_id` is not present
     : data
 
 const getId = (data: Record<string, unknown>, useIdAsInternalId: boolean) =>
@@ -211,7 +211,7 @@ export default async function getDocs(
   debugMongo('Normalizing data')
   const normalizedData = normalizeId(
     data.map(normalizeItem) as TypedData[],
-    aggregation ? false : useIdAsInternalId, // We won't map `id` to `_id` for aggregations, as it would mess the compounded id
+    useIdAsInternalId,
   )
 
   const response = {

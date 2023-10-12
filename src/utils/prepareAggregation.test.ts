@@ -624,7 +624,7 @@ test('should return mongo aggregation pipeline with id as _id', (t) => {
     {
       $group: {
         _id: { account: '$account', _id: '$_id' },
-        id: { $first: '$_id' },
+        id: { $first: '$_id' }, // Will be set as `id` to not overwrite aggregated `_id`
         updatedAt: { $first: '$updatedAt' },
       },
     },

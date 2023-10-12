@@ -38,7 +38,7 @@ const createClient = (collection: unknown) =>
     }),
   }) as unknown as MongoClient
 
-// Tests
+// Tests -- find
 
 test('should get one item', async (t) => {
   const [find] = createCollectionMethod([{ id: 'ent1', $type: 'entry' }])
@@ -203,6 +203,8 @@ test('should get with query', async (t) => {
   t.deepEqual(arg, expectedQuery)
 })
 
+// Tests -- aggregation
+
 test('should get with aggregation', async (t) => {
   const [find] = createCollectionMethod([])
   const [aggregate] = createCollectionMethod([
@@ -269,6 +271,83 @@ test('should get with aggregation', async (t) => {
   ]
 
   const ret = await getDocs(action, client)
+
+  t.is(find.callCount, 0)
+  t.is(aggregate.callCount, 1)
+  const arg = aggregate.args[0][0]
+  t.deepEqual(arg, expectedPipeline)
+  t.is(ret.status, 'ok')
+  t.deepEqual(ret.data, expectedData)
+  t.is(ret.params?.totalCount, 1)
+})
+
+test('should get with aggregation when idIsUnique is true', async (t) => {
+  const useIdAsInternalId = true // Will be true when idIsUnique is true
+  const [find] = createCollectionMethod([])
+  const [aggregate] = createCollectionMethod([
+    {
+      _id: { 'values\\_account': '1501', _id: 'ent1' },
+      updatedAt: '2021-01-18T00:00:00Z',
+      'values.status': 'inactive',
+    },
+  ])
+  const client = createClient({ find, aggregate })
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      typePlural: 'entries',
+    },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+        aggregation: [
+          { type: 'sort', sortBy: { updatedAt: -1 } },
+          {
+            type: 'group',
+            groupBy: ['values.account', 'id'],
+            values: { updatedAt: 'first', 'values.status': 'first' },
+          },
+          {
+            type: 'query',
+            query: [
+              { path: 'type', param: 'type' },
+              { path: 'personalia\\.age', op: 'gt', value: 18 },
+            ],
+          },
+        ],
+      },
+    },
+  }
+  const expectedPipeline = [
+    { $sort: { updatedAt: -1 } },
+    {
+      $group: {
+        _id: { 'values\\\\_account': '$values.account', _id: '$_id' },
+        updatedAt: { $first: '$updatedAt' },
+        'values\\\\_status': { $first: '$values.status' },
+      },
+    },
+    {
+      $match: {
+        type: 'entry',
+        'personalia\\_age': { $gt: 18 },
+      },
+    },
+    { $sort: { _id: 1 } },
+    { $setWindowFields: { output: { __totalCount: { $count: {} } } } }, // Adds total count to every document
+  ]
+  const expectedData = [
+    {
+      'values.account': '1501',
+      id: 'ent1',
+      updatedAt: '2021-01-18T00:00:00Z',
+      'values.status': 'inactive',
+    },
+  ]
+
+  const ret = await getDocs(action, client, useIdAsInternalId)
 
   t.is(find.callCount, 0)
   t.is(aggregate.callCount, 1)
