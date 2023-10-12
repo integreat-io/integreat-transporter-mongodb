@@ -24,11 +24,11 @@ const createCollectionMethod = (items: Record<string, unknown>[]) => {
     },
     // Mimick next()
     next: async () => it.next().value,
-    sort: () => cursor,
+    sort: (_sort: unknown) => cursor,
     allowDiskUse: () => cursor, // Only on FindCursor
   }
 
-  return sinon.stub().returns(cursor)
+  return [sinon.stub().returns(cursor), cursor] as const
 }
 
 const createClient = (collection: unknown) =>
@@ -36,12 +36,39 @@ const createClient = (collection: unknown) =>
     db: () => ({
       collection: () => collection as Collection,
     }),
-  } as unknown as MongoClient)
+  }) as unknown as MongoClient
 
 // Tests
 
+test('should get one item', async (t) => {
+  const [find] = createCollectionMethod([{ id: 'ent1', $type: 'entry' }])
+  const client = createClient({ find })
+  const action = {
+    type: 'GET',
+    payload: {
+      id: 'ent1',
+      type: 'entry',
+      typePlural: 'entries',
+    },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
+    },
+  }
+
+  const response = await getDocs(action, client)
+
+  t.is(response?.status, 'ok')
+  const data = response?.data as TypedData[]
+  t.is(data.length, 1)
+  t.is(data[0].id, 'ent1')
+  t.true(find.calledWith({ id: 'ent1' }))
+})
+
 test('should get items', async (t) => {
-  const find = createCollectionMethod([
+  const [find] = createCollectionMethod([
     { id: 'ent1', $type: 'entry' },
     { id: 'ent2', $type: 'entry' },
   ])
@@ -72,13 +99,16 @@ test('should get items', async (t) => {
   t.true(find.calledWith(expectedQuery))
 })
 
-test('should get one item', async (t) => {
-  const find = createCollectionMethod([{ id: 'ent1', $type: 'entry' }])
+test('should get items with sorting', async (t) => {
+  const [find, cursor] = createCollectionMethod([
+    { id: 'ent1', $type: 'entry' },
+    { id: 'ent2', $type: 'entry' },
+  ])
+  const sortSpy = sinon.spy(cursor, 'sort')
   const client = createClient({ find })
   const action = {
     type: 'GET',
     payload: {
-      id: 'ent1',
       type: 'entry',
       typePlural: 'entries',
     },
@@ -86,21 +116,64 @@ test('should get one item', async (t) => {
       options: {
         collection: 'documents',
         db: 'database',
+        sort: { id: 1 },
       },
     },
   }
+  const expectedQuery = {}
 
   const response = await getDocs(action, client)
 
   t.is(response?.status, 'ok')
   const data = response?.data as TypedData[]
-  t.is(data.length, 1)
+  t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
-  t.true(find.calledWith({ id: 'ent1' }))
+  t.is(data[1].id, 'ent2')
+  t.is(response?.params?.totalCount, 2)
+  t.true(find.calledWith(expectedQuery))
+  t.is(sortSpy.callCount, 1)
+  t.deepEqual(sortSpy.args[0][0], { id: 1 })
+})
+
+test('should get items with sorting when idIsUnique is true', async (t) => {
+  const useIdAsInternalId = true // Will be true when idIsUnique is true
+  const [find, cursor] = createCollectionMethod([
+    { _id: 'ent1', $type: 'entry' },
+    { _id: 'ent2', $type: 'entry' },
+  ])
+  const sortSpy = sinon.spy(cursor, 'sort')
+  const client = createClient({ find })
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      typePlural: 'entries',
+    },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+        sort: { id: 1 },
+      },
+    },
+  }
+  const expectedQuery = {}
+
+  const response = await getDocs(action, client, useIdAsInternalId)
+
+  t.is(response?.status, 'ok')
+  const data = response?.data as TypedData[]
+  t.is(data.length, 2)
+  t.is(data[0].id, 'ent1')
+  t.is(data[1].id, 'ent2')
+  t.is(response?.params?.totalCount, 2)
+  t.true(find.calledWith(expectedQuery))
+  t.is(sortSpy.callCount, 1)
+  t.deepEqual(sortSpy.args[0][0], { _id: 1 })
 })
 
 test('should get with query', async (t) => {
-  const find = createCollectionMethod([])
+  const [find] = createCollectionMethod([])
   const client = createClient({ find })
   const action = {
     type: 'GET',
@@ -131,8 +204,8 @@ test('should get with query', async (t) => {
 })
 
 test('should get with aggregation', async (t) => {
-  const find = createCollectionMethod([])
-  const aggregate = createCollectionMethod([
+  const [find] = createCollectionMethod([])
+  const [aggregate] = createCollectionMethod([
     {
       _id: { 'values\\_account': '1501', id: 'ent1' },
       updatedAt: '2021-01-18T00:00:00Z',
@@ -207,8 +280,8 @@ test('should get with aggregation', async (t) => {
 })
 
 test('should get put query and sort first in aggregation pipeline', async (t) => {
-  const find = createCollectionMethod([])
-  const aggregate = createCollectionMethod([])
+  const [find] = createCollectionMethod([])
+  const [aggregate] = createCollectionMethod([])
   const client = createClient({ find, aggregate })
   const action = {
     type: 'GET',
@@ -263,8 +336,8 @@ test('should get put query and sort first in aggregation pipeline', async (t) =>
 })
 
 test('should return one page of the aggregated result', async (t) => {
-  const find = createCollectionMethod([])
-  const aggregate = createCollectionMethod([
+  const [find] = createCollectionMethod([])
+  const [aggregate] = createCollectionMethod([
     {
       _id: { 'values\\_account': '1501', id: 'ent1' },
       updatedAt: '2021-01-18T00:00:00Z',
@@ -333,8 +406,8 @@ test('should return one page of the aggregated result', async (t) => {
 })
 
 test('should return the aggregated result from a page offset', async (t) => {
-  const find = createCollectionMethod([])
-  const aggregate = createCollectionMethod([
+  const [find] = createCollectionMethod([])
+  const [aggregate] = createCollectionMethod([
     {
       _id: { 'values\\_account': '1501', id: 'ent1' },
       updatedAt: '2021-01-18T00:00:00Z',
@@ -398,7 +471,7 @@ test('should return the aggregated result from a page offset', async (t) => {
 })
 
 test('should convert mongodb _id to string', async (t) => {
-  const find = createCollectionMethod([
+  const [find] = createCollectionMethod([
     {
       _id: {
         // An approximation of a mongodb _id object
@@ -436,7 +509,7 @@ test('should convert mongodb _id to string', async (t) => {
 })
 
 test('should get one page of items', async (t) => {
-  const find = createCollectionMethod([
+  const [find] = createCollectionMethod([
     { id: 'ent1', $type: 'entry' },
     { id: 'ent2', $type: 'entry' },
     { id: 'ent3', $type: 'entry' },
@@ -473,7 +546,7 @@ test('should get one page of items', async (t) => {
 })
 
 test('should return params for next page', async (t) => {
-  const find = createCollectionMethod([
+  const [find] = createCollectionMethod([
     { id: 'ent1', $type: 'entry' },
     { id: 'ent2', $type: 'entry' },
   ])
@@ -507,7 +580,7 @@ test('should return params for next page', async (t) => {
 })
 
 test('should get second page of items', async (t) => {
-  const find = createCollectionMethod([
+  const [find] = createCollectionMethod([
     { id: 'ent2', $type: 'entry' },
     { id: 'ent3', $type: 'entry' },
     { id: 'ent4', $type: 'entry' },
@@ -554,7 +627,7 @@ test('should get second page of items', async (t) => {
 })
 
 test('should get empty result when we have passed the last page', async (t) => {
-  const find = createCollectionMethod([{ id: 'ent4', $type: 'entry' }])
+  const [find] = createCollectionMethod([{ id: 'ent4', $type: 'entry' }])
   const countDocuments = async () => 3
   const client = createClient({ find, countDocuments })
   const action = {
@@ -587,7 +660,7 @@ test('should get empty result when we have passed the last page', async (t) => {
 })
 
 test('should get empty result when the pageAfter doc is not found', async (t) => {
-  const find = createCollectionMethod([{ id: 'ent5', $type: 'entry' }])
+  const [find] = createCollectionMethod([{ id: 'ent5', $type: 'entry' }])
   const countDocuments = async () => 3
   const client = createClient({ find, countDocuments })
   const action = {
@@ -620,7 +693,7 @@ test('should get empty result when the pageAfter doc is not found', async (t) =>
 })
 
 test('should get second page of items when there are documents before the pageAfter', async (t) => {
-  const find = createCollectionMethod([
+  const [find] = createCollectionMethod([
     { id: 'ent1', $type: 'entry', index: 1 },
     { id: 'ent2', $type: 'entry', index: 1 },
     { id: 'ent3', $type: 'entry', index: 2 },
@@ -665,7 +738,7 @@ test('should get second page of items when there are documents before the pageAf
 })
 
 test('should get second page of items - using pageOffset', async (t) => {
-  const find = createCollectionMethod([
+  const [find] = createCollectionMethod([
     { id: 'ent1', $type: 'entry' },
     { id: 'ent2', $type: 'entry' },
     { id: 'ent3', $type: 'entry' },
@@ -708,7 +781,7 @@ test('should get second page of items - using pageOffset', async (t) => {
 })
 
 test('should get empty result when we have passed the last page - using pageOffset', async (t) => {
-  const find = createCollectionMethod([
+  const [find] = createCollectionMethod([
     { id: 'ent1', $type: 'entry' },
     { id: 'ent2', $type: 'entry' },
     { id: 'ent3', $type: 'entry' },
@@ -744,7 +817,7 @@ test('should get empty result when we have passed the last page - using pageOffs
 })
 
 test('should support allowDiskUse for finds', async (t) => {
-  const find = createCollectionMethod([])
+  const [find] = createCollectionMethod([])
   const countDocuments = async () => 3
   const client = createClient({ find, countDocuments })
   const action = {
@@ -772,8 +845,8 @@ test('should support allowDiskUse for finds', async (t) => {
 })
 
 test('should support allowDiskUse for aggregation', async (t) => {
-  const find = createCollectionMethod([])
-  const aggregate = createCollectionMethod([])
+  const [find] = createCollectionMethod([])
+  const [aggregate] = createCollectionMethod([])
   const client = createClient({ find, aggregate })
   const action = {
     type: 'GET',
@@ -799,7 +872,7 @@ test('should support allowDiskUse for aggregation', async (t) => {
 })
 
 test('should return empty array when collection query comes back empty', async (t) => {
-  const find = createCollectionMethod([])
+  const [find] = createCollectionMethod([])
   const countDocuments = async () => 3
   const client = createClient({ find, countDocuments })
   const action = {
@@ -823,7 +896,7 @@ test('should return empty array when collection query comes back empty', async (
 })
 
 test('should return notfound when member query comes back empty', async (t) => {
-  const find = createCollectionMethod([])
+  const [find] = createCollectionMethod([])
   const client = createClient({ find })
   const action = {
     type: 'GET',
@@ -847,7 +920,7 @@ test('should return notfound when member query comes back empty', async (t) => {
 })
 
 test('should return error when missing option in exchange', async (t) => {
-  const find = createCollectionMethod([])
+  const [find] = createCollectionMethod([])
   const client = createClient({ find })
   const action = {
     type: 'GET',

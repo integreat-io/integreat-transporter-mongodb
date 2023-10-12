@@ -119,6 +119,19 @@ const appendToAggregation = (
 
 const paramsFromPayload = ({ data, ...payload }: Payload) => payload
 
+const prepareSort = (
+  sort: Record<string, 1 | -1> | undefined,
+  useIdAsInternalId: boolean,
+) =>
+  !useIdAsInternalId || !sort
+    ? sort
+    : Object.fromEntries(
+        Object.entries(sort).map(([key, value]) => [
+          key === 'id' ? '_id' : key,
+          value,
+        ]),
+      )
+
 export default async function getDocs(
   action: Action,
   client: MongoClient,
@@ -143,11 +156,11 @@ export default async function getDocs(
 
   const {
     query,
-    sort,
     allowDiskUse = false,
     aggregation: aggregationObjects,
   } = options as MongoOptions
   const filter = prepareFilter(query, params, pageId, useIdAsInternalId)
+  const sort = prepareSort((options as MongoOptions).sort, useIdAsInternalId)
 
   const aggregation = aggregationObjects
     ? prepareAggregation(
