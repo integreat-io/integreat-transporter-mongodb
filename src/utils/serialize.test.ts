@@ -6,6 +6,7 @@ test('should escape reserved characters and remove undefined values on serializa
   const data = {
     id: 'ent1',
     $type: 'entry',
+    '\\$type': 'Escaped',
     'stats.count': 3,
     channel$: 'news',
     title: undefined,
@@ -27,6 +28,7 @@ test('should escape reserved characters and remove undefined values on serializa
   const expected = {
     id: 'ent1',
     '\\$type': 'entry',
+    '\\\\$type': 'Escaped',
     'stats\\_count': 3,
     channel$: 'news',
     entry_author: {
@@ -83,6 +85,7 @@ test('should remove escape characters on normalization', (t) => {
   const data = {
     id: 'ent1',
     '\\$type': 'entry',
+    '\\\\$type': 'Escaped',
     'stats\\_count': 3,
     channel$: 'news',
     entry_author: {
@@ -102,6 +105,7 @@ test('should remove escape characters on normalization', (t) => {
   const expected = {
     id: 'ent1',
     $type: 'entry',
+    '\\$type': 'Escaped',
     'stats.count': 3,
     channel$: 'news',
     entry_author: {
