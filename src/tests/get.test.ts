@@ -32,7 +32,7 @@ test.afterEach.always(async (t) => {
 
 // Tests
 
-test('should get a document by id', async (t) => {
+test.serial('should get a document by id', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
     {
@@ -80,7 +80,7 @@ test('should get a document by id', async (t) => {
   t.false(data[0].hasOwnProperty('**empty**'))
 })
 
-test('should get documents by type', async (t) => {
+test.serial('should get documents by type', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
     { _id: '12345', id: 'ent1', type: 'entry' },
@@ -116,7 +116,7 @@ test('should get documents by type', async (t) => {
   t.is(data[1].id, 'ent2')
 })
 
-test('should get a document with endpoint query', async (t) => {
+test.serial('should get a document with endpoint query', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
     {
@@ -165,50 +165,53 @@ test('should get a document with endpoint query', async (t) => {
   t.is(data[0].id, 'ent2')
 })
 
-test('should get a document by id when idIsUnique is true', async (t) => {
-  const { collection, collectionName } = t.context
-  await insertDocuments(collection, [
-    {
-      _id: 'ent4',
-      date: new Date('2021-03-14T18:43:11Z'),
-    },
-    {
-      _id: 'ent5',
-      date: new Date('2021-03-14T18:51:09Z'),
-    },
-  ])
-  const action = {
-    type: 'GET',
-    payload: {
-      type: 'entry',
-      id: 'ent4',
-    },
-    meta: {
-      options: {
-        collection: collectionName,
-        db: 'test',
+test.serial(
+  'should get a document by id when idIsUnique is true',
+  async (t) => {
+    const { collection, collectionName } = t.context
+    await insertDocuments(collection, [
+      {
+        _id: 'ent4',
+        date: new Date('2021-03-14T18:43:11Z'),
       },
-    },
-  }
+      {
+        _id: 'ent5',
+        date: new Date('2021-03-14T18:51:09Z'),
+      },
+    ])
+    const action = {
+      type: 'GET',
+      payload: {
+        type: 'entry',
+        id: 'ent4',
+      },
+      meta: {
+        options: {
+          collection: collectionName,
+          db: 'test',
+        },
+      },
+    }
 
-  const connection = await transporter.connect(
-    optionsWithIdIsUnique,
-    authentication,
-    null,
-    emit,
-  )
-  const response = await transporter.send(action, connection)
-  await transporter.disconnect(connection)
+    const connection = await transporter.connect(
+      optionsWithIdIsUnique,
+      authentication,
+      null,
+      emit,
+    )
+    const response = await transporter.send(action, connection)
+    await transporter.disconnect(connection)
 
-  t.truthy(response)
-  t.is(response.status, 'ok', response.error)
-  const data = response.data as TypedData[]
-  t.is(data.length, 1)
-  t.is(data[0].id, 'ent4')
-  t.deepEqual(data[0].date, new Date('2021-03-14T18:43:11Z'))
-})
+    t.truthy(response)
+    t.is(response.status, 'ok', response.error)
+    const data = response.data as TypedData[]
+    t.is(data.length, 1)
+    t.is(data[0].id, 'ent4')
+    t.deepEqual(data[0].date, new Date('2021-03-14T18:43:11Z'))
+  },
+)
 
-test('should sort documents', async (t) => {
+test.serial('should sort documents', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
     {
