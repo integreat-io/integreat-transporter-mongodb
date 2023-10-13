@@ -1,7 +1,7 @@
 import test from 'ava'
 import { AggregationObject } from '../types.js'
 
-import prepareAggregation from './prepareAggregation.js'
+import prepareAggregation, { extractLookupPaths } from './prepareAggregation.js'
 
 // Setup
 
@@ -12,7 +12,7 @@ const countStage = {
   $setWindowFields: { output: { __totalCount: { $count: {} } } },
 }
 
-// Tests
+// Tests -- prepareAggregation
 
 test('should return mongo aggregation pipeline', (t) => {
   const aggregation: AggregationObject[] = [
@@ -751,6 +751,62 @@ test('should return mongo aggregation with project with id as _id', (t) => {
     undefined,
     useIdAsInternalId,
   )
+
+  t.deepEqual(ret, expected)
+})
+
+// Tests -- extractLookupPaths
+
+test('should extract paths in data where lookup data will be found', (t) => {
+  const aggregation = [
+    {
+      type: 'query' as const,
+      query: [{ path: 'type', value: 'entry' }],
+    },
+    {
+      type: 'lookup' as const,
+      collection: 'projects',
+      field: 'id',
+      path: 'included',
+    },
+    {
+      type: 'sort' as const,
+      sortBy: { id: 1 as const },
+    },
+  ]
+  const expected = ['included']
+
+  const ret = extractLookupPaths(aggregation)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should extract paths in data where lookup data will be found with several lookup steps', (t) => {
+  const aggregation = [
+    {
+      type: 'query' as const,
+      query: [{ path: 'type', value: 'entry' }],
+    },
+    {
+      type: 'lookup' as const,
+      collection: 'projects',
+      field: 'id',
+      path: 'included',
+    },
+    {
+      type: 'lookup' as const,
+      collection: 'users',
+      field: 'id',
+      path: 'meta.author',
+    },
+    {
+      type: 'sort' as const,
+      sortBy: { id: 1 as const },
+    },
+  ]
+  const expected = ['included', 'meta.author']
+
+  const ret = extractLookupPaths(aggregation)
 
   t.deepEqual(ret, expected)
 })

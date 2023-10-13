@@ -1,8 +1,12 @@
 import debug from 'debug'
+import mapAny from 'map-any'
 import { FindCursor, AggregationCursor, MongoClient } from 'mongodb'
-import { Action, Response, TypedData } from 'integreat'
+import { Action, Response } from 'integreat'
+import { getProperty, setProperty } from 'dot-prop'
 import prepareFilter from './utils/prepareFilter.js'
-import prepareAggregation from './utils/prepareAggregation.js'
+import prepareAggregation, {
+  extractLookupPaths,
+} from './utils/prepareAggregation.js'
 import createPaging from './utils/createPaging.js'
 import { normalizeItem } from './utils/serialize.js'
 import { getCollection } from './send.js'
@@ -23,10 +27,50 @@ interface ItemWithIdObject extends Record<string, unknown> {
   _id: Record<string, unknown>
 }
 
-const normalizeId = (data: TypedData[], useIdAsInternalId: boolean) =>
-  useIdAsInternalId
-    ? data.map(({ _id, id, ...item }) => ({ ...item, id: _id ?? id })) // Fall back to `id` if `_id` is not present
-    : data
+const useInternalId = ({
+  _id,
+  id,
+  ...item
+}: Record<string, unknown>): Record<string, unknown> => ({
+  ...item,
+  id: _id ?? id, // Fall back to `id` if `_id` is not present
+})
+
+const useInternalIdIfObject = (item: unknown) =>
+  isObject(item) ? useInternalId(item) : item
+
+const normalizeIdInItem = (lookupPaths: string[]) =>
+  function normalizeIdInItem(item: unknown) {
+    if (!isObject(item)) {
+      return item
+    }
+    const normalized = useInternalId(item)
+
+    if (lookupPaths.length > 0) {
+      // Look for lookup paths and normalize the ids in the lookup result
+      lookupPaths.forEach((lookupPath) => {
+        const value = getProperty(normalized, lookupPath)
+        setProperty(
+          normalized,
+          lookupPath,
+          mapAny(useInternalIdIfObject, value),
+        )
+      })
+    }
+
+    return normalized
+  }
+
+function normalizeId(
+  data: unknown[],
+  useIdAsInternalId: boolean,
+  lookupPaths: string[],
+) {
+  if (!useIdAsInternalId) {
+    return data
+  }
+  return data.map(normalizeIdInItem(lookupPaths))
+}
 
 const getId = (data: Record<string, unknown>, useIdAsInternalId: boolean) =>
   useIdAsInternalId ? data._id : data.id
@@ -170,6 +214,7 @@ export default async function getDocs(
         useIdAsInternalId,
       )
     : undefined
+  const lookupPaths = extractLookupPaths(aggregationObjects)
 
   let cursor
   if (aggregation) {
@@ -210,8 +255,9 @@ export default async function getDocs(
 
   debugMongo('Normalizing data')
   const normalizedData = normalizeId(
-    data.map(normalizeItem) as TypedData[],
+    data.map(normalizeItem),
     useIdAsInternalId,
+    lookupPaths,
   )
 
   const response = {
