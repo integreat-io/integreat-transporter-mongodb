@@ -44,8 +44,8 @@
     "@integreat/ts-dev-setup": "^5.0.2",
     "@types/debug": "^4.1.9",
     "@types/object-hash": "^3.0.4",
-    "@types/sinon": "^10.0.19",
+    "@types/sinon": "^17.0.0",
     "integreat": "1.4.0",
-    "sinon": "^16.1.0"
+    "sinon": "^17.0.1"
   }
 }
