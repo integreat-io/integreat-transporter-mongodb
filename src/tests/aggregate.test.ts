@@ -350,9 +350,60 @@ test('should aggregate with lookup when idIsUnique is true', async (t) => {
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
-  t.truthy(response)
   t.is(response.status, 'ok', response.error)
   const data = response.data as Record<string, unknown>[]
   t.deepEqual(data, expectedData)
   t.deepEqual(response.params?.totalCount, 4)
+})
+
+test('should handle empty steps in an aggregation', async (t) => {
+  const { collectionName } = t.context
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+    },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        aggregation: [
+          {
+            type: 'query',
+            query: [{ path: 'type', value: 'entry' }],
+          },
+          null,
+          {
+            type: 'lookup',
+            collection: collectionName,
+            field: 'id',
+            path: 'user',
+            pipeline: [
+              {
+                type: 'query',
+                query: [{ path: 'type', value: 'user' }],
+              },
+            ],
+          },
+          {
+            type: 'sort',
+            sortBy: { id: 1 },
+          },
+        ],
+      },
+    },
+  }
+
+  const connection = await transporter.connect(
+    optionsWithIdIsUnique,
+    authentication,
+    null,
+    emit,
+  )
+  const response = await transporter.send(action, connection)
+  await transporter.disconnect(connection)
+
+  t.is(response.status, 'ok', response.error) // If we get a response, we did not throw
+  t.true(Array.isArray(response.data))
+  t.is((response.data as unknown[]).length, 4)
 })

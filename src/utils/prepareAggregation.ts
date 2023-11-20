@@ -316,7 +316,7 @@ function ensureSorting(pipeline: Aggregation[]) {
 export const extractLookupPaths = (aggregation?: AggregationObject[]) =>
   Array.isArray(aggregation)
     ? aggregation
-        .filter((agg): agg is AggregationObjectLookUp => agg.type == 'lookup')
+        .filter((agg): agg is AggregationObjectLookUp => agg?.type == 'lookup')
         .map((agg) => agg.path)
         .filter(isNotEmpty)
     : []
