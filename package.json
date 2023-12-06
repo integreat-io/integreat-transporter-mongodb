@@ -41,11 +41,11 @@
     "object-hash": "^3.0.0"
   },
   "devDependencies": {
-    "@integreat/ts-dev-setup": "^5.0.3",
+    "@integreat/ts-dev-setup": "^5.0.4",
     "@types/debug": "^4.1.12",
     "@types/object-hash": "^3.0.6",
-    "@types/sinon": "^17.0.1",
-    "integreat": "1.4.6",
+    "@types/sinon": "^17.0.2",
+    "integreat": "^1.5.1",
     "sinon": "^17.0.1"
   }
 }
