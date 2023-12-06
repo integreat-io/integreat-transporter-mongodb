@@ -161,6 +161,30 @@ const createOperation = (action: Action, useIdAsInternalId: boolean) =>
     return { filter, update, id }
   }
 
+const hasQuery = (action: Action) => action.meta?.options?.query
+
+async function deleteWithQuery(
+  action: Action,
+  collection: Collection,
+): Promise<Response> {
+  const {
+    payload: { data, ...params },
+  } = action
+  const options = action.meta?.options as MongoOptions | undefined
+  const filter = prepareFilter(options?.query, params, undefined)
+
+  if (Object.keys(filter).length === 0) {
+    return { status: 'noaction', error: 'No query to delete with' }
+  } else {
+    try {
+      const result = await collection.deleteMany(filter)
+      return createOkResponse(result)
+    } catch (error) {
+      return createErrorResponse('error', (error as Error).message)
+    }
+  }
+}
+
 async function updateOne(
   operation: Operation,
   collection: Collection,
@@ -279,12 +303,20 @@ export default async function setDocs(
     createOperation(action, useIdAsInternalId),
   )
   if (operations.length === 0) {
-    // No operations -- end right away
-    return {
-      ...action.response,
-      status: 'noaction',
-      error: 'No items to update',
-      data: [],
+    if (
+      operations.length === 0 &&
+      action.type === 'DELETE' &&
+      hasQuery(action)
+    ) {
+      return await deleteWithQuery(action, collection)
+    } else {
+      // No operations -- end right away
+      return {
+        ...action.response,
+        status: 'noaction',
+        error: 'No items to update',
+        data: [],
+      }
     }
   }
 
