@@ -724,3 +724,34 @@ test('should return badrequest when no options', async (t) => {
   t.is(response?.status, 'badrequest')
   t.is(response?.error, 'No endpoint options')
 })
+
+test('should return error when mongo does not return a result object', async (t) => {
+  const updateOne = sinon.stub().returns(undefined)
+  const connection = createConnection({ updateOne })
+  const data = { id: 'ent1', $type: 'entry', title: 'Entry 1' }
+  const action = {
+    type: 'SET',
+    payload: { data },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+      },
+    },
+  }
+  const expectedResponse = {
+    status: 'error',
+    data: {
+      modifiedCount: 0,
+      insertedCount: 0,
+      deletedCount: 0,
+    },
+    error:
+      "Error updating item '<no id>' in mongodb: No results returned from MongoDB",
+  }
+
+  const response = await send(action, connection)
+
+  t.deepEqual(response, expectedResponse)
+  t.is(updateOne.callCount, 1)
+})

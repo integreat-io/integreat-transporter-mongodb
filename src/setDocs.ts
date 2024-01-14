@@ -75,8 +75,8 @@ const createResponse = (
       errors.length === 0
         ? 'ok'
         : responses.length === 1
-        ? responses[0].status
-        : 'error',
+          ? responses[0].status
+          : 'error',
     ...(responses && { data: summarizeResponses(responses) }),
     ...(errors.length > 0
       ? {
@@ -92,13 +92,23 @@ const createResponse = (
 const createOkResponse = (
   results: BulkWriteResult | UpdateResult | DeleteResult,
   id?: string,
-) => ({
-  id,
-  modifiedCount: (results as UpdateResult).modifiedCount ?? 0,
-  insertedCount: (results as UpdateResult).upsertedCount ?? 0,
-  deletedCount: (results as DeleteResult).deletedCount ?? 0,
-  status: 'ok',
-})
+) =>
+  results
+    ? {
+        id,
+        modifiedCount: (results as UpdateResult).modifiedCount ?? 0,
+        insertedCount: (results as UpdateResult).upsertedCount ?? 0,
+        deletedCount: (results as DeleteResult).deletedCount ?? 0,
+        status: 'ok',
+      }
+    : // NOTE: We don't really know why MongoDB would not return a result object, but it's better to return an error than not handling it
+      {
+        status: 'error',
+        error: 'No results returned from MongoDB',
+        modifiedCount: 0,
+        insertedCount: 0,
+        deletedCount: 0,
+      }
 
 const createErrorResponse = (
   status: string,
@@ -212,8 +222,8 @@ async function updateMany(
       isDelete(action)
         ? { deleteOne: { filter } }
         : isUpdate(action)
-        ? { updateOne: { filter, update } }
-        : { updateOne: { filter, update, upsert: true } },
+          ? { updateOne: { filter, update } }
+          : { updateOne: { filter, update, upsert: true } },
     )
     const result = await collection.bulkWrite(bulkOperations, {
       ordered: false,
