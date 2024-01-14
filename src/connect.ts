@@ -2,7 +2,12 @@
 import debug from 'debug'
 import { MongoClient } from 'mongodb'
 import createHash from 'object-hash'
-import { MongoOptions, Connection, MongoClientObject } from './types.js'
+import {
+  MongoOptions,
+  Connection,
+  MongoClientObject,
+  IncomingOptions,
+} from './types.js'
 
 const debugMongo = debug('integreat:transporter:mongodb:client')
 
@@ -81,6 +86,11 @@ async function createOrReuseClient(
   return clientObject
 }
 
+const preapreIncomingOptions = (incoming: IncomingOptions, db?: string) => ({
+  ...incoming,
+  db: incoming.db || db,
+})
+
 export default async function connect(
   Client: typeof MongoClient,
   options: MongoOptions,
@@ -98,6 +108,8 @@ export default async function connect(
     mongo,
     throwAfterFailedHeartbeatCount,
     idIsUnique = false,
+    db,
+    incoming,
   } = options
   const mongoUri = uri || baseUri
   if (!mongoUri) {
@@ -116,7 +128,12 @@ export default async function connect(
       emit,
       throwAfterFailedHeartbeatCount,
     )
-    return { status: 'ok', mongo: client, idIsUnique }
+    return {
+      status: 'ok',
+      mongo: client,
+      idIsUnique,
+      ...(incoming && { incoming: preapreIncomingOptions(incoming, db) }),
+    }
   } catch (error) {
     return {
       status: 'error',

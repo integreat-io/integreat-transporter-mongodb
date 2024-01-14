@@ -2,6 +2,7 @@ import mongodb from 'mongodb'
 import connect from './connect.js'
 import disconnect from './disconnect.js'
 import send from './send.js'
+import listen from './listen.js'
 import { Transporter } from 'integreat'
 import { MongoOptions, Connection } from './types.js'
 
@@ -31,25 +32,25 @@ const mongodbTransporter: Transporter = {
   },
 
   /**
-   * Disconnect from the source if relevant. The method is given the return
-   * value from the connect method.
+   * Disconnect from the database and any change stream.
    */
   async disconnect(connection: Connection | null) {
     return disconnect(connection)
   },
 
   /**
-   * Send the given data to the url, and return status and data.
-   * This is used for both retrieving and sending data, and Integreat will
-   * handle the preparation of the sent and the retrieved data.
-   *
-   * If an auth strategy is provided, authorization is attempted if not already
-   * authenticated, and a successfull authentication is required before sending
-   * the data with auth headers from the auth strategy.
+   * Get data from the database, or set, update, or delete data in the database
+   * -- depending on the action.
    */
   async send(exchange, connection) {
     return send(exchange, connection)
   },
+
+  /**
+   * Listen for changes in the database and dispatch incoming actions when
+   * appropriate.
+   */
+  listen,
 }
 
 export default mongodbTransporter

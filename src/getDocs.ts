@@ -36,7 +36,7 @@ const useInternalId = ({
   id: _id ?? id, // Fall back to `id` if `_id` is not present
 })
 
-const useInternalIdIfObject = (item: unknown) =>
+export const useInternalIdIfObject = (item: unknown) =>
   isObject(item) ? useInternalId(item) : item
 
 const normalizeIdInItem = (lookupPaths: string[]) =>

@@ -113,6 +113,57 @@ test('should use supplied auth', async (t) => {
   })
 })
 
+test('should pass on incoming options', async (t) => {
+  const options = {
+    uri: 'mongodb://db:27018/database',
+    incoming: {
+      collections: ['documents'],
+      db: 'database',
+    },
+  }
+  const constructSpy = sinon.stub()
+  const connectSpy = sinon.stub()
+  const expected = {
+    collections: ['documents'],
+    db: 'database',
+  }
+
+  const ret = await connect(
+    createMockMongo(constructSpy, connectSpy),
+    options,
+    emit,
+  )
+
+  t.is(ret.status, 'ok', ret.error)
+  t.deepEqual(ret.incoming, expected)
+})
+
+test('should use db from options when not set in incoming', async (t) => {
+  const options = {
+    uri: 'mongodb://db:27018/database',
+    db: 'database',
+    incoming: {
+      collections: ['documents'],
+      // No db
+    },
+  }
+  const constructSpy = sinon.stub()
+  const connectSpy = sinon.stub()
+  const expected = {
+    collections: ['documents'],
+    db: 'database',
+  }
+
+  const ret = await connect(
+    createMockMongo(constructSpy, connectSpy),
+    options,
+    emit,
+  )
+
+  t.is(ret.status, 'ok', ret.error)
+  t.deepEqual(ret.incoming, expected)
+})
+
 test('should reuse client when connecting twice with same options', async (t) => {
   const options = {
     uri: 'mongodb://db:27021/database',

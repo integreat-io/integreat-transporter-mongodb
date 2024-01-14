@@ -1,11 +1,9 @@
 import test from 'ava'
 import sinon from 'sinon'
-import { MongoClient } from 'mongodb'
+import { MongoClient, ChangeStream } from 'mongodb'
 import { MongoClientObject } from './types.js'
 
 import disconnect from './disconnect.js'
-
-// Setup
 
 // Tests
 
@@ -38,6 +36,30 @@ test('should do nothing when no client', async (t) => {
   const conn = { status: 'ok', client: undefined }
 
   await t.notThrowsAsync(disconnect(conn))
+})
+
+test('should close streams', async (t) => {
+  const closeSpy = sinon.stub().resolves(undefined)
+  const closeStreamSpy0 = sinon.stub().resolves(undefined)
+  const closeStreamSpy1 = sinon.stub().resolves(undefined)
+  const stream0 = { close: closeStreamSpy0 } as unknown as ChangeStream
+  const stream1 = { close: closeStreamSpy1 } as unknown as ChangeStream
+  const client = { close: closeSpy } as unknown as MongoClient
+  const clientObject: MongoClientObject = { client, count: 1 }
+  const connection = {
+    status: 'ok',
+    mongo: clientObject,
+    incoming: {
+      streams: [stream0, stream1],
+    },
+  }
+
+  await disconnect(connection)
+
+  t.is(closeStreamSpy0.callCount, 1)
+  t.is(closeStreamSpy1.callCount, 1)
+  t.deepEqual(connection.incoming?.streams, [])
+  t.is(closeSpy.callCount, 1)
 })
 
 test('should do nothing when connection has an error', async (t) => {
