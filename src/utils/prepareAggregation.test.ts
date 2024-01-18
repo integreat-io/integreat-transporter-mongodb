@@ -478,6 +478,55 @@ test('should return mongo aggregation with project and an expression in reduce i
   t.deepEqual(ret, expected)
 })
 
+test('should return mongo aggregation with search', (t) => {
+  const aggregation = [
+    {
+      type: 'search' as const,
+      index: 'default',
+      values: {
+        name: { type: 'autocomplete' as const, value: 'val', boostScore: 5 },
+        group: { type: 'autocomplete' as const, value: 'val' },
+        partner: { type: 'autocomplete' as const, value: 'val' },
+      },
+    },
+  ]
+  const expected = [
+    {
+      $search: {
+        index: 'default',
+        compound: {
+          should: [
+            {
+              autocomplete: {
+                query: 'val',
+                path: 'name',
+                score: { boost: { value: 5 } },
+              },
+            },
+            {
+              autocomplete: {
+                query: 'val',
+                path: 'group',
+              },
+            },
+            {
+              autocomplete: {
+                query: 'val',
+                path: 'partner',
+              },
+            },
+          ],
+          minimumShouldMatch: 1,
+        },
+      },
+    },
+  ]
+
+  const ret = prepareAggregation(aggregation, { type: 'entry' })
+
+  t.deepEqual(ret, expected)
+})
+
 test('should escape paths used as props', (t) => {
   const aggregation = [
     { type: 'sort' as const, sortBy: { 'values.updatedAt': -1 as const } },

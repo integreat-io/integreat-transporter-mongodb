@@ -12,6 +12,7 @@ import {
   AggregationObjectLookUp,
   AggregationObjectProject,
   AggregationObjectConcatArrays,
+  AggregationObjectSearch,
   AggregationObjectIf,
 } from '../types.js'
 import { isObject, isNotEmpty } from './is.js'
@@ -55,8 +56,8 @@ export const makeIdInternalInPath = <T extends { path?: string | string[] }>(
         path: makeIdInternal(query.path),
       }
     : Array.isArray(query.path)
-    ? { ...query, path: query.path.map(makeIdInternal) }
-    : query
+      ? { ...query, path: query.path.map(makeIdInternal) }
+      : query
 
 const makeIdInternalOnObject = (obj: Record<string, unknown>) =>
   Object.fromEntries(
@@ -67,10 +68,8 @@ const prepareGroupId = (fields: string[], useIdAsInternalId: boolean) =>
   fields.reduce(
     (obj, field) => ({
       ...obj,
-      [makeIdInternalIf(
-        serializeFieldKey(field),
-        useIdAsInternalId,
-      )]: `$${makeIdInternalIf(field, useIdAsInternalId)}`,
+      [makeIdInternalIf(serializeFieldKey(field), useIdAsInternalId)]:
+        `$${makeIdInternalIf(field, useIdAsInternalId)}`,
     }),
     {},
   )
@@ -169,8 +168,8 @@ const expressionToMongo = (
   typeof expr === 'string'
     ? `$${expr}`
     : isAggregation(expr)
-    ? dearrayIfPossible(prepareAggregation(ensureArray(expr), params))
-    : expr
+      ? dearrayIfPossible(prepareAggregation(ensureArray(expr), params))
+      : expr
 
 const ifToMongo = (
   { condition, then: thenArg, else: elseArg }: AggregationObjectIf,
@@ -267,6 +266,24 @@ const concatArraysToMongo = ({ path }: AggregationObjectConcatArrays) => ({
   $concatArrays: path.map((p) => `$$${p}`),
 })
 
+const searchToMongo = ({ index, values }: AggregationObjectSearch) => ({
+  $search: {
+    index,
+    compound: {
+      should: Object.entries(values).map(
+        ([key, { type, value, boostScore }]) => ({
+          [type]: {
+            query: value,
+            path: key,
+            ...(boostScore && { score: { boost: { value: boostScore } } }),
+          },
+        }),
+      ),
+      minimumShouldMatch: 1,
+    },
+  },
+})
+
 const toMongo = (params: Record<string, unknown>, useIdAsInternalId = false) =>
   function toMongo(obj: AggregationObject) {
     switch (obj.type) {
@@ -300,6 +317,8 @@ const toMongo = (params: Record<string, unknown>, useIdAsInternalId = false) =>
         return rootToMongo(makeIdInternalInPath(obj))
       case 'concatArrays':
         return concatArraysToMongo(makeIdInternalInPath(obj))
+      case 'search':
+        return searchToMongo(obj)
       default:
         return undefined
     }

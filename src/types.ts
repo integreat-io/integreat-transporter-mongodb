@@ -89,6 +89,18 @@ export interface AggregationObjectConcatArrays {
   path: string[]
 }
 
+export interface SearchObject {
+  type: 'autocomplete'
+  value: string
+  boostScore?: number
+}
+
+export interface AggregationObjectSearch {
+  type: 'search'
+  index?: string
+  values: Record<string, SearchObject>
+}
+
 export type AggregationObject =
   | AggregationObjectSort
   | AggregationObjectGroup
@@ -101,6 +113,7 @@ export type AggregationObject =
   | AggregationObjectLookUp
   | AggregationObjectProject
   | AggregationObjectConcatArrays
+  | AggregationObjectSearch
 
 export interface MongoOptions extends Record<string, unknown> {
   uri?: string
