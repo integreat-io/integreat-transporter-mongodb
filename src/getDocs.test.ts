@@ -543,6 +543,13 @@ test('should return first page of the aggregated result', async (t) => {
       'values.status': 'active',
     },
   ]
+  const expectedPaging = {
+    next: {
+      pageId: 'dmFsdWVzLmFjY291bnR8MzAwMHxpZHxlbnQyfHw+',
+      pageSize: 2,
+      type: 'entry',
+    },
+  }
 
   const ret = await getDocs(action, client)
 
@@ -551,13 +558,7 @@ test('should return first page of the aggregated result', async (t) => {
   t.is(aggregate.callCount, 1)
   t.is(ret.params?.totalCount, 3)
   t.deepEqual(ret.data, expectedData)
-  t.deepEqual(ret.paging, {
-    next: {
-      pageId: 'dmFsdWVzLmFjY291bnR8MzAwMHxpZHxlbnQyfHw+',
-      pageSize: 2,
-      type: 'entry',
-    },
-  })
+  t.deepEqual(ret.paging, expectedPaging)
 })
 
 test('should return second page of the aggregated result', async (t) => {
@@ -619,6 +620,9 @@ test('should return second page of the aggregated result', async (t) => {
       'values.status': 'active',
     },
   ]
+  const expectedPaging = {
+    next: undefined,
+  }
 
   const ret = await getDocs(action, client)
 
@@ -627,6 +631,7 @@ test('should return second page of the aggregated result', async (t) => {
   t.is(aggregate.callCount, 1)
   t.is(ret.params?.totalCount, 3)
   t.deepEqual(ret.data, expectedData)
+  t.deepEqual(ret.paging, expectedPaging)
 })
 
 test('should return the aggregated result from a page offset', async (t) => {
@@ -696,6 +701,85 @@ test('should return the aggregated result from a page offset', async (t) => {
   t.is(aggregate.callCount, 1)
   t.deepEqual(ret.data, expectedData)
   t.is(ret.params?.totalCount, 3)
+})
+
+test('should return first page of the aggregated result when idIsUnique is true', async (t) => {
+  const useIdAsInternalId = true // Will be true when idIsUnique is true
+  const [find] = createCollectionMethod([])
+  const [aggregate] = createCollectionMethod([
+    {
+      _id: { 'values\\_account': '1501', id: 'ent1' },
+      updatedAt: '2021-01-18T00:00:00Z',
+      'values.status': 'inactive',
+      __totalCount: 3,
+    },
+    {
+      _id: { 'values\\_account': '3000', id: 'ent2' },
+      updatedAt: '2021-01-19T00:00:00Z',
+      'values.status': 'active',
+      __totalCount: 3,
+    },
+    {
+      _id: { 'values\\_account': '3000', id: 'ent3' },
+      updatedAt: '2021-01-23T00:00:00Z',
+      'values.status': 'active',
+      __totalCount: 3,
+    },
+  ])
+  const countDocuments = async () => 10
+  const client = createClient({ find, aggregate, countDocuments })
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      typePlural: 'entries',
+      pageSize: 2,
+    },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+        aggregation: [
+          { type: 'sort', sortBy: { updatedAt: -1 } },
+          {
+            type: 'group',
+            groupBy: ['values.account', 'id'],
+            values: { updatedAt: 'first', 'values.status': 'first' },
+          },
+        ],
+      },
+    },
+  }
+  const expectedData = [
+    {
+      id: 'ent1',
+      'values.account': '1501',
+      updatedAt: '2021-01-18T00:00:00Z',
+      'values.status': 'inactive',
+    },
+    {
+      id: 'ent2',
+      'values.account': '3000',
+      updatedAt: '2021-01-19T00:00:00Z',
+      'values.status': 'active',
+    },
+  ]
+  const expectedPaging = {
+    next: {
+      pageId: 'ZW50Mnx8Pg',
+      pageSize: 2,
+      type: 'entry',
+    },
+  }
+
+  const ret = await getDocs(action, client, useIdAsInternalId)
+
+  t.is(ret.status, 'ok', ret.error)
+  t.is(find.callCount, 0)
+  t.is(aggregate.callCount, 1)
+  t.is(ret.params?.totalCount, 3)
+  t.deepEqual(ret.paging, expectedPaging)
+  t.deepEqual(ret.data, expectedData)
 })
 
 test('should convert mongodb _id to string', async (t) => {

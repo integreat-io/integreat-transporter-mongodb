@@ -314,6 +314,7 @@ export default async function getDocs(
       payload,
       sort,
       aggregationObjects,
+      useIdAsInternalId,
     )
   }
 

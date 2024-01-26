@@ -18,8 +18,11 @@ interface MongoData extends Record<string, unknown> {
   _id: string | Record<string, unknown>
 }
 
-const isMongoData = (value: unknown): value is MongoData =>
-  isObject(value) && !!value._id
+const isMongoData = (
+  value: unknown,
+  useIdAsInternalId = false,
+): value is MongoData =>
+  isObject(value) && (useIdAsInternalId ? !!value.id : !!value._id)
 
 const isTypedData = (value: unknown): value is TypedData =>
   isObject(value) && typeof value.id === 'string'
@@ -75,25 +78,29 @@ const generatePageIdFromId = (
   sort?: Record<string, number>,
 ): string => [lastItem.id, generateSortParts(lastItem, sort)].join('|')
 
-const generatePageIdFromMongoId = (
+function generatePageIdFromMongoId(
+  useIdAsInternalId: boolean,
   lastItem: MongoData,
   sort?: Record<string, number>,
-): string =>
-  [
-    ...(isObject(lastItem._id)
+): string {
+  const id = useIdAsInternalId ? lastItem.id : lastItem._id
+  return [
+    ...(isObject(id)
       ? Object.entries(lastItem._id).map((entry) => entry.join('|'))
-      : lastItem._id),
+      : [id]),
     '', // To get a double pipe
     generateSortParts(lastItem, sort),
   ].join('|')
+}
 
 function generatePageId(
   lastItem: unknown,
   sort?: Record<string, number>,
   aggregation?: AggregationObject[],
+  useIdAsInternalId = false,
 ) {
   if (aggregation) {
-    if (isMongoData(lastItem)) {
+    if (isMongoData(lastItem, useIdAsInternalId)) {
       const sortIndex = aggregation.findLastIndex(isSortAggregation)
       const groupIndex = aggregation.findLastIndex(isRegroupingAggregation)
       const aggSort =
@@ -101,7 +108,7 @@ function generatePageId(
           ? (aggregation[sortIndex] as AggregationObjectSort | undefined)
               ?.sortBy
           : undefined
-      return generatePageIdFromMongoId(lastItem, aggSort)
+      return generatePageIdFromMongoId(useIdAsInternalId, lastItem, aggSort)
     }
   } else if (isTypedData(lastItem)) {
     return generatePageIdFromId(lastItem, sort)
@@ -116,6 +123,7 @@ export default function createPaging(
   { type, id, pageOffset, pageSize, ...params }: Payload,
   sort?: Record<string, number>,
   aggregation?: AggregationObject[],
+  useIdAsInternalId = false,
 ): Paging {
   if (data.length === 0 || pageSize === undefined || data.length < pageSize) {
     return { next: undefined }
@@ -131,7 +139,9 @@ export default function createPaging(
     }
   } else {
     const lastItem = data[data.length - 1]
-    const pageId = encodeId(generatePageId(lastItem, sort, aggregation))
+    const pageId = encodeId(
+      generatePageId(lastItem, sort, aggregation, useIdAsInternalId),
+    )
     return {
       next: {
         ...preparePageParams(params, type, id),
