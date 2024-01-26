@@ -75,8 +75,8 @@ const createResponse = (
       errors.length === 0
         ? 'ok'
         : responses.length === 1
-        ? responses[0].status
-        : 'error',
+          ? responses[0].status
+          : 'error',
     ...(responses && { data: summarizeResponses(responses) }),
     ...(errors.length > 0
       ? {
@@ -151,6 +151,30 @@ const createOperation = (action: Action, useIdAsInternalId: boolean) =>
     return { filter, update, id }
   }
 
+const hasQuery = (action: Action) => action.meta?.options?.query
+
+async function deleteWithQuery(
+  action: Action,
+  collection: Collection,
+): Promise<Response> {
+  const {
+    payload: { data, ...params },
+  } = action
+  const options = action.meta?.options as MongoOptions | undefined
+  const filter = prepareFilter(options?.query, params, undefined)
+
+  if (Object.keys(filter).length === 0) {
+    return { status: 'noaction', error: 'No query to delete with' }
+  } else {
+    try {
+      const result = await collection.deleteMany(filter)
+      return createOkResponse(result)
+    } catch (error) {
+      return createErrorResponse('error', (error as Error).message)
+    }
+  }
+}
+
 async function updateOne(
   operation: Operation,
   collection: Collection,
@@ -212,8 +236,8 @@ async function updateMany(
       isDelete(action)
         ? { deleteOne: { filter } }
         : isUpdate(action)
-        ? { updateOne: { filter, update } }
-        : { updateOne: { filter, update, upsert: true } },
+          ? { updateOne: { filter, update } }
+          : { updateOne: { filter, update, upsert: true } },
     )
     const result = await collection.bulkWrite(bulkOperations, {
       ordered: false,
@@ -269,12 +293,16 @@ export default async function setDocs(
     createOperation(action, useIdAsInternalId),
   )
   if (operations.length === 0) {
-    // No operations -- end right away
-    return {
-      ...action.response,
-      status: 'noaction',
-      error: 'No items to update',
-      data: [],
+    if (action.type === 'DELETE' && hasQuery(action)) {
+      return await deleteWithQuery(action, collection)
+    } else {
+      // No operations -- end right away
+      return {
+        ...action.response,
+        status: 'noaction',
+        error: 'No items to update',
+        data: [],
+      }
     }
   }
 

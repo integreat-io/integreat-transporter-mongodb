@@ -58,7 +58,7 @@ test('should delete one document', async (t) => {
     options,
     authorization,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
@@ -75,15 +75,15 @@ test('should delete one document', async (t) => {
 test('should delete array of documents', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocuments(collection, [
-    { _id: '12345', id: 'ent1', '\\$type': 'entry' },
-    { _id: '12346', id: 'ent2', '\\$type': 'entry' },
+    { _id: '12347', id: 'user1', '\\$type': 'user' },
+    { _id: '12348', id: 'user2', '\\$type': 'user' },
   ])
   const action = {
     type: 'DELETE',
     payload: {
       data: [
-        { $type: 'entry', id: 'ent1' },
-        { $type: 'entry', id: 'ent2' },
+        { $type: 'user', id: 'user1' },
+        { $type: 'user', id: 'user2' },
       ],
     },
     meta: {
@@ -98,13 +98,51 @@ test('should delete array of documents', async (t) => {
     options,
     authorization,
     null,
-    emit
+    emit,
   )
   const response = await transporter.send(action, connection)
   await transporter.disconnect(connection)
 
   t.truthy(response)
   t.is(response.status, 'ok')
-  const docs = await getDocuments(collection, { '\\$type': 'entry' })
+  const docs = await getDocuments(collection, { '\\$type': 'user' })
   t.is(docs.length, 0)
+})
+
+test('should delete with query', async (t) => {
+  const { collection, collectionName } = t.context
+  await insertDocuments(collection, [
+    { _id: '12349', id: 'item1', '\\$type': 'item', deleteIt: 'yes' },
+    { _id: '12350', id: 'item2', '\\$type': 'item' },
+  ])
+  const action = {
+    type: 'DELETE',
+    payload: {
+      type: 'item',
+    },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        query: [{ path: 'deleteIt', op: 'eq', value: 'yes' }], // Use this when no data
+      },
+    },
+  }
+
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit,
+  )
+  const response = await transporter.send(action, connection)
+  await transporter.disconnect(connection)
+
+  t.truthy(response)
+  t.is(response.status, 'ok', response.error)
+  const docs = (await getDocuments(collection, {
+    '\\$type': 'item',
+  })) as TypedData[]
+  t.is(docs.length, 1)
+  t.is(docs[0].id, 'item2')
 })
