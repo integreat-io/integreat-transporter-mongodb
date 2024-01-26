@@ -842,8 +842,8 @@ test('should get one page of aggregated documents with params for next page - us
     },
   }
   const expectedData = [
-    { amount: 122, type: 'fish' },
-    { amount: 34, type: 'meat' },
+    { _id: { type: 'fish' }, amount: 122, type: 'fish' },
+    { _id: { type: 'meat' }, amount: 34, type: 'meat' },
   ]
   const expectedPaging = {
     next: {
@@ -898,7 +898,7 @@ test('should get second page of aggregated documents with params for next page -
       },
     },
   }
-  const expectedData = [{ amount: 4, type: 'veggis' }]
+  const expectedData = [{ _id: { type: 'veggis' }, amount: 4, type: 'veggis' }]
   const expectedPaging = { next: undefined }
 
   const connection = await transporter.connect(

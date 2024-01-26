@@ -27,13 +27,18 @@ interface ItemWithIdObject extends Record<string, unknown> {
   _id: Record<string, unknown>
 }
 
+const resolveInternalId = (_id: unknown, id: unknown) =>
+  isObject(_id) && id !== undefined
+    ? id // When `_id` is an object (i.e. a compund id), and `id` is set, use `id` to not override intentional mapping
+    : _id ?? id // Fall back to `id` if `_id` is not present
+
 const useInternalId = ({
   _id,
   id,
   ...item
 }: Record<string, unknown>): Record<string, unknown> => ({
   ...item,
-  id: _id ?? id, // Fall back to `id` if `_id` is not present
+  id: resolveInternalId(_id, id),
 })
 
 const useInternalIdIfObject = (item: unknown) =>
@@ -96,7 +101,11 @@ const moveToData = async (
   return !!doc // false if the doc to start after is not found
 }
 
-const explodeId = ({ _id, ...item }: ItemWithIdObject) => ({ ...item, ..._id })
+const explodeId = ({ _id, ...item }: ItemWithIdObject) => ({
+  _id,
+  ...item,
+  ..._id,
+})
 
 function mutateItem(item: unknown) {
   if (isObject(item) && isObject(item._id)) {

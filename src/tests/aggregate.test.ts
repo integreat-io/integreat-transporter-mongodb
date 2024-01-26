@@ -46,19 +46,25 @@ const docs = [
     id: 'ent4',
     type: 'entry',
     values: { category: 'news', count: 5 },
-    user: 'user1',
+    user: 'user3',
   },
   {
-    _id: 'user2', // We're switching the users when fetching by `_id`
+    _id: 'user2', // Looks strange, but we're switching the users when fetching by `_id`
     id: 'user1',
     type: 'user',
     name: 'User 1',
   },
   {
-    _id: 'user1', // We're switching the users when fetching by `_id`
+    _id: 'user1', // Looks strange, but we're switching the users when fetching by `_id`
     id: 'user2',
     type: 'user',
     name: 'User 2',
+  },
+  {
+    _id: 'user3',
+    id: 'user3',
+    type: 'user',
+    name: 'User 3',
   },
 ]
 
@@ -83,7 +89,6 @@ test('should get documents by aggregation', async (t) => {
     type: 'GET',
     payload: {
       type: 'entry',
-      pageSize: 2,
     },
     meta: {
       options: {
@@ -108,13 +113,15 @@ test('should get documents by aggregation', async (t) => {
     },
   }
   const expectedData1 = {
-    'values\\_category': 'news',
+    _id: { 'values\\_category': 'news' },
     id: 'ent1',
+    'values\\_category': 'news',
     'values\\_count': 16,
   }
   const expectedData2 = {
-    'values\\_category': 'sports',
+    _id: { 'values\\_category': 'sports' },
     id: 'ent2',
+    'values\\_category': 'sports',
     'values\\_count': 2,
   }
 
@@ -199,7 +206,7 @@ test('should aggregate with lookup', async (t) => {
       id: 'ent4',
       type: 'entry',
       values: { category: 'news', count: 5 },
-      user: [{ _id: 'user2', id: 'user1', name: 'User 1', type: 'user' }],
+      user: [{ _id: 'user3', id: 'user3', name: 'User 3', type: 'user' }],
     },
   ]
 
@@ -250,13 +257,13 @@ test('should get documents by aggregation when idIsUnique is true', async (t) =>
     },
   }
   const expectedData1 = {
-    'values\\_category': 'news',
     id: '12345',
+    'values\\_category': 'news',
     'values\\_count': 16,
   }
   const expectedData2 = {
-    'values\\_category': 'sports',
     id: '12346',
+    'values\\_category': 'sports',
     'values\\_count': 2,
   }
 
@@ -337,7 +344,7 @@ test('should aggregate with lookup when idIsUnique is true', async (t) => {
       id: '12348',
       type: 'entry',
       values: { category: 'news', count: 5 },
-      user: [{ id: 'user1', name: 'User 2', type: 'user' }],
+      user: [{ id: 'user3', name: 'User 3', type: 'user' }],
     },
   ]
 

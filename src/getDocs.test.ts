@@ -263,8 +263,12 @@ test('should get with aggregation', async (t) => {
   ]
   const expectedData = [
     {
-      'values.account': '1501',
+      _id: {
+        id: 'ent1',
+        'values.account': '1501',
+      },
       id: 'ent1',
+      'values.account': '1501',
       updatedAt: '2021-01-18T00:00:00Z',
       'values.status': 'inactive',
     },
@@ -353,6 +357,63 @@ test('should get with aggregation when idIsUnique is true', async (t) => {
   t.is(aggregate.callCount, 1)
   const arg = aggregate.args[0][0]
   t.deepEqual(arg, expectedPipeline)
+  t.is(ret.status, 'ok')
+  t.deepEqual(ret.data, expectedData)
+  t.is(ret.params?.totalCount, 1)
+})
+
+test('should keep id for aggregation when idIsUnique is true and we have a compound _id', async (t) => {
+  const useIdAsInternalId = true // Will be true when idIsUnique is true
+  const [find] = createCollectionMethod([])
+  const [aggregate] = createCollectionMethod([
+    {
+      _id: { 'values\\_account': '1501', id: 'ent1' },
+      updatedAt: '2021-01-18T00:00:00Z',
+      'values.status': 'inactive',
+    },
+  ])
+  const client = createClient({ find, aggregate })
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      typePlural: 'entries',
+    },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+        aggregation: [
+          { type: 'sort', sortBy: { updatedAt: -1 } },
+          {
+            type: 'group',
+            groupBy: ['values.account', 'id'],
+            values: { updatedAt: 'first', 'values.status': 'first' },
+          },
+          {
+            type: 'query',
+            query: [
+              { path: 'type', param: 'type' },
+              { path: 'personalia\\.age', op: 'gt', value: 18 },
+            ],
+          },
+        ],
+      },
+    },
+  }
+  const expectedData = [
+    {
+      id: 'ent1',
+      'values.account': '1501',
+      updatedAt: '2021-01-18T00:00:00Z',
+      'values.status': 'inactive',
+    },
+  ]
+
+  const ret = await getDocs(action, client, useIdAsInternalId)
+
+  t.is(find.callCount, 0)
+  t.is(aggregate.callCount, 1)
   t.is(ret.status, 'ok')
   t.deepEqual(ret.data, expectedData)
   t.is(ret.params?.totalCount, 1)
@@ -462,14 +523,22 @@ test('should return one page of the aggregated result', async (t) => {
   }
   const expectedData = [
     {
-      'values.account': '1501',
+      _id: {
+        id: 'ent1',
+        'values.account': '1501',
+      },
       id: 'ent1',
+      'values.account': '1501',
       updatedAt: '2021-01-18T00:00:00Z',
       'values.status': 'inactive',
     },
     {
-      'values.account': '3000',
+      _id: {
+        id: 'ent2',
+        'values.account': '3000',
+      },
       id: 'ent2',
+      'values.account': '3000',
       updatedAt: '2021-01-19T00:00:00Z',
       'values.status': 'active',
     },
@@ -533,8 +602,12 @@ test('should return the aggregated result from a page offset', async (t) => {
   }
   const expectedData = [
     {
-      'values.account': '3000',
+      _id: {
+        id: 'ent3',
+        'values.account': '3000',
+      },
       id: 'ent3',
+      'values.account': '3000',
       updatedAt: '2021-01-23T00:00:00Z',
       'values.status': 'active',
     },
