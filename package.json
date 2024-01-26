@@ -45,7 +45,7 @@
     "@types/debug": "^4.1.12",
     "@types/object-hash": "^3.0.6",
     "@types/sinon": "^17.0.3",
-    "integreat": "^1.5.5",
+    "integreat": "^1.5.6",
     "sinon": "^17.0.1"
   }
 }
