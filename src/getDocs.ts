@@ -1,7 +1,6 @@
+import assert from 'node:assert/strict'
 import debug from 'debug'
 import mapAny from 'map-any'
-import { FindCursor, AggregationCursor, MongoClient } from 'mongodb'
-import { Action, Response } from 'integreat'
 import { getProperty, setProperty } from 'dot-prop'
 import prepareFilter from './utils/prepareFilter.js'
 import prepareAggregation, {
@@ -12,7 +11,9 @@ import { normalizeItem } from './utils/serialize.js'
 import { getCollection } from './send.js'
 import { decodePageId, DecodedPageId } from './utils/pageId.js'
 import { isObject } from './utils/is.js'
-import {
+import type { FindCursor, AggregationCursor, MongoClient } from 'mongodb'
+import type { Action, Response } from 'integreat'
+import type {
   MongoOptions,
   Payload,
   AggregationObject,
@@ -80,11 +81,24 @@ function normalizeId(
 const getId = (data: Record<string, unknown>, useIdAsInternalId: boolean) =>
   useIdAsInternalId ? data._id : data.id
 
+function compareIds(a: unknown, b: string | Record<string, unknown>) {
+  if (isObject(a) && isObject(b)) {
+    try {
+      assert.deepEqual(a, b)
+      return true
+    } catch {
+      return false
+    }
+  }
+  return a === b
+}
+
 // Move the cursor to the first doc after the `pageAfter`
 // When no `pageAfter`, just start from the beginning
 const moveToData = async (
   cursor: Cursor,
   useIdAsInternalId: boolean,
+  isAggregation: boolean,
   pageAfter?: string | Record<string, unknown>,
 ) => {
   if (!pageAfter) {
@@ -95,8 +109,13 @@ const moveToData = async (
   let doc
   do {
     doc = await cursor.next()
-  } while (doc && getId(doc, useIdAsInternalId) !== pageAfter)
-  // TODO: Compare objects with deep equal
+  } while (
+    doc &&
+    !compareIds(
+      normalizeItem(getId(doc, useIdAsInternalId || isAggregation)),
+      pageAfter,
+    )
+  )
 
   return !!doc // false if the doc to start after is not found
 }
@@ -137,6 +156,7 @@ const getData = async (cursor: Cursor, pageSize: number) => {
 const getPage = async (
   cursor: Cursor,
   useIdAsInternalId: boolean,
+  isAggregation: boolean,
   { pageSize = Infinity, pageOffset, pageAfter }: Payload,
   pageId?: DecodedPageId,
 ) => {
@@ -147,7 +167,12 @@ const getPage = async (
 
     // When pageAfter is set – loop until we find the doc with that `id`
     debugMongo('Moving to cursor %s', after)
-    const foundFirst = await moveToData(cursor, useIdAsInternalId, after)
+    const foundFirst = await moveToData(
+      cursor,
+      useIdAsInternalId,
+      isAggregation,
+      after,
+    )
 
     if (!foundFirst) {
       return []
@@ -237,7 +262,13 @@ export default async function getDocs(
   }
 
   debugMongo('Getting page')
-  const data = await getPage(cursor, useIdAsInternalId, payload, pageId)
+  const data = await getPage(
+    cursor,
+    useIdAsInternalId,
+    !!aggregation,
+    payload,
+    pageId,
+  )
   debugMongo('Got result page with %s items', data.length)
 
   if (data.length === 0 && payload.id) {

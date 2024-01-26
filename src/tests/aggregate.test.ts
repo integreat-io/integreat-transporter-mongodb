@@ -143,6 +143,131 @@ test('should get documents by aggregation', async (t) => {
   t.deepEqual(response.params?.totalCount, 2)
 })
 
+test('should get first page of documents by aggregation', async (t) => {
+  const { collectionName } = t.context
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      pageSize: 2,
+    },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        aggregation: [
+          {
+            type: 'query',
+            query: [{ path: 'type', value: 'entry' }],
+          },
+          {
+            type: 'group',
+            groupBy: ['user'],
+            values: { 'values.count': 'sum' },
+          },
+          {
+            type: 'sort',
+            sortBy: { _id: 1 },
+          },
+        ],
+      },
+    },
+  }
+  const expectedData1 = {
+    _id: { user: 'user1' },
+    user: 'user1',
+    'values\\_count': 5,
+  }
+  const expectedData2 = {
+    _id: { user: 'user2' },
+    user: 'user2',
+    'values\\_count': 8,
+  }
+  const expectedPaging = {
+    next: {
+      pageId: 'dXNlcnx1c2VyMnx8Pg',
+      pageSize: 2,
+      type: 'entry',
+    },
+  }
+
+  const connection = await transporter.connect(
+    options,
+    authentication,
+    null,
+    emit,
+  )
+  const response = await transporter.send(action, connection)
+  await transporter.disconnect(connection)
+
+  t.truthy(response)
+  t.is(response.status, 'ok', response.error)
+  t.deepEqual(response.paging, expectedPaging)
+  const data = response.data as Record<string, unknown>[]
+  t.is(data.length, 2)
+  t.deepEqual(data[0], expectedData1)
+  t.deepEqual(data[1], expectedData2)
+  t.deepEqual(response.params?.totalCount, 3)
+})
+
+test('should get second page of documents by aggregation', async (t) => {
+  const { collectionName } = t.context
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      pageSize: 2,
+      pageId: 'dXNlcnx1c2VyMnx8Pg',
+    },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        aggregation: [
+          {
+            type: 'query',
+            query: [{ path: 'type', value: 'entry' }],
+          },
+          {
+            type: 'group',
+            groupBy: ['user'],
+            values: { 'values.count': 'sum' },
+          },
+          {
+            type: 'sort',
+            sortBy: { _id: 1 },
+          },
+        ],
+      },
+    },
+  }
+  const expectedData3 = {
+    _id: { user: 'user3' },
+    user: 'user3',
+    'values\\_count': 5,
+  }
+  const expectedPaging = {
+    next: undefined,
+  }
+
+  const connection = await transporter.connect(
+    options,
+    authentication,
+    null,
+    emit,
+  )
+  const response = await transporter.send(action, connection)
+  await transporter.disconnect(connection)
+
+  t.truthy(response)
+  t.is(response.status, 'ok', response.error)
+  const data = response.data as Record<string, unknown>[]
+  t.is(data.length, 1)
+  t.deepEqual(data[0], expectedData3)
+  t.deepEqual(response.params?.totalCount, 3)
+  t.deepEqual(response.paging, expectedPaging)
+})
+
 test('should aggregate with lookup', async (t) => {
   const { collectionName } = t.context
   const action = {

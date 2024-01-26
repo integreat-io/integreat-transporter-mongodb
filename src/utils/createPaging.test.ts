@@ -1,6 +1,6 @@
 import test from 'ava'
-import { TypedData } from 'integreat'
-import { AggregationObject } from '../types.js'
+import type { TypedData } from 'integreat'
+import type { AggregationObject } from '../types.js'
 
 import createPaging from './createPaging.js'
 
@@ -507,6 +507,39 @@ test('should return paging for aggregated data when sorting', (t) => {
     next: {
       type: 'project',
       pageId: 'YWNjb3VudHxhY2MxfGlkfHByb2oxfHxhbW91bnQ+MzU', // account|acc1|id|proj1||amount>35
+      pageSize: 2,
+      archived: true,
+    },
+  }
+
+  const ret = createPaging(data, request, undefined, aggregation)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should return paging for aggregated data when sorting by _id', (t) => {
+  const data = [
+    { _id: { account: 'acc1', id: 'proj2' }, amount: 2 },
+    { _id: { account: 'acc1', id: 'proj1' }, amount: 35 },
+  ]
+  const request = {
+    type: 'project',
+    pageSize: 2,
+    archived: true,
+    target: 'crm',
+  }
+  const aggregation: AggregationObject[] = [
+    {
+      type: 'group',
+      groupBy: ['account', 'id'],
+      values: { amount: 'sum' },
+    },
+    { type: 'sort', sortBy: { _id: 1 } },
+  ]
+  const expected = {
+    next: {
+      type: 'project',
+      pageId: 'YWNjb3VudHxhY2MxfGlkfHByb2oxfHw+', // account|acc1|id|proj1||>
       pageSize: 2,
       archived: true,
     },

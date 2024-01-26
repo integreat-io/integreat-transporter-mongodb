@@ -1,9 +1,13 @@
 /* eslint-disable security/detect-object-injection */
 import { getProperty } from 'dot-prop'
-import { TypedData } from 'integreat'
-import { Payload, AggregationObject, AggregationObjectSort } from '../types.js'
 import { btoa, removePadding } from './base64.js'
 import { isObject } from './is.js'
+import type { TypedData } from 'integreat'
+import type {
+  Payload,
+  AggregationObject,
+  AggregationObjectSort,
+} from '../types.js'
 
 export interface Paging {
   next?: Payload
@@ -30,8 +34,8 @@ const encodeValue = (value: unknown) =>
   typeof value === 'string'
     ? `"${encodeURIComponent(value)}"`
     : value instanceof Date
-    ? value.toISOString()
-    : value
+      ? value.toISOString()
+      : value
 
 const preparePageParams = (
   { data, target, typePlural, pageAfter, ...params }: Record<string, unknown>,
@@ -39,27 +43,37 @@ const preparePageParams = (
   id?: string | string[],
 ) => ({ ...(type && { type }), ...(id && { id }), ...params })
 
+const arrowFromDirection = (direction: number) => (direction >= 0 ? '>' : '<')
+
 const createSortString =
   (lastItem: Record<string, unknown>) =>
   ([path, direction]: [string, number]) =>
     [
       path,
-      direction > 0 ? '>' : '<',
+      arrowFromDirection(direction),
       encodeValue(getProperty(lastItem, path)),
     ].join('')
 
-const generateSortParts = (
+function generateSortParts(
   lastItem: Record<string, unknown>,
   sort?: Record<string, number>,
-): string[] =>
-  sort
-    ? Object.entries(sort).slice(0, 1).map(createSortString(lastItem))
-    : ['>']
+): string {
+  if (sort) {
+    const firstEntry = Object.entries(sort)[0]
+    if (firstEntry) {
+      if (firstEntry[0] === '_id') {
+        return arrowFromDirection(firstEntry[1])
+      }
+      return createSortString(lastItem)(firstEntry)
+    }
+  }
+  return '>'
+}
 
 const generatePageIdFromId = (
   lastItem: TypedData,
   sort?: Record<string, number>,
-): string => [lastItem.id, ...generateSortParts(lastItem, sort)].join('|')
+): string => [lastItem.id, generateSortParts(lastItem, sort)].join('|')
 
 const generatePageIdFromMongoId = (
   lastItem: MongoData,
@@ -70,7 +84,7 @@ const generatePageIdFromMongoId = (
       ? Object.entries(lastItem._id).map((entry) => entry.join('|'))
       : lastItem._id),
     '', // To get a double pipe
-    ...generateSortParts(lastItem, sort),
+    generateSortParts(lastItem, sort),
   ].join('|')
 
 function generatePageId(

@@ -84,10 +84,10 @@ operations on the collection without any extra setup.
 #### Serializing and normalizing
 
 Some characters are not allowed in MongoDB keys, so we have to escape them when
-setting data to MongoDB. Leading `$` is escape with a `\`, and `.` is escaped
-with a `\_`. This is done automatically by the transporter, and reverted when
-values are fetched, but you will see it if you query data directly from the
-database.
+setting data to MongoDB. Leading `$` is escape as `\$`, and `.` is escaped as
+`\_`. Consequently, `\` is mapped to `\\` as well. This is done automatically by
+the transporter, and reverted when values are fetched, but you will see it if
+you query data directly from the database.
 
 Integreat accepts using an empty string `''` as a key in an object (as does
 JavaScript and JSON), but MongoDB does not. We therefore replace empty strings
@@ -205,27 +205,11 @@ will be used by default (the value of `id` is `'ent1'` in this example):
 
 ```
 
-#### Pagination
-
-When the `pageSize` param is set in a request, it is taken as the max number of
-documents to return in the response. When nothing else is specified, the first
-page of documents is returned, and the `paging.next` prop on the response will
-hold a params object that may be used to get the next page.
-
-There are two types of pagination; `pageId` or `pageOffset`. The first one is
-used by default, and returns an id for the next page in the dataset. All details
-around this id is internal to the transporter and may change without being
-considered a breaking change. Used treat it as an id and you'll be find.
-
-The `pageOffset` approach kicks in when a `pageOffset` param is specified on the
-action, so to use this approach, you need to set `pageOffset: 0` for the first
-page. If the `pageSize` is e.g. `100`, the next `pageOffset` will be `100`, etc.
+#### Aggregation
 
 Aggregation is supported by specifying a pipeline on the `aggregation` property
 on the `options` object. If a query or a sort order is specified, they are put
-first in the aggregation pipeline, query first, then sorting. Aggregations don't
-support paging, and combining `pageSize` with `aggregation` will give a
-`badrequest` error.
+first in the aggregation pipeline, query first, then sorting.
 
 Example of an aggregation pipeline:
 
@@ -258,10 +242,23 @@ Example of an aggregation pipeline:
 }
 ```
 
-**Note:** As MongoDB does not allow keys with `.` in it or starting with `$`,
-so these characters are mapped. `.` is always mapped to `\_`, and `$` is mapped
-to `\$` when used at the beginning of a key. Consequently, `\` is mapped to
-`\\` as well.
+#### Pagination
+
+When the `pageSize` param is set in a request, it is taken as the max number of
+documents to return in the response. When nothing else is specified, the first
+page of documents is returned, and the `paging.next` prop on the response will
+hold a params object that may be used to get the next page.
+
+There are two types of pagination; `pageId` or `pageOffset`. The first one is
+used by default, and returns an id for the next page in the dataset. All details
+around this id is internal to the transporter and may change without being
+considered a breaking change. Used treat it as an id and you'll be find.
+
+The `pageOffset` approach kicks in when a `pageOffset` param is specified on the
+action, so to use this approach, you need to set `pageOffset: 0` for the first
+page. If the `pageSize` is e.g. `100`, the next `pageOffset` will be `100`, etc.
+
+Pagination works for both aggregations and simple queries.
 
 #### Authentication
 

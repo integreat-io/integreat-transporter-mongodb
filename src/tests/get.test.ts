@@ -7,7 +7,7 @@ import {
   deleteDocuments,
   MongoElements,
 } from './helpers/mongo.js'
-import { TypedData } from 'integreat'
+import type { TypedData } from 'integreat'
 
 import transporter from '../index.js'
 
@@ -114,6 +114,52 @@ test.serial('should get documents by type', async (t) => {
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
   t.is(data[1].id, 'ent2')
+})
+
+test.serial('should get documents with pagination', async (t) => {
+  const { collection, collectionName } = t.context
+  await insertDocuments(collection, [
+    { _id: '12345', id: 'ent1', type: 'entry' },
+    { _id: '12346', id: 'ent2', type: 'entry' },
+    { _id: '12347', id: 'ent3', type: 'entry' },
+  ])
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      pageSize: 2,
+    },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+      },
+    },
+  }
+  const expectedPaging = {
+    next: {
+      pageId: 'ZW50Mnw+',
+      pageSize: 2,
+      type: 'entry',
+    },
+  }
+
+  const connection = await transporter.connect(
+    options,
+    authentication,
+    null,
+    emit,
+  )
+  const response = await transporter.send(action, connection)
+  await transporter.disconnect(connection)
+
+  t.truthy(response)
+  t.is(response.status, 'ok', response.error)
+  const data = response.data as TypedData[]
+  t.is(data.length, 2)
+  t.is(data[0].id, 'ent1')
+  t.is(data[1].id, 'ent2')
+  t.deepEqual(response.paging, expectedPaging)
 })
 
 test.serial('should get a document with endpoint query', async (t) => {

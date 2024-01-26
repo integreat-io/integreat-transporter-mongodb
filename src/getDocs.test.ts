@@ -1,7 +1,7 @@
 import test from 'ava'
 import sinon from 'sinon'
-import { TypedData } from 'integreat'
-import { Collection, MongoClient } from 'mongodb'
+import type { TypedData } from 'integreat'
+import type { Collection, MongoClient } from 'mongodb'
 
 import getDocs from './getDocs.js'
 
@@ -475,7 +475,7 @@ test('should get put query and sort first in aggregation pipeline', async (t) =>
   t.deepEqual(arg, expectedPipeline)
 })
 
-test('should return one page of the aggregated result', async (t) => {
+test('should return first page of the aggregated result', async (t) => {
   const [find] = createCollectionMethod([])
   const [aggregate] = createCollectionMethod([
     {
@@ -540,6 +540,82 @@ test('should return one page of the aggregated result', async (t) => {
       id: 'ent2',
       'values.account': '3000',
       updatedAt: '2021-01-19T00:00:00Z',
+      'values.status': 'active',
+    },
+  ]
+
+  const ret = await getDocs(action, client)
+
+  t.is(ret.status, 'ok', ret.error)
+  t.is(find.callCount, 0)
+  t.is(aggregate.callCount, 1)
+  t.is(ret.params?.totalCount, 3)
+  t.deepEqual(ret.data, expectedData)
+  t.deepEqual(ret.paging, {
+    next: {
+      pageId: 'dmFsdWVzLmFjY291bnR8MzAwMHxpZHxlbnQyfHw+',
+      pageSize: 2,
+      type: 'entry',
+    },
+  })
+})
+
+test('should return second page of the aggregated result', async (t) => {
+  const [find] = createCollectionMethod([])
+  const [aggregate] = createCollectionMethod([
+    {
+      _id: { 'values\\_account': '1501', id: 'ent1' },
+      updatedAt: '2021-01-18T00:00:00Z',
+      'values.status': 'inactive',
+      __totalCount: 3,
+    },
+    {
+      _id: { 'values\\_account': '3000', id: 'ent2' },
+      updatedAt: '2021-01-19T00:00:00Z',
+      'values.status': 'active',
+      __totalCount: 3,
+    },
+    {
+      _id: { 'values\\_account': '3000', id: 'ent3' },
+      updatedAt: '2021-01-23T00:00:00Z',
+      'values.status': 'active',
+      __totalCount: 3,
+    },
+  ])
+  const countDocuments = async () => 10
+  const client = createClient({ find, aggregate, countDocuments })
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      typePlural: 'entries',
+      pageSize: 2,
+      pageId: 'dmFsdWVzLmFjY291bnR8MzAwMHxpZHxlbnQyfHw+',
+    },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+        aggregation: [
+          { type: 'sort', sortBy: { updatedAt: -1 } },
+          {
+            type: 'group',
+            groupBy: ['values.account', 'id'],
+            values: { updatedAt: 'first', 'values.status': 'first' },
+          },
+        ],
+      },
+    },
+  }
+  const expectedData = [
+    {
+      _id: {
+        id: 'ent3',
+        'values.account': '3000',
+      },
+      id: 'ent3',
+      'values.account': '3000',
+      updatedAt: '2021-01-23T00:00:00Z',
       'values.status': 'active',
     },
   ]
