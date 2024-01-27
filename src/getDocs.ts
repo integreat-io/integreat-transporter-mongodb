@@ -239,9 +239,9 @@ export default async function getDocs(
     allowDiskUse = false,
     aggregation: aggregationObjects,
   } = options as MongoOptions
-  const filter = prepareFilter(query, params, pageId, useIdAsInternalId)
   const sort = prepareSort((options as MongoOptions).sort, useIdAsInternalId)
 
+  // Prepare aggregation
   const aggregation = aggregationObjects
     ? prepareAggregation(
         appendToAggregation(aggregationObjects, query, sort),
@@ -254,9 +254,12 @@ export default async function getDocs(
 
   let cursor
   if (aggregation) {
+    // Run aggregation
     debugMongo('Starting query with aggregation %o', aggregation)
     cursor = collection.aggregate(aggregation, { allowDiskUse })
   } else {
+    // Prepare filter and run as query when not an aggregation
+    const filter = prepareFilter(query, params, pageId, useIdAsInternalId)
     debugMongo('Starting query with filter %o', filter)
     cursor = collection.find(filter, { allowDiskUse })
     debugMongo('Sorting with %o', sort)
