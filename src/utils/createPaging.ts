@@ -22,7 +22,8 @@ const isMongoData = (
   value: unknown,
   useIdAsInternalId = false,
 ): value is MongoData =>
-  isObject(value) && (useIdAsInternalId ? !!value.id : !!value._id)
+  isObject(value) &&
+  (useIdAsInternalId && !isObject(value._id) ? !!value.id : !!value._id)
 
 const isTypedData = (value: unknown): value is TypedData =>
   isObject(value) && typeof value.id === 'string'
@@ -86,7 +87,9 @@ function generatePageIdFromMongoId(
   const id = useIdAsInternalId ? lastItem.id : lastItem._id
   return [
     ...(isObject(id)
-      ? Object.entries(lastItem._id).map((entry) => entry.join('|'))
+      ? Object.entries(lastItem._id).map(
+          ([key, value]) => `${key}|${encodeValue(value)}`,
+        )
       : [id]),
     '', // To get a double pipe
     generateSortParts(lastItem, sort),
@@ -140,7 +143,12 @@ export default function createPaging(
   } else {
     const lastItem = data[data.length - 1]
     const pageId = encodeId(
-      generatePageId(lastItem, sort, aggregation, useIdAsInternalId),
+      generatePageId(
+        lastItem,
+        sort,
+        aggregation,
+        aggregation ? false : useIdAsInternalId,
+      ),
     )
     return {
       next: {

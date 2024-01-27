@@ -185,7 +185,7 @@ test('should get first page of documents by aggregation', async (t) => {
   }
   const expectedPaging = {
     next: {
-      pageId: 'dXNlcnx1c2VyMnx8Pg',
+      pageId: 'dXNlcnwidXNlcjIifHw+',
       pageSize: 2,
       type: 'entry',
     },
@@ -217,7 +217,7 @@ test('should get second page of documents by aggregation', async (t) => {
     payload: {
       type: 'entry',
       pageSize: 2,
-      pageId: 'dXNlcnx1c2VyMnx8Pg',
+      pageId: 'dXNlcnwidXNlcjIifHw+',
     },
     meta: {
       options: {
@@ -382,11 +382,13 @@ test('should get documents by aggregation when idIsUnique is true', async (t) =>
     },
   }
   const expectedData1 = {
+    _id: { 'values\\_category': 'news' },
     id: '12345',
     'values\\_category': 'news',
     'values\\_count': 16,
   }
   const expectedData2 = {
+    _id: { 'values\\_category': 'sports' },
     id: '12346',
     'values\\_category': 'sports',
     'values\\_count': 2,
@@ -486,6 +488,155 @@ test('should aggregate with lookup when idIsUnique is true', async (t) => {
   const data = response.data as Record<string, unknown>[]
   t.deepEqual(data, expectedData)
   t.deepEqual(response.params?.totalCount, 4)
+})
+
+test('should get first page of more complex aggregation when idIsUnique is true', async (t) => {
+  const { collectionName } = t.context
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      pageSize: 2,
+    },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        aggregation: [
+          {
+            type: 'query',
+            query: [{ path: 'type', value: 'entry' }],
+          },
+          {
+            type: 'group',
+            groupBy: ['values.category', 'values.count'],
+            values: { user: 'first' },
+          },
+          {
+            type: 'sort',
+            sortBy: { _id: -1 },
+          },
+        ],
+      },
+    },
+  }
+  const expectedData = [
+    {
+      _id: {
+        'values\\_category': 'sports',
+        'values\\_count': 2,
+      },
+      user: 'user1',
+      'values\\_category': 'sports',
+      'values\\_count': 2,
+    },
+    {
+      _id: {
+        'values\\_category': 'news',
+        'values\\_count': 8,
+      },
+      user: 'user2',
+      'values\\_category': 'news',
+      'values\\_count': 8,
+    },
+  ]
+  const expectedPaging = {
+    next: {
+      pageId: 'dmFsdWVzXF9jYXRlZ29yeXwibmV3cyJ8dmFsdWVzXF9jb3VudHw4fHw8',
+      pageSize: 2,
+      type: 'entry',
+    },
+  }
+
+  const connection = await transporter.connect(
+    optionsWithIdIsUnique,
+    authentication,
+    null,
+    emit,
+  )
+  const response = await transporter.send(action, connection)
+  await transporter.disconnect(connection)
+
+  t.is(response.status, 'ok', response.error)
+  const data = response.data as Record<string, unknown>[]
+  t.deepEqual(data, expectedData)
+  t.deepEqual(response.params?.totalCount, 4)
+  t.deepEqual(response.paging, expectedPaging)
+})
+
+test('should get second page of more complex aggregation when idIsUnique is true', async (t) => {
+  const { collectionName } = t.context
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      pageSize: 2,
+      pageId: 'dmFsdWVzXF9jYXRlZ29yeXwibmV3cyJ8dmFsdWVzXF9jb3VudHw4fHw8',
+    },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        aggregation: [
+          {
+            type: 'query',
+            query: [{ path: 'type', value: 'entry' }],
+          },
+          {
+            type: 'group',
+            groupBy: ['values.category', 'values.count'],
+            values: { user: 'first' },
+          },
+          {
+            type: 'sort',
+            sortBy: { _id: -1 },
+          },
+        ],
+      },
+    },
+  }
+  const expectedData = [
+    {
+      _id: {
+        'values\\_category': 'news',
+        'values\\_count': 5,
+      },
+      user: 'user3',
+      'values\\_category': 'news',
+      'values\\_count': 5,
+    },
+    {
+      _id: {
+        'values\\_category': 'news',
+        'values\\_count': 3,
+      },
+      user: 'user1',
+      'values\\_category': 'news',
+      'values\\_count': 3,
+    },
+  ]
+  const expectedPaging = {
+    next: {
+      pageId: 'dmFsdWVzXF9jYXRlZ29yeXwibmV3cyJ8dmFsdWVzXF9jb3VudHwzfHw8',
+      pageSize: 2,
+      type: 'entry',
+    },
+  }
+
+  const connection = await transporter.connect(
+    optionsWithIdIsUnique,
+    authentication,
+    null,
+    emit,
+  )
+  const response = await transporter.send(action, connection)
+  await transporter.disconnect(connection)
+
+  t.is(response.status, 'ok', response.error)
+  const data = response.data as Record<string, unknown>[]
+  t.deepEqual(data, expectedData)
+  t.deepEqual(response.params?.totalCount, 4)
+  t.deepEqual(response.paging, expectedPaging)
 })
 
 test('should handle empty steps in an aggregation', async (t) => {

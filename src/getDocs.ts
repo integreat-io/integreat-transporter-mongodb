@@ -50,10 +50,12 @@ const normalizeIdInItem = (lookupPaths: string[]) =>
     if (!isObject(item)) {
       return item
     }
-    const normalized = useInternalId(item)
+    // Don't normalize the id if it's an compound id
+    const normalized = isObject(item._id) ? item : useInternalId(item)
 
     if (lookupPaths.length > 0) {
       // Look for lookup paths and normalize the ids in the lookup result
+      // We do this even for aggregations
       lookupPaths.forEach((lookupPath) => {
         const value = getProperty(normalized, lookupPath)
         setProperty(
@@ -86,7 +88,7 @@ function compareIds(a: unknown, b: string | Record<string, unknown>) {
     try {
       assert.deepEqual(a, b)
       return true
-    } catch {
+    } catch (err) {
       return false
     }
   }

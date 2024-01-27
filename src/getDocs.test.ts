@@ -403,6 +403,7 @@ test('should keep id for aggregation when idIsUnique is true and we have a compo
   }
   const expectedData = [
     {
+      _id: { id: 'ent1', 'values.account': '1501' },
       id: 'ent1',
       'values.account': '1501',
       updatedAt: '2021-01-18T00:00:00Z',
@@ -545,7 +546,7 @@ test('should return first page of the aggregated result', async (t) => {
   ]
   const expectedPaging = {
     next: {
-      pageId: 'dmFsdWVzLmFjY291bnR8MzAwMHxpZHxlbnQyfHw+',
+      pageId: 'dmFsdWVzLmFjY291bnR8IjMwMDAifGlkfCJlbnQyInx8Pg',
       pageSize: 2,
       type: 'entry',
     },
@@ -591,7 +592,7 @@ test('should return second page of the aggregated result', async (t) => {
       type: 'entry',
       typePlural: 'entries',
       pageSize: 2,
-      pageId: 'dmFsdWVzLmFjY291bnR8MzAwMHxpZHxlbnQyfHw+',
+      pageId: 'dmFsdWVzLmFjY291bnR8IjMwMDAifGlkfCJlbnQyInx8Pg',
     },
     meta: {
       options: {
@@ -752,12 +753,14 @@ test('should return first page of the aggregated result when idIsUnique is true'
   }
   const expectedData = [
     {
+      _id: { id: 'ent1', 'values.account': '1501' },
       id: 'ent1',
       'values.account': '1501',
       updatedAt: '2021-01-18T00:00:00Z',
       'values.status': 'inactive',
     },
     {
+      _id: { id: 'ent2', 'values.account': '3000' },
       id: 'ent2',
       'values.account': '3000',
       updatedAt: '2021-01-19T00:00:00Z',
@@ -766,7 +769,7 @@ test('should return first page of the aggregated result when idIsUnique is true'
   ]
   const expectedPaging = {
     next: {
-      pageId: 'ZW50Mnx8Pg',
+      pageId: 'dmFsdWVzLmFjY291bnR8IjMwMDAifGlkfCJlbnQyInx8Pg',
       pageSize: 2,
       type: 'entry',
     },

@@ -57,7 +57,7 @@ function extractIdAndParts(
     const idParts = aggParts[0].split('|')
     const id: Record<string, unknown> = {}
     for (let i = 0; i < idParts.length; i += 2) {
-      id[idParts[i]] = idParts[i + 1]
+      id[idParts[i]] = decodePartValue(idParts[i + 1])
     }
     const parts = aggParts[1]?.split('|') || []
     return [id, parts]
