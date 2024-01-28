@@ -5,7 +5,6 @@ import { isObject, isTypedData, isMongoData } from './is.js'
 import type { TypedData } from 'integreat'
 import type {
   QueryObject,
-  AggregationObjectSort,
   AggregationObject,
   MongoData,
   ParsedPageId,
@@ -14,12 +13,6 @@ import type {
 // Encode
 
 const arrowFromDirection = (direction: number) => (direction >= 0 ? '>' : '<')
-
-const isSortAggregation = (
-  aggregation: AggregationObject,
-): aggregation is AggregationObjectSort => aggregation.type === 'sort'
-const isRegroupingAggregation = (aggregation: AggregationObject) =>
-  aggregation.type === 'group'
 
 const encodeValue = (value: unknown) =>
   typeof value === 'string'
@@ -59,18 +52,14 @@ const generatePageIdFromId = (
 ): string =>
   [encodeValue(lastItem.id), generateSortParts(lastItem, sort)].join('|')
 
-function generatePageIdFromMongoId(
-  lastItem: MongoData,
-  sort?: Record<string, number>,
-): string {
+function generatePageIdFromMongoId(lastItem: MongoData): string {
   return [
+    '', // To get the leading pipe that tells us this is an aggregation
     ...(isObject(lastItem._id)
       ? Object.entries(lastItem._id).map(
           ([key, value]) => `${key}|${encodeValue(value)}`,
         )
       : [lastItem._id]),
-    '', // To get a double pipe
-    generateSortParts(lastItem, sort),
   ].join('|')
 }
 
@@ -81,14 +70,7 @@ function generatePageId(
 ) {
   if (aggregation) {
     if (isMongoData(lastItem)) {
-      const sortIndex = aggregation.findLastIndex(isSortAggregation)
-      const groupIndex = aggregation.findLastIndex(isRegroupingAggregation)
-      const aggSort =
-        sortIndex > groupIndex
-          ? (aggregation[sortIndex] as AggregationObjectSort | undefined)
-              ?.sortBy
-          : undefined
-      return generatePageIdFromMongoId(lastItem, aggSort)
+      return generatePageIdFromMongoId(lastItem)
     }
   } else if (isTypedData(lastItem)) {
     return generatePageIdFromId(lastItem, sort)
@@ -149,11 +131,9 @@ function filterFromSortParts(
 function extractIdAndParts(
   pageId: string,
 ): [string | Record<string, unknown>, string[]] {
-  const aggParts = pageId.split('||')
-
-  if (aggParts.length > 1) {
-    // There is a double pipe, so this is a pageId with an compound id (aggregation)
-    const idParts = aggParts[0].split('|')
+  if (pageId.startsWith('|')) {
+    // When the pageId starts with a pipe, we know it's a compound id (aggregation)
+    const idParts = pageId.slice(1).split('|')
     const id: Record<string, unknown> = {}
     for (let i = 0; i < idParts.length; i += 2) {
       id[idParts[i]] = decodePartValue(idParts[i + 1])

@@ -546,7 +546,7 @@ test('should return first page of the aggregated result', async (t) => {
   ]
   const expectedPaging = {
     next: {
-      pageId: 'dmFsdWVzLmFjY291bnR8IjMwMDAifGlkfCJlbnQyInx8Pg',
+      pageId: 'fHZhbHVlcy5hY2NvdW50fCIzMDAwInxpZHwiZW50MiI', // |values.account|"3000"|id|"ent2"
       pageSize: 2,
       type: 'entry',
     },
@@ -592,7 +592,7 @@ test('should return second page of the aggregated result', async (t) => {
       type: 'entry',
       typePlural: 'entries',
       pageSize: 2,
-      pageId: 'dmFsdWVzLmFjY291bnR8IjMwMDAifGlkfCJlbnQyInx8Pg',
+      pageId: 'fHZhbHVlcy5hY2NvdW50fCIzMDAwInxpZHwiZW50MiI', // |values.account|"3000"|id|"ent2"
     },
     meta: {
       options: {
@@ -769,7 +769,7 @@ test('should return first page of the aggregated result when idIsUnique is true'
   ]
   const expectedPaging = {
     next: {
-      pageId: 'dmFsdWVzLmFjY291bnR8IjMwMDAifGlkfCJlbnQyInx8Pg',
+      pageId: 'fHZhbHVlcy5hY2NvdW50fCIzMDAwInxpZHwiZW50MiI', // |values.account|"3000"|id|"ent2"
       pageSize: 2,
       type: 'entry',
     },

@@ -252,7 +252,7 @@ hold a params object that may be used to get the next page.
 There are two types of pagination; `pageId` or `pageOffset`. The first one is
 used by default, and returns an id for the next page in the dataset. All details
 around this id is internal to the transporter and may change without being
-considered a breaking change. Used treat it as an id and you'll be find.
+considered a breaking change. Just treat it as an id and you'll be find.
 
 The `pageOffset` approach kicks in when a `pageOffset` param is specified on the
 action, so to use this approach, you need to set `pageOffset: 0` for the first

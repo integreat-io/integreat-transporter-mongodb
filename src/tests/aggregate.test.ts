@@ -185,7 +185,7 @@ test('should get first page of documents by aggregation', async (t) => {
   }
   const expectedPaging = {
     next: {
-      pageId: 'dXNlcnwidXNlcjIifHw+',
+      pageId: 'fHVzZXJ8InVzZXIyIg', // |user|"user2"
       pageSize: 2,
       type: 'entry',
     },
@@ -217,7 +217,7 @@ test('should get second page of documents by aggregation', async (t) => {
     payload: {
       type: 'entry',
       pageSize: 2,
-      pageId: 'dXNlcnwidXNlcjIifHw+',
+      pageId: 'fHVzZXJ8InVzZXIyIg', // |user|"user2"
     },
     meta: {
       options: {
@@ -542,7 +542,7 @@ test('should get first page of more complex aggregation when idIsUnique is true'
   ]
   const expectedPaging = {
     next: {
-      pageId: 'dmFsdWVzXF9jYXRlZ29yeXwibmV3cyJ8dmFsdWVzXF9jb3VudHw4fHw8',
+      pageId: 'fHZhbHVlc1xfY2F0ZWdvcnl8Im5ld3MifHZhbHVlc1xfY291bnR8OA', // |values\_category|"news"|values\_count|8
       pageSize: 2,
       type: 'entry',
     },
@@ -571,7 +571,7 @@ test('should get second page of more complex aggregation when idIsUnique is true
     payload: {
       type: 'entry',
       pageSize: 2,
-      pageId: 'dmFsdWVzXF9jYXRlZ29yeXwibmV3cyJ8dmFsdWVzXF9jb3VudHw4fHw8',
+      pageId: 'fHZhbHVlc1xfY2F0ZWdvcnl8Im5ld3MifHZhbHVlc1xfY291bnR8OA', // |values\_category|"news"|values\_count|8
     },
     meta: {
       options: {
@@ -617,7 +617,7 @@ test('should get second page of more complex aggregation when idIsUnique is true
   ]
   const expectedPaging = {
     next: {
-      pageId: 'dmFsdWVzXF9jYXRlZ29yeXwibmV3cyJ8dmFsdWVzXF9jb3VudHwzfHw8',
+      pageId: 'fHZhbHVlc1xfY2F0ZWdvcnl8Im5ld3MifHZhbHVlc1xfY291bnR8Mw', // |values\_category|"news"|values\_count|3
       pageSize: 2,
       type: 'entry',
     },

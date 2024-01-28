@@ -67,7 +67,7 @@ test('should encode pageId for aggregated data', (t) => {
       values: { amount: 'sum' },
     },
   ]
-  const expectedPageId = 'YWNjb3VudHwiYWNjMSJ8aWR8InByb2oyInx8Pg' // account|"acc1"|id|"proj2"||>
+  const expectedPageId = 'fGFjY291bnR8ImFjYzEifGlkfCJwcm9qMiI' // |account|"acc1"|id|"proj2"
 
   const ret = encodePageId(lastItem, undefined, aggregation)
 
@@ -84,7 +84,7 @@ test('should encode pageId for aggregated data when sorting', (t) => {
     },
     { type: 'sort', sortBy: { amount: 1 } },
   ]
-  const expectedPageId = 'YWNjb3VudHwiYWNjMSJ8aWR8InByb2oxInx8YW1vdW50PjM1' // account|"acc1"|id|"proj1"||amount>35
+  const expectedPageId = 'fGFjY291bnR8ImFjYzEifGlkfCJwcm9qMSI' // |account|"acc1"|id|"proj1"
 
   const ret = encodePageId(lastItem, undefined, aggregation)
 
@@ -101,7 +101,7 @@ test('should encode pageId for aggregated data when sorting by _id', (t) => {
     },
     { type: 'sort', sortBy: { _id: 1 } },
   ]
-  const expectedPageId = 'YWNjb3VudHwiYWNjMSJ8aWR8InByb2oxInx8Pg' // account|"acc1"|id|"proj1"||>
+  const expectedPageId = 'fGFjY291bnR8ImFjYzEifGlkfCJwcm9qMSI' // |account|"acc1"|id|"proj1"
 
   const ret = encodePageId(lastItem, undefined, aggregation)
 
@@ -118,7 +118,7 @@ test('should use default sorting when aggregated sorting is done before group', 
       values: { amount: 'sum' },
     },
   ]
-  const expectedPageId = 'YWNjb3VudHwiYWNjMSJ8aWR8InByb2oyInx8Pg' // account|"acc1"|id|"proj2"||>
+  const expectedPageId = 'fGFjY291bnR8ImFjYzEifGlkfCJwcm9qMiI' // |account|"acc1"|id|"proj2"
 
   const ret = encodePageId(lastItem, undefined, aggregation)
 
@@ -214,7 +214,7 @@ test('should return undefined when no pageId', (t) => {
 })
 
 test('should decode pageId with compound id', (t) => {
-  const pageId = 'YWNjb3VudHwiYWNjMSJ8aWR8InByb2oyInx8' // account|"acc1"|id|"proj2"||
+  const pageId = 'fGFjY291bnR8ImFjYzEifGlkfCJwcm9qMiI' // |account|"acc1"|id|"proj2"
   const expected = {
     id: { account: 'acc1', id: 'proj2' },
     filter: [],

@@ -390,7 +390,7 @@ test('should return paging for first page of aggregated data', (t) => {
   const expected = {
     next: {
       type: 'project',
-      pageId: 'YWNjb3VudHwiYWNjMSJ8aWR8InByb2oyInx8Pg', // account|"acc1"|id|"proj2"||>
+      pageId: 'fGFjY291bnR8ImFjYzEifGlkfCJwcm9qMiI', // |account|"acc1"|id|"proj2"
       pageSize: 2,
       archived: true,
     },
@@ -408,7 +408,7 @@ test('should return paging for the second page of aggregated data', (t) => {
   ]
   const request = {
     type: 'project',
-    pageId: 'YWNjb3VudHwiYWNjMSJ8aWR8InByb2oyInx8Pg', // account|"acc1"|id|"proj2"||>
+    pageId: 'fGFjY291bnR8ImFjYzEifGlkfCJwcm9qMiI', // |account|"acc1"|id|"proj2"
     pageSize: 2,
     archived: true,
   }
@@ -422,7 +422,7 @@ test('should return paging for the second page of aggregated data', (t) => {
   const expected = {
     next: {
       type: 'project',
-      pageId: 'YWNjb3VudHwiYWNjMyJ8aWR8InByb2oxInx8Pg', // account|"acc3"|id|"proj1"||>
+      pageId: 'fGFjY291bnR8ImFjYzMifGlkfCJwcm9qMSI', // |account|"acc3"|id|"proj1"
       pageSize: 2,
       archived: true,
     },
@@ -437,7 +437,7 @@ test('should not return paging when aggregated data size is smaller than page si
   const data = [{ _id: { account: 'acc3', id: 'proj2' }, amount: 4 }]
   const request = {
     type: 'project',
-    pageId: 'YWNjb3VudHwiYWNjMyJ8aWR8InByb2oxInx8Pg', // account|"acc3"|id|"proj1"||>
+    pageId: 'fGFjY291bnR8ImFjYzMifGlkfCJwcm9qMSI', // |account|"acc3"|id|"proj1"
     pageSize: 2,
     archived: true,
   }
@@ -506,73 +506,7 @@ test('should return paging for aggregated data when sorting', (t) => {
   const expected = {
     next: {
       type: 'project',
-      pageId: 'YWNjb3VudHwiYWNjMSJ8aWR8InByb2oxInx8YW1vdW50PjM1', // account|"acc1"|id|"proj1"||amount>35
-      pageSize: 2,
-      archived: true,
-    },
-  }
-
-  const ret = createPaging(data, request, undefined, aggregation)
-
-  t.deepEqual(ret, expected)
-})
-
-test('should return paging for aggregated data when sorting by _id', (t) => {
-  const data = [
-    { _id: { account: 'acc1', id: 'proj2' }, amount: 2 },
-    { _id: { account: 'acc1', id: 'proj1' }, amount: 35 },
-  ]
-  const request = {
-    type: 'project',
-    pageSize: 2,
-    archived: true,
-    target: 'crm',
-  }
-  const aggregation: AggregationObject[] = [
-    {
-      type: 'group',
-      groupBy: ['account', 'id'],
-      values: { amount: 'sum' },
-    },
-    { type: 'sort', sortBy: { _id: 1 } },
-  ]
-  const expected = {
-    next: {
-      type: 'project',
-      pageId: 'YWNjb3VudHwiYWNjMSJ8aWR8InByb2oxInx8Pg', // account|"acc1"|id|"proj1"||>
-      pageSize: 2,
-      archived: true,
-    },
-  }
-
-  const ret = createPaging(data, request, undefined, aggregation)
-
-  t.deepEqual(ret, expected)
-})
-
-test('should use default sorting when aggregated sorting is done before group', (t) => {
-  const data = [
-    { _id: { account: 'acc1', id: 'proj1' }, amount: 35 },
-    { _id: { account: 'acc1', id: 'proj2' }, amount: 2 },
-  ]
-  const request = {
-    type: 'project',
-    pageSize: 2,
-    archived: true,
-    target: 'crm',
-  }
-  const aggregation: AggregationObject[] = [
-    { type: 'sort', sortBy: { amount: 1 } },
-    {
-      type: 'group',
-      groupBy: ['account', 'id'],
-      values: { amount: 'sum' },
-    },
-  ]
-  const expected = {
-    next: {
-      type: 'project',
-      pageId: 'YWNjb3VudHwiYWNjMSJ8aWR8InByb2oyInx8Pg', // account|"acc1"|id|"proj2"||>
+      pageId: 'fGFjY291bnR8ImFjYzEifGlkfCJwcm9qMSI', // |account|"acc1"|id|"proj1"
       pageSize: 2,
       archived: true,
     },
