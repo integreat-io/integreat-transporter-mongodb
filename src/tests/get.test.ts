@@ -138,7 +138,7 @@ test.serial('should get documents with pagination', async (t) => {
   }
   const expectedPaging = {
     next: {
-      pageId: 'ZW50Mnw+',
+      pageId: 'ImVudDIifD4', // "ent2"|>
       pageSize: 2,
       type: 'entry',
     },

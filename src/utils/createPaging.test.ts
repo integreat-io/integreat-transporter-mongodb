@@ -37,7 +37,7 @@ test('should return paging for first page', (t) => {
   const expected = {
     next: {
       type: 'entry',
-      pageId: 'ZW50Mnw+', // ent2|>
+      pageId: 'ImVudDIifD4', // "ent2"|>
       pageSize: 2,
       archived: true,
     },
@@ -55,13 +55,13 @@ test('should return paging for second page', (t) => {
   ])
   const request = {
     type: 'entry',
-    pageId: 'ZW50Mnw+', // ent2|>
+    pageId: 'ImVudDIifD4', // "ent2"|>
     pageSize: 2,
   }
   const expected = {
     next: {
       type: 'entry',
-      pageId: 'ZW50NHw+', // ent4|>
+      pageId: 'ImVudDQifD4', // "ent4"|>
       pageSize: 2,
     },
   }
@@ -75,7 +75,7 @@ test('should not return paging next when data size is smaller than page size', (
   const data = prepareData([{ id: 'ent3', $type: 'entry' }])
   const request = {
     type: 'entry',
-    pageId: 'ZW50Mnw+', // ent2|>
+    pageId: 'ImVudDIifD4', // "ent2"|>
     pageSize: 2,
   }
   const expected = {
@@ -181,7 +181,7 @@ test('should return paging when sorting', (t) => {
   const expected = {
     next: {
       type: 'entry',
-      pageId: 'ZW50M3xpbmRleD4y', // ent3|index>2
+      pageId: 'ImVudDMifGluZGV4PjI', // "ent3"|index>2
       pageSize: 2,
     },
   }
@@ -206,7 +206,7 @@ test('should return paging when sorting descending', (t) => {
   const expected = {
     next: {
       type: 'entry',
-      pageId: 'ZW50MnxpbmRleDwx', // ent2|index<1
+      pageId: 'ImVudDIifGluZGV4PDE', // "ent2"|index<1
       pageSize: 2,
     },
   }
@@ -232,7 +232,7 @@ test('should return paging with first sort field only', (t) => {
   const expected = {
     next: {
       type: 'entry',
-      pageId: 'ZW50MnxpbmRleDwx', // ent2|index<1
+      pageId: 'ImVudDIifGluZGV4PDE', // "ent2"|index<1
       pageSize: 2,
     },
   }
@@ -257,7 +257,7 @@ test('should return paging when sorting on a date field', (t) => {
   const expected = {
     next: {
       type: 'entry',
-      pageId: 'ZW50M3xkYXRlPjIwMjEtMDEtMThUMTI6MDU6MTEuMDAwWg', // ent3|date>2021-01-18T12:05:11.000Z
+      pageId: 'ImVudDMifGRhdGU+MjAyMS0wMS0xOFQxMjowNToxMS4wMDBa', // "ent3"|date>2021-01-18T12:05:11.000Z
       pageSize: 2,
     },
   }
@@ -282,7 +282,7 @@ test('should return paging with encoded string', (t) => {
   const expected = {
     next: {
       type: 'entry',
-      pageId: 'ZW50MnxtZXNzYWdlPCJFc2NhcGUlMjAlMjJtZSUyMiI', // ent2|message<"Escape%20%22me%22"
+      pageId: 'ImVudDIifG1lc3NhZ2U8IkVzY2FwZSUyMCUyMm1lJTIyIg', // "ent2"|message<"Escape%20%22me%22"
       pageSize: 2,
     },
   }
@@ -308,7 +308,7 @@ test('should include id and other params when present in request', (t) => {
     next: {
       type: 'entry',
       id: 'ent1',
-      pageId: 'ZW50Mnw+', // ent2|>
+      pageId: 'ImVudDIifD4', // "ent2"|>
       pageSize: 2,
       archived: true,
     },
@@ -334,7 +334,7 @@ test('should not touch existing query', (t) => {
     next: {
       type: 'entry',
       query: [{ path: 'index', op: 'gt', value: 1 }],
-      pageId: 'ZW50M3w+', // ent3|>
+      pageId: 'ImVudDMifD4', // "ent3"|>
       pageSize: 2,
     },
   }
@@ -437,7 +437,7 @@ test('should not return paging when aggregated data size is smaller than page si
   const data = [{ _id: { account: 'acc3', id: 'proj2' }, amount: 4 }]
   const request = {
     type: 'project',
-    pageId: 'YWNjb3VudHxhY2MzfGlkfHByb2oxfHw+', // account|acc3|id|proj1||>
+    pageId: 'YWNjb3VudHwiYWNjMyJ8aWR8InByb2oxInx8Pg', // account|"acc3"|id|"proj1"||>
     pageSize: 2,
     archived: true,
   }
@@ -546,46 +546,6 @@ test('should return paging for aggregated data when sorting by _id', (t) => {
   }
 
   const ret = createPaging(data, request, undefined, aggregation)
-
-  t.deepEqual(ret, expected)
-})
-
-test('should return paging for aggregated data when useIdAsInternalId is true', (t) => {
-  const useIdAsInternalId = true
-  const data = [
-    { _id: { account: 'acc1', id: 'proj2' }, amount: 2 },
-    { _id: { account: 'acc1', id: 'proj1' }, amount: 35 },
-  ]
-  const request = {
-    type: 'project',
-    pageSize: 2,
-    archived: true,
-    target: 'crm',
-  }
-  const aggregation: AggregationObject[] = [
-    {
-      type: 'group',
-      groupBy: ['account', 'id'],
-      values: { amount: 'sum' },
-    },
-    { type: 'sort', sortBy: { _id: 1 } },
-  ]
-  const expected = {
-    next: {
-      type: 'project',
-      pageId: 'YWNjb3VudHwiYWNjMSJ8aWR8InByb2oxInx8Pg', // account|"acc1"|id|"proj1"||>
-      pageSize: 2,
-      archived: true,
-    },
-  }
-
-  const ret = createPaging(
-    data,
-    request,
-    undefined,
-    aggregation,
-    useIdAsInternalId,
-  )
 
   t.deepEqual(ret, expected)
 })

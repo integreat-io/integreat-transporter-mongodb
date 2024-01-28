@@ -1,6 +1,15 @@
 import { MongoClient } from 'mongodb'
 import { Connection as ConnectionBase, Payload as BasePayload } from 'integreat'
 
+export interface MongoData extends Record<string, unknown> {
+  _id: string | Record<string, unknown>
+}
+
+export interface ParsedPageId {
+  id: string | Record<string, unknown>
+  filter: QueryObject[]
+}
+
 export interface QueryObject {
   path?: string
   op?: string

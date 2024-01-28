@@ -420,7 +420,7 @@ test('should keep id for aggregation when idIsUnique is true and we have a compo
   t.is(ret.params?.totalCount, 1)
 })
 
-test('should get put query and sort first in aggregation pipeline', async (t) => {
+test('should put query and sort first in aggregation pipeline', async (t) => {
   const [find] = createCollectionMethod([])
   const [aggregate] = createCollectionMethod([])
   const client = createClient({ find, aggregate })
@@ -884,7 +884,7 @@ test('should return params for next page', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50Mnw+', // ent2|>
+      pageId: 'ImVudDIifD4', // "ent2"|>
       pageSize: 2,
     },
   }
@@ -921,7 +921,7 @@ test('should get second page of items', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50NHw+', // ent4|>
+      pageId: 'ImVudDQifD4', // "ent4"|>
       pageSize: 2,
     },
   }
@@ -1021,7 +1021,7 @@ test('should get second page of items when there are documents before the pageAf
     payload: {
       type: 'entry',
       pageSize: 2,
-      pageId: 'ZW50MnxpbmRleD4x', // ent2|index>1
+      pageId: 'ImVudDIifGluZGV4PjE', // "ent2"|index>1
       typePlural: 'entries',
     },
     meta: {
@@ -1035,7 +1035,7 @@ test('should get second page of items when there are documents before the pageAf
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50NHxpbmRleD4z', // ent4|index>3
+      pageId: 'ImVudDQifGluZGV4PjM', // "ent4"|index>3
       pageSize: 2,
     },
   }

@@ -9,7 +9,7 @@ import prepareAggregation, {
 import createPaging from './utils/createPaging.js'
 import { normalizeItem } from './utils/serialize.js'
 import { getCollection } from './send.js'
-import { decodePageId, DecodedPageId } from './utils/pageId.js'
+import { decodePageId } from './utils/pageId.js'
 import { isObject } from './utils/is.js'
 import type { FindCursor, AggregationCursor, MongoClient } from 'mongodb'
 import type { Action, Response } from 'integreat'
@@ -18,6 +18,7 @@ import type {
   Payload,
   AggregationObject,
   QueryObject,
+  ParsedPageId,
 } from './types.js'
 
 const debugMongo = debug('integreat:transporter:mongodb')
@@ -160,7 +161,7 @@ const getPage = async (
   useIdAsInternalId: boolean,
   isAggregation: boolean,
   { pageSize = Infinity, pageOffset, pageAfter }: Payload,
-  pageId?: DecodedPageId,
+  pageId?: ParsedPageId,
 ) => {
   if (typeof pageOffset === 'number') {
     cursor.skip(pageOffset)
@@ -319,7 +320,6 @@ export default async function getDocs(
       payload,
       sort,
       aggregationObjects,
-      useIdAsInternalId,
     )
   }
 

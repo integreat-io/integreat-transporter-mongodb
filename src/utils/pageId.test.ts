@@ -1,11 +1,134 @@
 import test from 'ava'
 
-import { decodePageId } from './pageId.js'
+import { encodePageId, decodePageId } from './pageId.js'
+import type { AggregationObject } from '../types.js'
 
-// Tests
+// Tests -- encode pageId
+
+test('should encode pageId from lastItem', (t) => {
+  const lastItem = { _id: 'internal1', id: 'ent2', $type: 'entry' }
+  const expectedPageId = 'ImVudDIifD4' // "ent2"|>
+
+  const ret = encodePageId(lastItem)
+
+  t.is(ret, expectedPageId)
+})
+
+test('should encode pageId with sorting', (t) => {
+  const lastItem = { id: 'ent3', $type: 'entry', index: 2 }
+  const sort = { index: 1 }
+  const expectedPageId = 'ImVudDMifGluZGV4PjI' // "ent3"|index>2
+
+  const ret = encodePageId(lastItem, sort)
+
+  t.is(ret, expectedPageId)
+})
+
+test('should encode pageId with descending sorting', (t) => {
+  const lastItem = { id: 'ent3', $type: 'entry', index: 2 }
+  const sort = { index: -1 }
+  const expectedPageId = 'ImVudDMifGluZGV4PDI' // "ent3"|index<2
+
+  const ret = encodePageId(lastItem, sort)
+
+  t.is(ret, expectedPageId)
+})
+
+test('should encode pageId with sorting on a date field', (t) => {
+  const lastItem = {
+    id: 'ent3',
+    $type: 'entry',
+    date: new Date('2021-01-18T12:05:11Z'),
+  }
+  const sort = { date: 1 }
+  const expectedPageId = 'ImVudDMifGRhdGU+MjAyMS0wMS0xOFQxMjowNToxMS4wMDBa' // "ent3"|date>2021-01-18T12:05:11.000Z
+
+  const ret = encodePageId(lastItem, sort)
+
+  t.is(ret, expectedPageId)
+})
+
+test('should encode pageId with encoded string', (t) => {
+  const lastItem = { id: 'ent2', $type: 'entry', message: 'Escape "me"' }
+  const sort = { message: -1 }
+  const expectedPageId = 'ImVudDIifG1lc3NhZ2U8IkVzY2FwZSUyMCUyMm1lJTIyIg' // "ent2"|message<"Escape%20%22me%22"
+
+  const ret = encodePageId(lastItem, sort)
+
+  t.is(ret, expectedPageId)
+})
+
+test('should encode pageId for aggregated data', (t) => {
+  const lastItem = { _id: { account: 'acc1', id: 'proj2' }, amount: 2 }
+  const aggregation: AggregationObject[] = [
+    {
+      type: 'group',
+      groupBy: ['account', 'id'],
+      values: { amount: 'sum' },
+    },
+  ]
+  const expectedPageId = 'YWNjb3VudHwiYWNjMSJ8aWR8InByb2oyInx8Pg' // account|"acc1"|id|"proj2"||>
+
+  const ret = encodePageId(lastItem, undefined, aggregation)
+
+  t.is(ret, expectedPageId)
+})
+
+test('should encode pageId for aggregated data when sorting', (t) => {
+  const lastItem = { _id: { account: 'acc1', id: 'proj1' }, amount: 35 }
+  const aggregation: AggregationObject[] = [
+    {
+      type: 'group',
+      groupBy: ['account', 'id'],
+      values: { amount: 'sum' },
+    },
+    { type: 'sort', sortBy: { amount: 1 } },
+  ]
+  const expectedPageId = 'YWNjb3VudHwiYWNjMSJ8aWR8InByb2oxInx8YW1vdW50PjM1' // account|"acc1"|id|"proj1"||amount>35
+
+  const ret = encodePageId(lastItem, undefined, aggregation)
+
+  t.is(ret, expectedPageId)
+})
+
+test('should encode pageId for aggregated data when sorting by _id', (t) => {
+  const lastItem = { _id: { account: 'acc1', id: 'proj1' }, amount: 35 }
+  const aggregation: AggregationObject[] = [
+    {
+      type: 'group',
+      groupBy: ['account', 'id'],
+      values: { amount: 'sum' },
+    },
+    { type: 'sort', sortBy: { _id: 1 } },
+  ]
+  const expectedPageId = 'YWNjb3VudHwiYWNjMSJ8aWR8InByb2oxInx8Pg' // account|"acc1"|id|"proj1"||>
+
+  const ret = encodePageId(lastItem, undefined, aggregation)
+
+  t.is(ret, expectedPageId)
+})
+
+test('should use default sorting when aggregated sorting is done before group', (t) => {
+  const lastItem = { _id: { account: 'acc1', id: 'proj2' }, amount: 2 }
+  const aggregation: AggregationObject[] = [
+    { type: 'sort', sortBy: { amount: 1 } },
+    {
+      type: 'group',
+      groupBy: ['account', 'id'],
+      values: { amount: 'sum' },
+    },
+  ]
+  const expectedPageId = 'YWNjb3VudHwiYWNjMSJ8aWR8InByb2oyInx8Pg' // account|"acc1"|id|"proj2"||>
+
+  const ret = encodePageId(lastItem, undefined, aggregation)
+
+  t.is(ret, expectedPageId)
+})
+
+// Tests -- decode pageId
 
 test('should decode pageId with default sorting', (t) => {
-  const pageId = 'ZW50Mnw+' // ent2|>
+  const pageId = 'ImVudDIifD4=' // "ent2"|>
   const expected = {
     id: 'ent2',
     filter: [{ path: 'id', op: 'gte', value: 'ent2' }],
@@ -16,9 +139,21 @@ test('should decode pageId with default sorting', (t) => {
   t.deepEqual(ret, expected)
 })
 
+test('should decode pageId with numeric id', (t) => {
+  const pageId = 'MTAwMXw+' // 1001|>
+  const expected = {
+    id: 1001,
+    filter: [{ path: 'id', op: 'gte', value: 1001 }],
+  }
+
+  const ret = decodePageId(pageId)
+
+  t.deepEqual(ret, expected)
+})
+
 test('should decode pageId with sorting fields', (t) => {
   const pageId =
-    'ZW50MnxhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkxMDAwfGF0dHJpYnV0ZXMuaW5kZXg+MQ' // ent2|attributes.timestamp<1584211391000|attributes.index>1
+    'ImVudDIifGF0dHJpYnV0ZXMudGltZXN0YW1wPDE1ODQyMTEzOTEwMDB8YXR0cmlidXRlcy5pbmRleD4x' // "ent2"|attributes.timestamp<1584211391000|attributes.index>1
   const expected = {
     id: 'ent2',
     filter: [
@@ -33,7 +168,7 @@ test('should decode pageId with sorting fields', (t) => {
 })
 
 test('should decode pageId with encoded string', (t) => {
-  const pageId = 'ZW50MnxpbmRleDwxfG1lc3NhZ2U8IkVzY2FwZSUyMCUyMm1lJTIyIg' // ent2|index<1|message<"Escape%20%22me%22"
+  const pageId = 'ImVudDIifGluZGV4PDF8bWVzc2FnZTwiRXNjYXBlJTIwJTIybWUlMjIi' // "ent2"|index<1|message<"Escape%20%22me%22"
   const expected = {
     id: 'ent2',
     filter: [
@@ -63,36 +198,10 @@ test('should decode pageId with unencoded string', (t) => {
 })
 
 test('should decode pageId with date string', (t) => {
-  const pageId = 'ZW50M3xkYXRlPjIwMjEtMDEtMThUMTI6MDU6MTEuMDAwWg' // ent3|date>2021-01-18T12:05:11.000Z
+  const pageId = 'ImVudDMifGRhdGU+MjAyMS0wMS0xOFQxMjowNToxMS4wMDBa' // "ent3"|date>2021-01-18T12:05:11.000Z
   const expected = {
     id: 'ent3',
     filter: [{ path: 'date', op: 'gte', value: '2021-01-18T12:05:11.000Z' }],
-  }
-
-  const ret = decodePageId(pageId)
-
-  t.deepEqual(ret, expected)
-})
-
-test('should decode pageId with aggregation id', (t) => {
-  const pageId = 'YWNjb3VudHxhY2MxfGlkfHByb2oyfHw+' // account|acc1|id|proj2||>
-  const expected = {
-    id: { account: 'acc1', id: 'proj2' },
-    filter: [
-      { path: 'id', op: 'gte', value: { account: 'acc1', id: 'proj2' } },
-    ],
-  }
-
-  const ret = decodePageId(pageId)
-
-  t.deepEqual(ret, expected)
-})
-
-test('should decode pageId with aggregation id and sorting', (t) => {
-  const pageId = 'YWNjb3VudHxhY2MxfGlkfHByb2oxfHxhbW91bnQ+MzU' // account|acc1|id|proj1||amount>35
-  const expected = {
-    id: { account: 'acc1', id: 'proj1' },
-    filter: [{ path: 'amount', op: 'gte', value: 35 }],
   }
 
   const ret = decodePageId(pageId)
@@ -104,4 +213,14 @@ test('should return undefined when no pageId', (t) => {
   t.is(decodePageId(undefined), undefined)
 })
 
-test.todo('should be complete for different aggregation cases')
+test('should decode pageId with compound id', (t) => {
+  const pageId = 'YWNjb3VudHwiYWNjMSJ8aWR8InByb2oyInx8' // account|"acc1"|id|"proj2"||
+  const expected = {
+    id: { account: 'acc1', id: 'proj2' },
+    filter: [],
+  }
+
+  const ret = decodePageId(pageId)
+
+  t.deepEqual(ret, expected)
+})

@@ -1,10 +1,9 @@
 import { setProperty } from 'dot-prop'
-import { QueryObject } from '../types.js'
 import { serializePath } from './serialize.js'
 import { isObject } from './is.js'
-import { DecodedPageId } from './pageId.js'
 import { ensureArray } from './array.js'
 import { makeIdInternalInPath } from './prepareAggregation.js'
+import type { QueryObject, ParsedPageId } from '../types.js'
 
 type QueryArray = (QueryObject | QueryArray)[]
 
@@ -28,8 +27,8 @@ const castValueIfDate = (value: unknown): unknown =>
   isDateString(value)
     ? new Date(value)
     : isObject(value)
-    ? castDates(value)
-    : value
+      ? castDates(value)
+      : value
 
 const castDates = (query: Record<string, unknown>) =>
   Object.entries(query).reduce(
@@ -92,8 +91,8 @@ function setMongoSelectorFromQueryObj(
     let targetValue = variable
       ? `$$${variable}`
       : op === 'isArray'
-      ? `$${path}`
-      : (param ? allParams[param] : value) || null // eslint-disable-line security/detect-object-injection
+        ? `$${path}`
+        : (param ? allParams[param] : value) || null // eslint-disable-line security/detect-object-injection
 
     if (expr && op === 'in') {
       targetValue = [`$${path}`, targetValue]
@@ -104,8 +103,8 @@ function setMongoSelectorFromQueryObj(
         expr
           ? '$expr'
           : op === 'isArray' || op === 'search' || typeof path !== 'string'
-          ? undefined
-          : serializePath(path),
+            ? undefined
+            : serializePath(path),
         mapOp(op),
       ]
         .filter(Boolean)
@@ -142,7 +141,7 @@ const mongoSelectorFromQuery = (
 export default function prepareFilter(
   queryArray: QueryArray = [],
   params: Params = {},
-  pageId?: DecodedPageId,
+  pageId?: ParsedPageId,
   useIdAsInternalId = false,
 ): Record<string, unknown> {
   // Create query object from array of props

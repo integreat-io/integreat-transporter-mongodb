@@ -54,7 +54,7 @@ test('should get one page of documents with params for next page', async (t) => 
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50Mnw+',
+      pageId: 'ImVudDIifD4', // "ent2"|>
       pageSize: 2,
     },
   }
@@ -88,7 +88,7 @@ test('should get second page of documents', async (t) => {
     type: 'GET',
     payload: {
       type: 'entry',
-      pageId: 'ZW50Mnw+',
+      pageId: 'ImVudDIifD4', // "ent2"|>
       pageSize: 2,
     },
     meta: {
@@ -101,7 +101,7 @@ test('should get second page of documents', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50NHw+',
+      pageId: 'ImVudDQifD4', // "ent4"|>
       pageSize: 2,
     },
   }
@@ -141,7 +141,7 @@ test('should get second page of documents using date index', async (t) => {
     type: 'GET',
     payload: {
       type: 'entry',
-      pageId: 'ZW50MXxkYXRlPjIwMjEtMDEtMThUMTA6NDQ6MDcuMDAwWg',
+      pageId: 'ImVudDEifGRhdGU+MjAyMS0wMS0xOFQxMDo0NDowNy4wMDBa', // "ent1"|date>2021-01-18T10:44:07.000Z
       pageSize: 1,
     },
     meta: {
@@ -155,7 +155,7 @@ test('should get second page of documents using date index', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50MnxkYXRlPjIwMjEtMDEtMThUMTE6MDU6MTYuMDAwWg',
+      pageId: 'ImVudDIifGRhdGU+MjAyMS0wMS0xOFQxMTowNToxNi4wMDBa', // "ent2"|date>2021-01-18T11:05:16.000Z
       pageSize: 1,
     },
   }
@@ -187,7 +187,7 @@ test('should return less than a full page at the end', async (t) => {
     type: 'GET',
     payload: {
       type: 'entry',
-      pageId: 'ZW50Mnw+',
+      pageId: 'ImVudDIifD4', // "ent2"|>
       pageSize: 2,
     },
     meta: {
@@ -230,7 +230,7 @@ test('should return empty array when past last page', async (t) => {
     payload: {
       type: 'entry',
       query: [{ path: '_id', op: 'gte', value: 'ent4' }],
-      pageId: 'ZW50NHw+',
+      pageId: 'ImVudDIifD4', // "ent2"|>
       pageSize: 2,
     },
     meta: {
@@ -282,7 +282,7 @@ test('should get first page when idIsUnique is true', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50Mnw+',
+      pageId: 'ImVudDIifD4', // "ent2"|>
       pageSize: 2,
     },
   }
@@ -320,7 +320,7 @@ test('should get second page when idIsUnique is true', async (t) => {
     type: 'GET',
     payload: {
       type: 'entry',
-      pageId: 'ZW50MXxkYXRlPjIwMjEtMDEtMThUMTA6NDQ6MDcuMDAwWg',
+      pageId: 'ImVudDEifGRhdGU+MjAyMS0wMS0xOFQxMDo0NDowNy4wMDBa', // "ent1"|date>2021-01-18T10:44:07.000Z
       pageSize: 1,
     },
     meta: {
@@ -334,7 +334,7 @@ test('should get second page when idIsUnique is true', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50MnxkYXRlPjIwMjEtMDEtMThUMTE6MDU6MTYuMDAwWg',
+      pageId: 'ImVudDIifGRhdGU+MjAyMS0wMS0xOFQxMTowNToxNi4wMDBa', // "ent2"|date>2021-01-18T11:05:16.000Z
       pageSize: 1,
     },
   }
@@ -422,7 +422,7 @@ test('should get second page of documents when sorting', async (t) => {
     type: 'GET',
     payload: {
       type: 'entry',
-      pageId: 'ZW50M3xhdHRyaWJ1dGVzLmluZGV4PjI',
+      pageId: 'ImVudDMifGF0dHJpYnV0ZXMuaW5kZXg+Mg', // "ent3"|attributes.index>2
       pageSize: 2,
     },
     meta: {
@@ -436,7 +436,7 @@ test('should get second page of documents when sorting', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50NHxhdHRyaWJ1dGVzLmluZGV4PjQ',
+      pageId: 'ImVudDQifGF0dHJpYnV0ZXMuaW5kZXg+NA', // "ent4"|attributes.index>4
       pageSize: 2,
     },
   }
@@ -486,7 +486,7 @@ test('should get second page of documents when sorting descending', async (t) =>
     type: 'GET',
     payload: {
       type: 'entry',
-      pageId: 'ZW50MXxhdHRyaWJ1dGVzLmluZGV4PDM',
+      pageId: 'ImVudDEifGF0dHJpYnV0ZXMuaW5kZXg8Mw', // "ent1"|attributes.index<3
       pageSize: 2,
     },
     meta: {
@@ -500,7 +500,7 @@ test('should get second page of documents when sorting descending', async (t) =>
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50MnxhdHRyaWJ1dGVzLmluZGV4PDE',
+      pageId: 'ImVudDIifGF0dHJpYnV0ZXMuaW5kZXg8MQ', // "ent2"|attributes.index<1
       pageSize: 2,
     },
   }
@@ -564,7 +564,7 @@ test('should return page params when sorting by two dimensions', async (t) => {
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50MnxhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkxMDAw',
+      pageId: 'ImVudDIifGF0dHJpYnV0ZXMudGltZXN0YW1wPDE1ODQyMTEzOTEwMDA', // "ent2"|attributes.timestamp<1584211391000
       pageSize: 2,
     },
   }
@@ -614,7 +614,7 @@ test('should get second page of documents when sorting key is not unique', async
     type: 'GET',
     payload: {
       type: 'entry',
-      pageId: 'ZW50M3xhdHRyaWJ1dGVzLmluZGV4PjE',
+      pageId: 'ImVudDMifGF0dHJpYnV0ZXMuaW5kZXg+MQ', // "ent3"|attributes.index>1
       pageSize: 2,
     },
     meta: {
@@ -628,7 +628,7 @@ test('should get second page of documents when sorting key is not unique', async
   const expectedPaging = {
     next: {
       type: 'entry',
-      pageId: 'ZW50NHxhdHRyaWJ1dGVzLmluZGV4PjM',
+      pageId: 'ImVudDQifGF0dHJpYnV0ZXMuaW5kZXg+Mw', // "ent4"|attributes.index>3
       pageSize: 2,
     },
   }
@@ -694,7 +694,7 @@ test('should keep existing queries', async (t) => {
     next: {
       type: 'entry',
       query: [{ path: 'attributes.index', op: 'lt', value: 3 }],
-      pageId: 'ZW50M3xhdHRyaWJ1dGVzLnRpbWVzdGFtcDwxNTg0MjExMzkwMDgz',
+      pageId: 'ImVudDMifGF0dHJpYnV0ZXMudGltZXN0YW1wPDE1ODQyMTEzOTAwODM', // "ent3"|attributes.timestamp<1584211390083
       pageSize: 2,
     },
   }
