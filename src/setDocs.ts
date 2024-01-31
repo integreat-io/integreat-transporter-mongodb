@@ -1,6 +1,12 @@
 /* eslint-disable security/detect-object-injection */
-import { Action, Response } from 'integreat'
-import {
+import debug from 'debug'
+import prepareFilter from './utils/prepareFilter.js'
+import { serializeItem } from './utils/serialize.js'
+import { isObject, isObjectWithId, ObjectWithId } from './utils/is.js'
+import { ensureArray } from './utils/array.js'
+import { getCollection } from './send.js'
+import type { Action, Response } from 'integreat'
+import type {
   Collection,
   MongoClient,
   MongoBulkWriteError,
@@ -9,13 +15,7 @@ import {
   DeleteResult,
   BulkWriteResult,
 } from 'mongodb'
-import debug from 'debug'
-import prepareFilter from './utils/prepareFilter.js'
-import { serializeItem } from './utils/serialize.js'
-import { ObjectWithId, isObjectWithId } from './utils/is.js'
-import { ensureArray } from './utils/array.js'
-import { getCollection } from './send.js'
-import { MongoOptions } from './types.js'
+import type { MongoOptions } from './types.js'
 
 interface ItemResponse {
   id?: string | string[]
@@ -30,6 +30,7 @@ interface Operation {
   id: string
   filter: Record<string, unknown>
   update: Record<string, unknown>
+  updateMany?: boolean
 }
 
 interface OperationError {
@@ -40,6 +41,13 @@ const debugMongo = debug('integreat:transporter:mongodb')
 
 const isDelete = (action: Action) => action.type === 'DELETE'
 const isUpdate = (action: Action) => action.type === 'UPDATE'
+const isUpdateMany = (operations: Operation[]) =>
+  operations.some((operation) => operation.updateMany === true)
+
+const extractQuery = (action: Action) =>
+  Array.isArray(action.meta?.options?.query)
+    ? action.meta.options.query
+    : undefined
 
 const summarizeResponses = (responses: ItemResponse[]) =>
   responses.reduce(
@@ -115,6 +123,33 @@ const createErrorResponse = (
 
 const removeId = ({ id, ...item }: ObjectWithId) => item
 
+function createUpdateByQueryOperation(
+  item: Record<string, unknown>,
+  action: Action,
+  useIdAsInternalId: boolean,
+) {
+  const {
+    payload: { data, ...params },
+    meta: { options: { keepUndefined = false } = {} } = {},
+  } = action
+  const filter = prepareFilter(
+    extractQuery(action), // We know we have a query here, or else we wouldn't be here
+    params,
+    undefined,
+    useIdAsInternalId,
+  )
+  const update = {
+    $set: {
+      ...(serializeItem(item, keepUndefined === true) as Record<
+        string,
+        unknown
+      >),
+    },
+  }
+
+  return { filter, update, updateMany: true }
+}
+
 const createOperation = (action: Action, useIdAsInternalId: boolean) =>
   function createOperation(item: unknown): Operation | OperationError {
     if (!isObjectWithId(item)) {
@@ -151,7 +186,23 @@ const createOperation = (action: Action, useIdAsInternalId: boolean) =>
     return { filter, update, id }
   }
 
-const hasQuery = (action: Action) => action.meta?.options?.query
+function createOperations(
+  data: unknown,
+  action: Action,
+  useIdAsInternalId: boolean,
+) {
+  const query = extractQuery(action)
+  if (
+    isUpdate(action) &&
+    Array.isArray(query) &&
+    query.length > 0 &&
+    isObject(data)
+  ) {
+    return [createUpdateByQueryOperation(data, action, useIdAsInternalId)]
+  } else {
+    return ensureArray(data).map(createOperation(action, useIdAsInternalId))
+  }
+}
 
 async function deleteWithQuery(
   action: Action,
@@ -224,20 +275,28 @@ async function updateMany(
         $or: operations.map((op) => op.filter),
       })
       if (count < operations.length) {
-        return createErrorResponse(
-          'notfound',
-          'One or more documents were not found with the given filter',
-          operations.map((op) => op.id),
-        )
+        return isUpdateMany(operations)
+          ? createErrorResponse(
+              'noaction',
+              'No documents were matched by the given filter',
+            )
+          : createErrorResponse(
+              'notfound',
+              'One or more documents were not found with the given filter',
+              operations.map((op) => op.id),
+            )
       }
     }
 
-    const bulkOperations = operations.map(({ filter, update }) =>
-      isDelete(action)
-        ? { deleteOne: { filter } }
-        : isUpdate(action)
-          ? { updateOne: { filter, update } }
-          : { updateOne: { filter, update, upsert: true } },
+    const bulkOperations = operations.map(
+      ({ filter, update }) =>
+        isDelete(action)
+          ? { deleteOne: { filter } }
+          : isUpdate(action)
+            ? isUpdateMany(operations)
+              ? { updateMany: { filter, update } } // Use updateMany if we're updating many, typically with a query
+              : { updateOne: { filter, update } } // Use updateOne if we're updating one, typically with an id
+            : { updateOne: { filter, update, upsert: true } }, // We're upserting, as this may be a new doc or an updated doc
     )
     const result = await collection.bulkWrite(bulkOperations, {
       ordered: false,
@@ -266,7 +325,7 @@ async function update(
   collection: Collection,
   action: Action,
 ) {
-  if (operations.length === 1) {
+  if (operations.length === 1 && !operations[0].updateMany) {
     return await updateOne(operations[0] as Operation, collection, action)
   } else {
     return await updateMany(operations as Operation[], collection, action)
@@ -289,11 +348,13 @@ export default async function setDocs(
   }
 
   // Create operations from data
-  const operations = ensureArray(action.payload.data).map(
-    createOperation(action, useIdAsInternalId),
+  const operations = createOperations(
+    action.payload.data,
+    action,
+    useIdAsInternalId,
   )
   if (operations.length === 0) {
-    if (action.type === 'DELETE' && hasQuery(action)) {
+    if (action.type === 'DELETE' && !!extractQuery(action)) {
       return await deleteWithQuery(action, collection)
     } else {
       // No operations -- end right away

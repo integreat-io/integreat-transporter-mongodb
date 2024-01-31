@@ -41,8 +41,11 @@ The data returns from `GET` actions will be the retrieved documents, while for
 `SET`, `UPDATE`, and `DELETE` actions the data will be result stats in the form
 of `{ modifiedCount: 1, insertedCount: 2, deletedCount: 0 }`.
 
-`UPDATE` actions will respond with a `notfound` error if one or more of the
-provided data items are not already in the database.
+`UPDATE` actions may update a given array of items or use the given data item to
+update all documents matched by a given query. In the first case, the action
+will respond with a `notfound` error if one or more of the provided data items
+are not already in the database. In the second case, the action will respond
+with `noaction` if no documents are matched by the query.
 
 `GET` actions will also return a `totalCount` in the `params` object of the
 response, with the total number of documents matching the query. This is useful

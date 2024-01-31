@@ -4,6 +4,7 @@ import {
   openMongoWithCollection,
   closeMongo,
   insertDocument,
+  insertDocuments,
   getDocuments,
   deleteDocuments,
   MongoElements,
@@ -280,5 +281,108 @@ test('should update document when idIsUnique is true', async (t) => {
   t.is(docs[0]._id, 'ent5')
   t.is(docs[0].title, 'Updated entry 5')
   t.falsy(docs[0].id)
+  t.deepEqual(response.data, expectedData)
+})
+
+test('should update documents by query', async (t) => {
+  const { collection, collectionName } = t.context
+  await insertDocuments(collection, [
+    {
+      id: 'ent1',
+      title: 'Entry 1',
+      meta: { 'archived\\_flag': false },
+    },
+    {
+      id: 'ent2',
+      title: 'Entry 2',
+      meta: { 'archived\\_flag': true },
+    },
+    {
+      id: 'ent3',
+      title: 'Entry 3',
+      meta: { 'archived\\_flag': true },
+    },
+  ])
+  const action = {
+    type: 'UPDATE',
+    payload: {
+      data: {
+        isDeleted: true,
+      },
+    },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        query: [{ path: 'meta.archived\\_flag', op: 'eq', value: true }],
+      },
+    },
+  }
+  const expectedData = { insertedCount: 0, modifiedCount: 2, deletedCount: 0 }
+
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit,
+  )
+  const response = await transporter.send(action, connection)
+  await transporter.disconnect(connection)
+
+  t.is(response.status, 'ok', response.error)
+  const docs = (await getDocuments(collection, {})) as Record<string, unknown>[]
+  t.is(docs.length, 3)
+  t.is(docs[0].id, 'ent1')
+  t.is(docs[0].isDeleted, undefined) // Not updated
+  t.is(docs[1].id, 'ent2')
+  t.is(docs[1].isDeleted, true) // Updated
+  t.is(docs[2].id, 'ent3')
+  t.is(docs[2].isDeleted, true) // Updated
+  t.deepEqual(response.data, expectedData)
+})
+
+test('should respond with noaction when update query does not match any document', async (t) => {
+  const { collection, collectionName } = t.context
+  await insertDocuments(collection, [
+    {
+      id: 'ent1',
+      title: 'Entry 1',
+    },
+    {
+      id: 'ent2',
+      title: 'Entry 2',
+    },
+  ])
+  const action = {
+    type: 'UPDATE',
+    payload: {
+      data: {
+        isDeleted: true,
+      },
+    },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        query: [{ path: 'meta.archived\\_flag', op: 'eq', value: true }], // None will match this
+      },
+    },
+  }
+  const expectedData = { insertedCount: 0, modifiedCount: 0, deletedCount: 0 }
+
+  const connection = await transporter.connect(
+    options,
+    authorization,
+    null,
+    emit,
+  )
+  const response = await transporter.send(action, connection)
+  await transporter.disconnect(connection)
+
+  t.is(response.status, 'noaction', response.error)
+  const docs = (await getDocuments(collection, {})) as Record<string, unknown>[]
+  t.is(docs.length, 2)
+  t.is(docs[0].isDeleted, undefined) // Not updated
+  t.is(docs[0].isDeleted, undefined) // Not updated
   t.deepEqual(response.data, expectedData)
 })
