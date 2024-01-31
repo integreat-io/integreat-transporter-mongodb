@@ -43,11 +43,13 @@ const opsWithoutValue = ['isset', 'notset']
 const opsWithObject = ['match']
 const validOps = [
   'eq',
+  'ne',
   'lt',
   'gt',
   'lte',
   'gte',
   'in',
+  'nin',
   'regex',
   'isArray',
   'search',
