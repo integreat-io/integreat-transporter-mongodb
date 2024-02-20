@@ -1,6 +1,6 @@
 /* eslint-disable security/detect-object-injection */
 import debug from 'debug'
-import { MongoClient } from 'mongodb'
+import type { MongoClient, MongoClientOptions } from 'mongodb'
 import createHash from 'object-hash'
 import { MongoOptions, Connection, MongoClientObject } from './types.js'
 
@@ -9,12 +9,13 @@ const debugMongo = debug('integreat:transporter:mongodb:client')
 const prepareOptions = (
   options?: Record<string, unknown>,
   auth?: Record<string, unknown> | null,
-): Record<string, unknown> => ({
-  ...options,
-  ...(auth && typeof auth.key === 'string' && typeof auth.secret === 'string'
-    ? { auth: { username: auth.key, password: auth.secret } }
-    : {}),
-})
+): MongoClientOptions =>
+  ({
+    ...options,
+    ...(auth && typeof auth.key === 'string' && typeof auth.secret === 'string'
+      ? { auth: { username: auth.key, password: auth.secret } }
+      : {}),
+  }) as MongoClientOptions // Type hack, as MongoClientOptions requires some props that are not really required
 
 let failedHeartbeatCount = 0
 const clients: Record<string, MongoClientObject> = {}
@@ -22,7 +23,7 @@ const clients: Record<string, MongoClientObject> = {}
 async function createOrReuseClient(
   Client: typeof MongoClient,
   mongoUri: string,
-  options: Record<string, unknown>,
+  options: MongoClientOptions,
   emit: (eventType: string, ...args: unknown[]) => void,
   throwAfterFailedHeartbeatCount?: number,
 ): Promise<MongoClientObject | undefined> {

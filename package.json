@@ -12,7 +12,7 @@
     }
   },
   "scripts": {
-    "test": "npm run build && c8 --reporter=text-summary ava --config ./ava-dist.config.cjs",
+    "test": "npm run build && c8 --reporter=text-summary ava --config ./ava-dist.config.js",
     "test:setup": "docker-compose up",
     "test:teardown": "docker-compose down",
     "test:watch": "npm run dev",
@@ -41,11 +41,12 @@
     "object-hash": "^3.0.0"
   },
   "devDependencies": {
-    "@integreat/ts-dev-setup": "^5.0.4",
+    "@integreat/ts-dev-setup": "^6.0.1",
     "@types/debug": "^4.1.12",
+    "@types/node": "^20.11.19",
     "@types/object-hash": "^3.0.6",
     "@types/sinon": "^17.0.3",
-    "integreat": "^1.5.6",
+    "integreat": "^1.5.8",
     "sinon": "^17.0.1"
   }
 }
