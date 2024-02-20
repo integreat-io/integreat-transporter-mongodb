@@ -31,7 +31,7 @@
   },
   "homepage": "https://github.com/integreat-io/integreat-transporter-mongodb#readme",
   "engines": {
-    "node": ">= 18"
+    "node": ">= 18.18"
   },
   "dependencies": {
     "debug": "^4.3.4",
