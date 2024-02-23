@@ -1,8 +1,13 @@
 /* eslint-disable security/detect-object-injection */
 import debug from 'debug'
-import type { MongoClient, MongoClientOptions } from 'mongodb'
 import createHash from 'object-hash'
-import { MongoOptions, Connection, MongoClientObject } from './types.js'
+import type { MongoClient, MongoClientOptions } from 'mongodb'
+import type {
+  MongoOptions,
+  Connection,
+  MongoClientObject,
+  IncomingOptions,
+} from './types.js'
 
 const debugMongo = debug('integreat:transporter:mongodb:client')
 
@@ -82,6 +87,11 @@ async function createOrReuseClient(
   return clientObject
 }
 
+const prepareIncomingOptions = (incoming: IncomingOptions, db?: string) => ({
+  ...incoming,
+  db: incoming.db || db,
+})
+
 export default async function connect(
   Client: typeof MongoClient,
   options: MongoOptions,
@@ -99,6 +109,8 @@ export default async function connect(
     mongo,
     throwAfterFailedHeartbeatCount,
     idIsUnique = false,
+    db,
+    incoming,
   } = options
   const mongoUri = uri || baseUri
   if (!mongoUri) {
@@ -117,7 +129,13 @@ export default async function connect(
       emit,
       throwAfterFailedHeartbeatCount,
     )
-    return { status: 'ok', mongo: client, idIsUnique }
+    return {
+      status: 'ok',
+      mongo: client,
+      idIsUnique,
+      ...(incoming && { incoming: prepareIncomingOptions(incoming, db) }),
+      emit, // We include emit here to pass it on to `listen()`. Would be better if Integreat passed it on to the listen() function directly
+    }
   } catch (error) {
     return {
       status: 'error',

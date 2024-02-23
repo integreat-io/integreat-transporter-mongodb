@@ -292,6 +292,38 @@ not recommend this approach, as the username and password is then included in
 the definition file and this makes the chance of it being e.g. commited to a git
 repo, much higher.
 
+#### Listening to changes
+
+The MongoDB transporter supports listening to changes in the database. To enable
+this, set an array of collections to listen to in the `collections` property on
+the `incoming` object on `options`. When the Integreat instance is set up, call
+`listen()` on the instance, and Integreat will dispatch `SET` actions for
+`insert` and `update` events, and and `DELETE` actions for `delete` events. Note
+that `DELETE` will only be dispatched when `idIsUnique` is `true`, as we would
+otherwise not know the id of the deleted document.
+
+You may also specify a database in `options.incoming.db`, otherwise `options.db`
+is used.
+
+The incoming action will have the following payload properties:
+- `collection`: The name of the collection
+- `db`: The name of the database
+- `data`: The document for `insert` and `update` events
+- `id`: The id of the document for `delete` events
+- `method`: The method that triggered the change: `insert`, `update`, or
+  `delete`.
+
+Note that we disregard any incoming settings in endpoint `options` for now. You
+may use the endpoint `match` settings to direct incoming actions for different
+collections and event types, to different endpoints. In the future we may allow
+different incoming settings for different endpoints, so only specify this on the
+service to make sure you are future compatible.
+
+We use MongoDB's change streams to listen to changes, so this feature requires
+a replica set or a shared cluster. See
+[the MongoDB documentation on Change Streams](https://www.mongodb.com/docs/manual/changeStreams/)
+for more.
+
 #### Heartbeat
 
 **Experimental:** By setting a number on the `throwAfterFailedHeartbeatCount`

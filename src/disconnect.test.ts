@@ -1,7 +1,7 @@
 import test from 'ava'
 import sinon from 'sinon'
-import { MongoClient } from 'mongodb'
-import { MongoClientObject } from './types.js'
+import type { MongoClient, ChangeStream } from 'mongodb'
+import type { MongoClientObject, Connection } from './types.js'
 
 import disconnect from './disconnect.js'
 
@@ -34,8 +34,41 @@ test('should not disconnect client when the count is higher than 1', async (t) =
   t.is(clientObject.count, 1)
 })
 
+test('should close streams', async (t) => {
+  const closeSpy = sinon.stub().resolves(undefined)
+  const closeStreamSpy0 = sinon.stub().resolves(undefined)
+  const closeStreamSpy1 = sinon.stub().resolves(undefined)
+  const stream0 = { close: closeStreamSpy0 } as unknown as ChangeStream
+  const stream1 = { close: closeStreamSpy1 } as unknown as ChangeStream
+  const client = { close: closeSpy } as unknown as MongoClient
+  const clientObject: MongoClientObject = { client, count: 1 }
+  const connection = {
+    status: 'ok',
+    mongo: clientObject,
+    incoming: {
+      streams: [stream0, stream1],
+    },
+  }
+
+  await disconnect(connection)
+
+  t.is(closeStreamSpy0.callCount, 1)
+  t.is(closeStreamSpy1.callCount, 1)
+  t.deepEqual(connection.incoming?.streams, [])
+  t.is(closeSpy.callCount, 1)
+})
+
 test('should do nothing when no client', async (t) => {
-  const conn = { status: 'ok', client: undefined }
+  const conn = {
+    status: 'ok',
+    mongo: { client: undefined },
+  } as unknown as Connection
+
+  await t.notThrowsAsync(disconnect(conn))
+})
+
+test('should do nothing when no mongo object', async (t) => {
+  const conn = { status: 'ok' }
 
   await t.notThrowsAsync(disconnect(conn))
 })

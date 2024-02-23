@@ -43,7 +43,7 @@ const useInternalId = ({
   id: resolveInternalId(_id, id),
 })
 
-const useInternalIdIfObject = (item: unknown) =>
+export const useInternalIdIfObject = (item: unknown) =>
   isObject(item) ? useInternalId(item) : item
 
 const normalizeIdInItem = (lookupPaths: string[]) =>

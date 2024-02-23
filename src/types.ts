@@ -1,5 +1,8 @@
-import { MongoClient } from 'mongodb'
-import { Connection as ConnectionBase, Payload as BasePayload } from 'integreat'
+import type { MongoClient, ChangeStream } from 'mongodb'
+import type {
+  Connection as ConnectionBase,
+  Payload as BasePayload,
+} from 'integreat'
 
 export interface MongoData extends Record<string, unknown> {
   _id: string | Record<string, unknown>
@@ -124,6 +127,11 @@ export type AggregationObject =
   | AggregationObjectConcatArrays
   | AggregationObjectSearch
 
+export interface IncomingOptions extends Record<string, unknown> {
+  collections?: string[]
+  db?: string
+}
+
 export interface MongoOptions extends Record<string, unknown> {
   uri?: string
   baseUri?: string
@@ -136,6 +144,7 @@ export interface MongoOptions extends Record<string, unknown> {
   allowDiskUse?: boolean
   throwAfterFailedHeartbeatCount?: number
   idIsUnique?: boolean
+  incoming?: IncomingOptions
 }
 
 export interface MongoClientObject {
@@ -143,9 +152,18 @@ export interface MongoClientObject {
   count: number
 }
 
+export interface IncomingConnection {
+  collections?: string[]
+  db?: string
+  streams?: ChangeStream[]
+}
+
 export interface Connection extends ConnectionBase {
   mongo?: MongoClientObject
   error?: string
+  incoming?: IncomingConnection
+  idIsUnique?: boolean
+  emit?: (eventType: string, ...args: unknown[]) => void
 }
 
 export interface Payload extends BasePayload {
@@ -154,4 +172,14 @@ export interface Payload extends BasePayload {
   pageSize?: number
   pageAfter?: string
   pageId?: string
+}
+
+export interface ChangeStreamEvent {
+  operationType: 'insert' | 'update' | 'replace' | 'delete' | 'invalidate'
+  fullDocument: unknown
+  ns: {
+    db: string
+    coll: string
+  }
+  documentKey: { _id: string }
 }

@@ -4,18 +4,27 @@ import { Connection } from './types.js'
 const debugMongo = debug('integreat:transporter:mongodb:client')
 
 export default async function disconnect(
-  connection: Connection | null
+  connection: Connection | null,
 ): Promise<void> {
-  if (connection?.status === 'ok' && connection.mongo?.client) {
+  if (connection?.status === 'ok' && connection.mongo) {
     connection.mongo.count -= 1
     debugMongo(
-      `*** MongoDb Client: Disconnecting, count ${connection.mongo.count}`
+      `*** MongoDb Client: Disconnecting, count ${connection.mongo.count}`,
     )
 
-    if (connection.mongo.count <= 0) {
+    if (Array.isArray(connection.incoming?.streams)) {
+      const streams = connection.incoming?.streams
+      connection.incoming.streams = []
+      for (const stream of streams) {
+        await stream.close()
+      }
+      debugMongo(`*** MongoDb Client: ${streams.length} streams closed`)
+    }
+
+    if (connection.mongo.count <= 0 && connection.mongo?.client) {
       connection.mongo.client.close()
       connection.mongo.client = null
-      debugMongo(`*** MongoDb Client: Disconnected`)
+      debugMongo('*** MongoDb Client: Disconnected')
     }
   }
 }

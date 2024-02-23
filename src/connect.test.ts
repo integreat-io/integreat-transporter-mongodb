@@ -41,6 +41,7 @@ test('should return connection with client', async (t) => {
   t.true(constructSpy.calledWith('mongodb://db:27027/database'))
   t.is(connectSpy.callCount, 1)
   t.false(ret.idIsUnique) // Default value
+  t.is(ret.emit, emit)
 })
 
 test('should set idIsUnique on connection', async (t) => {
@@ -111,6 +112,57 @@ test('should use supplied auth', async (t) => {
     readPreference: 'primaryPreferred',
     auth: { username: 'johnf', password: 's3cr3t' },
   })
+})
+
+test('should pass on incoming options', async (t) => {
+  const options = {
+    uri: 'mongodb://db:27018/database',
+    incoming: {
+      collections: ['documents'],
+      db: 'database',
+    },
+  }
+  const constructSpy = sinon.stub()
+  const connectSpy = sinon.stub()
+  const expected = {
+    collections: ['documents'],
+    db: 'database',
+  }
+
+  const ret = await connect(
+    createMockMongo(constructSpy, connectSpy),
+    options,
+    emit,
+  )
+
+  t.is(ret.status, 'ok', ret.error)
+  t.deepEqual(ret.incoming, expected)
+})
+
+test('should use db from options when not set in incoming', async (t) => {
+  const options = {
+    uri: 'mongodb://db:27018/database',
+    db: 'database',
+    incoming: {
+      collections: ['documents'],
+      // No db
+    },
+  }
+  const constructSpy = sinon.stub()
+  const connectSpy = sinon.stub()
+  const expected = {
+    collections: ['documents'],
+    db: 'database',
+  }
+
+  const ret = await connect(
+    createMockMongo(constructSpy, connectSpy),
+    options,
+    emit,
+  )
+
+  t.is(ret.status, 'ok', ret.error)
+  t.deepEqual(ret.incoming, expected)
 })
 
 test('should reuse client when connecting twice with same options', async (t) => {
