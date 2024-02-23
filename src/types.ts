@@ -132,7 +132,7 @@ export interface IncomingOptions extends Record<string, unknown> {
   db?: string
 }
 
-export interface MongoOptions extends Record<string, unknown> {
+export interface ServiceOptions extends Record<string, unknown> {
   uri?: string
   baseUri?: string
   db?: string

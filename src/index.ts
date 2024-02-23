@@ -4,7 +4,7 @@ import disconnect from './disconnect.js'
 import send from './send.js'
 import listen from './listen.js'
 import { Transporter } from 'integreat'
-import { MongoOptions, Connection } from './types.js'
+import type { ServiceOptions, Connection } from './types.js'
 
 /**
  * MongoDB Transporter for Integreat
@@ -15,7 +15,7 @@ const mongodbTransporter: Transporter = {
   /**
    * Prepare endpoint options.
    */
-  prepareOptions(options: MongoOptions) {
+  prepareOptions(options: ServiceOptions) {
     return options
   },
 

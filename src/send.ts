@@ -2,13 +2,13 @@ import { Action, Response } from 'integreat'
 import { Collection, MongoClient } from 'mongodb'
 import getDocs from './getDocs.js'
 import setDocs from './setDocs.js'
-import { Connection, MongoOptions } from './types.js'
+import { Connection, ServiceOptions } from './types.js'
 
 export const getCollection = (
   action: Action,
   client: MongoClient,
 ): Collection | undefined => {
-  const options = action.meta?.options as MongoOptions | undefined
+  const options = action.meta?.options as ServiceOptions | undefined
   if (!options?.collection) {
     return undefined
   }

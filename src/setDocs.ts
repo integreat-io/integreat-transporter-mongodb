@@ -15,7 +15,7 @@ import type {
   DeleteResult,
   BulkWriteResult,
 } from 'mongodb'
-import type { MongoOptions } from './types.js'
+import type { ServiceOptions } from './types.js'
 
 interface ItemResponse {
   id?: string | string[]
@@ -160,7 +160,7 @@ const createOperation = (action: Action, useIdAsInternalId: boolean) =>
       payload: { data, ...params },
       meta: { options: { keepUndefined = false } = {} } = {},
     } = action
-    const options = action.meta?.options as MongoOptions | undefined
+    const options = action.meta?.options as ServiceOptions | undefined
     const id = String(item.id)
     const idKey = useIdAsInternalId ? '_id' : 'id'
 
@@ -211,7 +211,7 @@ async function deleteWithQuery(
   const {
     payload: { data, ...params },
   } = action
-  const options = action.meta?.options as MongoOptions | undefined
+  const options = action.meta?.options as ServiceOptions | undefined
   const filter = prepareFilter(options?.query, params, undefined)
 
   if (Object.keys(filter).length === 0) {

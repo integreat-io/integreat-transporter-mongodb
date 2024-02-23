@@ -14,7 +14,7 @@ import { isObject } from './utils/is.js'
 import type { FindCursor, AggregationCursor, MongoClient } from 'mongodb'
 import type { Action, Response } from 'integreat'
 import type {
-  MongoOptions,
+  ServiceOptions,
   Payload,
   AggregationObject,
   QueryObject,
@@ -239,8 +239,8 @@ export default async function getDocs(
     query,
     allowDiskUse = false,
     aggregation: aggregationObjects,
-  } = options as MongoOptions
-  const sort = prepareSort((options as MongoOptions).sort, useIdAsInternalId)
+  } = options as ServiceOptions
+  const sort = prepareSort((options as ServiceOptions).sort, useIdAsInternalId)
 
   // Prepare aggregation
   const aggregation = aggregationObjects

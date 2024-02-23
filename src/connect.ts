@@ -3,7 +3,7 @@ import debug from 'debug'
 import createHash from 'object-hash'
 import type { MongoClient, MongoClientOptions } from 'mongodb'
 import type {
-  MongoOptions,
+  ServiceOptions,
   Connection,
   MongoClientObject,
   IncomingOptions,
@@ -94,7 +94,7 @@ const prepareIncomingOptions = (incoming: IncomingOptions, db?: string) => ({
 
 export default async function connect(
   Client: typeof MongoClient,
-  options: MongoOptions,
+  options: ServiceOptions,
   emit: (eventType: string, ...args: unknown[]) => void,
   auth?: Record<string, unknown> | null,
   connection: Connection | null = null,
