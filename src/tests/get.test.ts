@@ -20,13 +20,12 @@ const optionsWithIdIsUnique = { ...options, idIsUnique: true }
 const authentication = null
 const emit = () => undefined
 
-test.beforeEach(async (t) => {
+test.before(async (t) => {
   t.context = await openMongoWithCollection('test')
 })
 
-test.afterEach.always(async (t) => {
-  const { client, collection } = t.context
-  await deleteDocuments(collection, {})
+test.after.always(async (t) => {
+  const { client } = t.context
   closeMongo(client)
 })
 
@@ -78,6 +77,8 @@ test.serial('should get a document by id', async (t) => {
   t.deepEqual(data[0].date, new Date('2021-03-14T18:43:11Z'))
   t.is(data[0][''], 'Empty') // Should normalize `'**empty**'` to empty string when used as key
   t.false(data[0].hasOwnProperty('**empty**'))
+
+  await deleteDocuments(collection, {})
 })
 
 test.serial('should get documents by type', async (t) => {
@@ -114,6 +115,8 @@ test.serial('should get documents by type', async (t) => {
   t.is(data.length, 2)
   t.is(data[0].id, 'ent1')
   t.is(data[1].id, 'ent2')
+
+  await deleteDocuments(collection, {})
 })
 
 test.serial('should get documents with pagination', async (t) => {
@@ -160,6 +163,8 @@ test.serial('should get documents with pagination', async (t) => {
   t.is(data[0].id, 'ent1')
   t.is(data[1].id, 'ent2')
   t.deepEqual(response.paging, expectedPaging)
+
+  await deleteDocuments(collection, {})
 })
 
 test.serial('should get a document with endpoint query', async (t) => {
@@ -209,6 +214,8 @@ test.serial('should get a document with endpoint query', async (t) => {
   const data = response.data as TypedData[]
   t.is(data.length, 1)
   t.is(data[0].id, 'ent2')
+
+  await deleteDocuments(collection, {})
 })
 
 test.serial(
@@ -254,6 +261,8 @@ test.serial(
     t.is(data.length, 1)
     t.is(data[0].id, 'ent4')
     t.deepEqual(data[0].date, new Date('2021-03-14T18:43:11Z'))
+
+    await deleteDocuments(collection, {})
   },
 )
 
@@ -311,4 +320,6 @@ test.serial('should sort documents', async (t) => {
   t.is(data[0].id, 'ent3')
   t.is(data[1].id, 'ent1')
   t.is(data[2].id, 'ent2')
+
+  await deleteDocuments(collection, {})
 })

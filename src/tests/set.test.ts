@@ -32,7 +32,7 @@ test.afterEach.always(async (t) => {
 
 // Tests
 
-test('should set one document', async (t) => {
+test.serial('should set one document', async (t) => {
   const { collection, collectionName } = t.context
   const action = {
     type: 'SET',
@@ -77,7 +77,7 @@ test('should set one document', async (t) => {
   t.deepEqual(response.data, expectedData)
 })
 
-test('should set array of documents', async (t) => {
+test.serial('should set array of documents', async (t) => {
   const { collection, collectionName } = t.context
   const action = {
     type: 'SET',
@@ -113,7 +113,7 @@ test('should set array of documents', async (t) => {
   t.deepEqual(response.data, expectedData)
 })
 
-test('should update existing document', async (t) => {
+test.serial('should update existing document', async (t) => {
   const { collection, collectionName } = t.context
   await insertDocument(collection, {
     id: 'ent1',
@@ -164,7 +164,7 @@ test('should update existing document', async (t) => {
   t.deepEqual(response.data, expectedData)
 })
 
-test('should keep undefined when keepUndefined is true', async (t) => {
+test.serial('should keep undefined when keepUndefined is true', async (t) => {
   const { collection, collectionName } = t.context
   const action = {
     type: 'SET',
@@ -205,7 +205,7 @@ test('should keep undefined when keepUndefined is true', async (t) => {
   t.deepEqual(docs[0].meta, { section: 'news', archived: null })
 })
 
-test('should set id to _id when idIsUnique is true', async (t) => {
+test.serial('should set id to _id when idIsUnique is true', async (t) => {
   const { collection, collectionName } = t.context
   const action = {
     type: 'SET',
@@ -241,78 +241,90 @@ test('should set id to _id when idIsUnique is true', async (t) => {
   t.falsy(docs[0].id)
 })
 
-test('should set id to _id when idIsUnique is true for array of documents', async (t) => {
-  const { collection, collectionName } = t.context
-  const action = {
-    type: 'SET',
-    payload: {
-      data: [
-        { $type: 'entry', id: 'ent1' },
-        { $type: 'entry', id: 'ent2' },
-      ],
-    },
-    meta: {
-      options: {
-        collection: collectionName,
-        db: 'test',
+test.serial(
+  'should set id to _id when idIsUnique is true for array of documents',
+  async (t) => {
+    const { collection, collectionName } = t.context
+    const action = {
+      type: 'SET',
+      payload: {
+        data: [
+          { $type: 'entry', id: 'ent1' },
+          { $type: 'entry', id: 'ent2' },
+        ],
       },
-    },
-  }
-
-  const connection = await transporter.connect(
-    optionsWithIdIsUnique,
-    authorization,
-    null,
-    emit,
-  )
-  const response = await transporter.send(action, connection)
-  await transporter.disconnect(connection)
-
-  t.is(response.status, 'ok', response.error)
-  const docs = (await getDocuments(collection, {})) as Record<string, unknown>[]
-  t.is(docs.length, 2)
-  t.true(docs.some((doc) => doc._id === 'ent1'))
-  t.true(docs.some((doc) => doc._id === 'ent2'))
-})
-
-test('should update existing document when idIsUnique is true', async (t) => {
-  const { collection, collectionName } = t.context
-  await insertDocument(collection, {
-    _id: 'ent3',
-    title: 'Entry 3',
-  })
-  const action = {
-    type: 'SET',
-    payload: {
-      data: {
-        $type: 'entry',
-        id: 'ent3',
-        title: 'Updated entry 3',
+      meta: {
+        options: {
+          collection: collectionName,
+          db: 'test',
+        },
       },
-    },
-    meta: {
-      options: {
-        collection: collectionName,
-        db: 'test',
+    }
+
+    const connection = await transporter.connect(
+      optionsWithIdIsUnique,
+      authorization,
+      null,
+      emit,
+    )
+    const response = await transporter.send(action, connection)
+    await transporter.disconnect(connection)
+
+    t.is(response.status, 'ok', response.error)
+    const docs = (await getDocuments(collection, {})) as Record<
+      string,
+      unknown
+    >[]
+    t.is(docs.length, 2)
+    t.true(docs.some((doc) => doc._id === 'ent1'))
+    t.true(docs.some((doc) => doc._id === 'ent2'))
+  },
+)
+
+test.serial(
+  'should update existing document when idIsUnique is true',
+  async (t) => {
+    const { collection, collectionName } = t.context
+    await insertDocument(collection, {
+      _id: 'ent3',
+      title: 'Entry 3',
+    })
+    const action = {
+      type: 'SET',
+      payload: {
+        data: {
+          $type: 'entry',
+          id: 'ent3',
+          title: 'Updated entry 3',
+        },
       },
-    },
-  }
-  const expectedData = { insertedCount: 0, modifiedCount: 1, deletedCount: 0 }
+      meta: {
+        options: {
+          collection: collectionName,
+          db: 'test',
+        },
+      },
+    }
+    const expectedData = { insertedCount: 0, modifiedCount: 1, deletedCount: 0 }
 
-  const connection = await transporter.connect(
-    optionsWithIdIsUnique,
-    authorization,
-    null,
-    emit,
-  )
-  const response = await transporter.send(action, connection)
-  await transporter.disconnect(connection)
+    const connection = await transporter.connect(
+      optionsWithIdIsUnique,
+      authorization,
+      null,
+      emit,
+    )
+    const response = await transporter.send(action, connection)
+    await transporter.disconnect(connection)
 
-  t.is(response.status, 'ok', response.error)
-  const docs = (await getDocuments(collection, {})) as Record<string, unknown>[]
-  t.is(docs.length, 1)
-  t.is(docs[0]._id, 'ent3')
-  t.is(docs[0].title, 'Updated entry 3')
-  t.falsy(docs[0].id)
-  t.deepEqual(response.data, expectedData)
-})
+    t.is(response.status, 'ok', response.error)
+    const docs = (await getDocuments(collection, {})) as Record<
+      string,
+      unknown
+    >[]
+    t.is(docs.length, 1)
+    t.is(docs[0]._id, 'ent3')
+    t.is(docs[0].title, 'Updated entry 3')
+    t.falsy(docs[0].id)
+    t.deepEqual(response.data, expectedData)
+  },
+)
