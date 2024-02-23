@@ -25,3 +25,32 @@ test('prepareOptions should set options', async (t) => {
 
   t.deepEqual(ret, expected)
 })
+
+// Tests -- shouldListen
+
+test('should return true when incoming is set in options', (t) => {
+  const options = {
+    uri: 'mongodb://db:27030/database',
+    db: 'database',
+    collection: 'documents',
+    incoming: {
+      collections: ['documents'],
+    },
+  }
+
+  const ret = transporter.shouldListen!(options)
+
+  t.true(ret)
+})
+
+test('should return false when incoming is not set in options', (t) => {
+  const options = {
+    uri: 'mongodb://db:27030/database',
+    db: 'database',
+    collection: 'documents',
+  }
+
+  const ret = transporter.shouldListen!(options)
+
+  t.false(ret)
+})

@@ -32,21 +32,27 @@ const mongodbTransporter: Transporter = {
   },
 
   /**
-   * Disconnect from the database and any change streams.
-   */
-  disconnect,
-
-  /**
    * Get data from the database, or set, update, or delete data in the database
    * -- depending on the action.
    */
   send,
 
   /**
+   * Return `true` if we should listen to the database for changes, `false` if
+   *  not. We simply return `true` if there is an `incoming` options object.
+   */
+  shouldListen: (options: ServiceOptions) => !!options.incoming,
+
+  /**
    * Listen for changes in the database and dispatch incoming actions when
    * appropriate.
    */
   listen,
+
+  /**
+   * Disconnect from the database and any change streams.
+   */
+  disconnect,
 }
 
 export default mongodbTransporter
