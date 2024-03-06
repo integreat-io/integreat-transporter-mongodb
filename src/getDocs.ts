@@ -294,7 +294,12 @@ export default async function getDocs(
           ? data[0].__totalCount // This is a special prop added in the aggregation
           : 0
     } else {
-      const countFilter = prepareFilter(query, params)
+      const countFilter = prepareFilter(
+        query,
+        params,
+        undefined,
+        useIdAsInternalId,
+      )
       totalCount = await collection.countDocuments(countFilter)
     }
   }
