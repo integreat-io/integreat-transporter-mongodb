@@ -18,6 +18,7 @@ export interface QueryObject {
   op?: string
   param?: string
   value?: unknown
+  valuePath?: string
   variable?: string
   expr?: boolean
 }

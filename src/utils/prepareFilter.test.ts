@@ -262,6 +262,46 @@ test('should support expr queries for in', (t) => {
   t.deepEqual(ret, expected)
 })
 
+test('should support expr queries for eq', (t) => {
+  const type = 'entry'
+  const id = 'ent1'
+  const query = [{ path: 'id', op: 'eq', valuePath: 'cid', expr: true }]
+  const expected = {
+    $expr: { $eq: ['$id', '$cid'] },
+  }
+
+  const ret = prepareFilter(query, { type, id })
+
+  t.deepEqual(ret, expected)
+})
+
+test('should support expr queries for ne', (t) => {
+  const type = 'entry'
+  const id = 'ent1'
+  const query = [{ path: 'id', op: 'ne', valuePath: 'cid', expr: true }]
+  const expected = {
+    $expr: { $ne: ['$id', '$cid'] },
+  }
+
+  const ret = prepareFilter(query, { type, id })
+
+  t.deepEqual(ret, expected)
+})
+
+test('should support expr queries for eq with _id', (t) => {
+  const useIdAsInternalId = true
+  const type = 'entry'
+  const id = 'ent1'
+  const query = [{ path: 'id', op: 'eq', valuePath: 'cid', expr: true }]
+  const expected = {
+    $expr: { $eq: ['$_id', '$cid'] },
+  }
+
+  const ret = prepareFilter(query, { type, id }, undefined, useIdAsInternalId)
+
+  t.deepEqual(ret, expected)
+})
+
 test('should support expr queries for isArray', (t) => {
   const type = 'entry'
   const id = 'ent1'

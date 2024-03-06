@@ -67,10 +67,10 @@ const isValidValue = (value: unknown, op: string): boolean =>
       (opsWithObject.includes(op) && isObject(value)) ||
       (value === null && opsWithoutValue.includes(op))
 
-function mapOp(op: string) {
+function mapOp(op: string, expr = false) {
   switch (op) {
     case 'eq':
-      return undefined
+      return expr ? '$eq' : undefined
     case 'isset':
       return '$ne'
     case 'notset':
@@ -86,17 +86,19 @@ function mapOp(op: string) {
 
 function setMongoSelectorFromQueryObj(
   allParams: Record<string, unknown>,
-  { path, op = 'eq', value, param, variable, expr }: QueryObject,
+  { path, op = 'eq', value, valuePath, param, variable, expr }: QueryObject,
   filter = {},
 ) {
   if (isOpValid(op)) {
     let targetValue = variable
       ? `$$${variable}`
-      : op === 'isArray'
-        ? `$${path}`
-        : (param ? allParams[param] : value) || null // eslint-disable-line security/detect-object-injection
+      : valuePath
+        ? `$${valuePath}`
+        : op === 'isArray'
+          ? `$${path}`
+          : (param ? allParams[param] : value) || null // eslint-disable-line security/detect-object-injection
 
-    if (expr && op === 'in') {
+    if (expr && op !== 'isArray') {
       targetValue = [`$${path}`, targetValue]
     }
 
@@ -107,7 +109,7 @@ function setMongoSelectorFromQueryObj(
           : op === 'isArray' || op === 'search' || typeof path !== 'string'
             ? undefined
             : serializePath(path),
-        mapOp(op),
+        mapOp(op, expr),
       ]
         .filter(Boolean)
         .join('.')
