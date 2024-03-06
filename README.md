@@ -75,14 +75,29 @@ The `uri` is used as the uri to the database.
 #### MongoDB's \_id field
 
 MongoDB uses an `_id` field as the primary key for documents. By default, we
-user let MongoDB generate this field and never touch it, but if you set
+let MongoDB generate this field and never touch it, but if you set
 `idIsUnique: true` in the option, signaling that the `id` of the data items
-you'll send to the mongodb transporter will always be unique, we'll map the `id`
-to `_id` and back again.
+you'll send will always be unique, we'll map the `id` to `_id` and back again.
 
-One of the advantages of this is that, in addition to not have an extra id
-field, MongoDB will always create an index for `_id`, so this may speed up
+One of the advantages of this, in addition to not have an extra id field,
+is that MongoDB will always create an index for `_id`, so this may speed up
 operations on the collection without any extra setup.
+
+`idIsUnique: true` may be set on the service `options` to apply to all
+collections, or on each endpoint, applying to the collection relevant to that
+endpoint. You are responsible for making sure the `idIsUnique` is set
+consistently, if more than one endpoint is dealing with the same collection, or
+else you'll end up with inconsistencies.
+
+When listening to MongoDb, you may set `idIsUnique` on the `incoming` options.
+If not set here, incoming will use whatever is set on the service `options`.
+Keep in mind that setting `idIsUnique` on endpoints will not affect incoming
+data, so make sure to set it on the service level when needed.
+
+There are also cases where one endpoint may involve more than one collection
+(e.g. in aggregations), and in these cases all relevant collections must adhere
+to `idIsUnique` being either `false` or `true`. It's usually a good idea to be
+consistent within a database anyway.
 
 #### Serializing and normalizing
 

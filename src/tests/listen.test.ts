@@ -145,8 +145,8 @@ test.serial(
       incoming: {
         collections: [collectionName],
         db: 'test',
+        idIsUnique: true,
       },
-      idIsUnique: true,
     }
     const data = {
       _id: 'ent100',

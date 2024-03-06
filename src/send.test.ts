@@ -98,6 +98,39 @@ test('should get items with id as internal id', async (t) => {
       options: {
         collection: 'documents',
         db: 'database',
+        idIsUnique,
+      },
+    },
+  }
+
+  const response = await send(action, connection)
+
+  t.is(response?.status, 'ok')
+  const data = response?.data as TypedData[]
+  t.is(data.length, 2)
+  t.falsy(data[0]._id) // Should not pass on internal id
+  t.is(data[0].id, 'ent1')
+  t.is(data[1].id, 'ent2')
+})
+
+test('should get items with id as internal id, when idIsUnique is set on the meta options only', async (t) => {
+  const idIsUnique = true
+  const find = createFind([
+    { _id: 'ent1', $type: 'entry' },
+    { _id: 'ent2', $type: 'entry' },
+  ])
+  const connection = createConnection({ find }) // We're not setting `idIsUnique` on the connection to mimick when this is only set on an endpoint
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+      typePlural: 'entries',
+    },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+        idIsUnique,
       },
     },
   }
@@ -263,6 +296,7 @@ test('should update items with id as internal id', async (t) => {
       options: {
         collection: 'documents',
         db: 'database',
+        idIsUnique,
       },
     },
   }

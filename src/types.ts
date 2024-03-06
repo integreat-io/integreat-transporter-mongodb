@@ -130,6 +130,7 @@ export type AggregationObject =
 export interface IncomingOptions extends Record<string, unknown> {
   collections?: string[]
   db?: string
+  idIsUnique?: boolean
 }
 
 export interface ServiceOptions extends Record<string, unknown> {
@@ -156,13 +157,13 @@ export interface IncomingConnection {
   collections?: string[]
   db?: string
   streams?: ChangeStream[]
+  idIsUnique?: boolean
 }
 
 export interface Connection extends ConnectionBase {
   mongo?: MongoClientObject
   error?: string
   incoming?: IncomingConnection
-  idIsUnique?: boolean
   emit?: (eventType: string, ...args: unknown[]) => void
 }
 

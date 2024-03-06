@@ -219,6 +219,7 @@ test.serial('should set id to _id when idIsUnique is true', async (t) => {
       options: {
         collection: collectionName,
         db: 'test',
+        idIsUnique: true,
       },
     },
   }
@@ -257,6 +258,7 @@ test.serial(
         options: {
           collection: collectionName,
           db: 'test',
+          idIsUnique: true,
         },
       },
     }
@@ -302,6 +304,7 @@ test.serial(
         options: {
           collection: collectionName,
           db: 'test',
+          idIsUnique: true,
         },
       },
     }

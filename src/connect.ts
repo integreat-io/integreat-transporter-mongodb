@@ -87,9 +87,14 @@ async function createOrReuseClient(
   return clientObject
 }
 
-const prepareIncomingOptions = (incoming: IncomingOptions, db?: string) => ({
-  ...incoming,
-  db: incoming.db || db,
+const prepareIncomingOptions = (
+  { collections, db, idIsUnique }: IncomingOptions,
+  outgoingDb?: string,
+  outgoingIdIsUnique?: boolean,
+) => ({
+  collections,
+  db: db || outgoingDb,
+  idIsUnique: idIsUnique ?? outgoingIdIsUnique ?? false,
 })
 
 export default async function connect(
@@ -108,8 +113,8 @@ export default async function connect(
     baseUri,
     mongo,
     throwAfterFailedHeartbeatCount,
-    idIsUnique = false,
     db,
+    idIsUnique,
     incoming,
   } = options
   const mongoUri = uri || baseUri
@@ -132,8 +137,9 @@ export default async function connect(
     return {
       status: 'ok',
       mongo: client,
-      idIsUnique,
-      ...(incoming && { incoming: prepareIncomingOptions(incoming, db) }),
+      ...(incoming && {
+        incoming: prepareIncomingOptions(incoming, db, idIsUnique),
+      }),
       emit, // We include emit here to pass it on to `listen()`. Would be better if Integreat passed it on to the listen() function directly
     }
   } catch (error) {

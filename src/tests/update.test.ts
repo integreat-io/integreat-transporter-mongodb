@@ -278,6 +278,7 @@ test.serial('should update document when idIsUnique is true', async (t) => {
       options: {
         collection: collectionName,
         db: 'test',
+        idIsUnique: true,
       },
     },
   }

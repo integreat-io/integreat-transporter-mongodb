@@ -40,27 +40,7 @@ test('should return connection with client', async (t) => {
   t.is(constructSpy.callCount, 1)
   t.true(constructSpy.calledWith('mongodb://db:27027/database'))
   t.is(connectSpy.callCount, 1)
-  t.false(ret.idIsUnique) // Default value
   t.is(ret.emit, emit)
-})
-
-test('should set idIsUnique on connection', async (t) => {
-  const options = {
-    uri: 'mongodb://db:27028/database',
-    idIsUnique: true,
-  }
-  const constructSpy = sinon.stub()
-  const connectSpy = sinon.stub()
-
-  const ret = await connect(
-    createMockMongo(constructSpy, connectSpy),
-    options,
-    emit,
-  )
-
-  t.is(ret.status, 'ok', ret.error)
-  t.true(ret.idIsUnique)
-  t.falsy(ret.error)
 })
 
 test('should use baseUri when uri is not supplied', async (t) => {
@@ -127,6 +107,61 @@ test('should pass on incoming options', async (t) => {
   const expected = {
     collections: ['documents'],
     db: 'database',
+    idIsUnique: false,
+  }
+
+  const ret = await connect(
+    createMockMongo(constructSpy, connectSpy),
+    options,
+    emit,
+  )
+
+  t.is(ret.status, 'ok', ret.error)
+  t.deepEqual(ret.incoming, expected)
+})
+
+test('should pass on incoming options with idIsUnique', async (t) => {
+  const options = {
+    uri: 'mongodb://db:27018/database',
+    incoming: {
+      collections: ['documents'],
+      db: 'database',
+      idIsUnique: true,
+    },
+  }
+  const constructSpy = sinon.stub()
+  const connectSpy = sinon.stub()
+  const expected = {
+    collections: ['documents'],
+    db: 'database',
+    idIsUnique: true,
+  }
+
+  const ret = await connect(
+    createMockMongo(constructSpy, connectSpy),
+    options,
+    emit,
+  )
+
+  t.is(ret.status, 'ok', ret.error)
+  t.deepEqual(ret.incoming, expected)
+})
+
+test('should use idIsUnique from outgoing options if not set on incoming', async (t) => {
+  const options = {
+    uri: 'mongodb://db:27018/database',
+    incoming: {
+      collections: ['documents'],
+      db: 'database',
+    },
+    idIsUnique: true, // Defined on the top-level, i.e. outgoing
+  }
+  const constructSpy = sinon.stub()
+  const connectSpy = sinon.stub()
+  const expected = {
+    collections: ['documents'],
+    db: 'database',
+    idIsUnique: true,
   }
 
   const ret = await connect(
@@ -153,6 +188,7 @@ test('should use db from options when not set in incoming', async (t) => {
   const expected = {
     collections: ['documents'],
     db: 'database',
+    idIsUnique: false,
   }
 
   const ret = await connect(

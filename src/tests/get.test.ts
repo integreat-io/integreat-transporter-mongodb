@@ -242,6 +242,7 @@ test.serial(
         options: {
           collection: collectionName,
           db: 'test',
+          idIsUnique: true,
         },
       },
     }

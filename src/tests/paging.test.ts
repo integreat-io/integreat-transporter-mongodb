@@ -276,6 +276,7 @@ test('should get first page when idIsUnique is true', async (t) => {
       options: {
         collection: collectionName,
         db: 'test',
+        idIsUnique: true,
       },
     },
   }
@@ -327,6 +328,7 @@ test('should get second page when idIsUnique is true', async (t) => {
       options: {
         collection: collectionName,
         db: 'test',
+        idIsUnique: true,
         sort: { date: 1 },
       },
     },

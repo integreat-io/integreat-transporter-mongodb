@@ -363,6 +363,7 @@ test('should get documents by aggregation when idIsUnique is true', async (t) =>
       options: {
         collection: collectionName,
         db: 'test',
+        idIsUnique: true,
         aggregation: [
           {
             type: 'query',
@@ -423,6 +424,7 @@ test('should aggregate with lookup when idIsUnique is true', async (t) => {
       options: {
         collection: collectionName,
         db: 'test',
+        idIsUnique: true,
         aggregation: [
           {
             type: 'query',
@@ -502,6 +504,7 @@ test('should get first page of more complex aggregation when idIsUnique is true'
       options: {
         collection: collectionName,
         db: 'test',
+        idIsUnique: true,
         aggregation: [
           {
             type: 'query',
@@ -577,6 +580,7 @@ test('should get second page of more complex aggregation when idIsUnique is true
       options: {
         collection: collectionName,
         db: 'test',
+        idIsUnique: true,
         aggregation: [
           {
             type: 'query',
@@ -650,6 +654,7 @@ test('should handle empty steps in an aggregation', async (t) => {
       options: {
         collection: collectionName,
         db: 'test',
+        idIsUnique: true,
         aggregation: [
           {
             type: 'query',

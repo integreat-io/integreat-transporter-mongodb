@@ -11,7 +11,6 @@ const createConnection = (
   collection: unknown,
   incoming: IncomingOptions,
   collectionUsers: unknown = null,
-  idIsUnique = false,
   emit = () => undefined,
 ): Connection => ({
   status: 'ok',
@@ -32,7 +31,6 @@ const createConnection = (
     count: 1,
   },
   incoming,
-  idIsUnique,
   emit,
 })
 
@@ -178,13 +176,12 @@ test('should dispatch action with inserted document when idIsUnique is true', as
   const dispatch = sinon.stub().resolves({ status: 'ok' })
   const on = sinon.stub()
   const watch = sinon.stub().returns({ on })
-  const incomingOptions = { collections: ['documents'], db: 'database' }
-  const connection = createConnection(
-    { watch },
-    incomingOptions,
-    undefined,
-    true,
-  )
+  const incomingOptions = {
+    collections: ['documents'],
+    db: 'database',
+    idIsUnique: true,
+  }
+  const connection = createConnection({ watch }, incomingOptions)
   const data = {
     _id: 'ent100',
     title: 'Entry 100!',
@@ -224,13 +221,12 @@ test('should dispatch action with deleted document when idIsUnique is true', asy
   const dispatch = sinon.stub().resolves({ status: 'ok' })
   const on = sinon.stub()
   const watch = sinon.stub().returns({ on })
-  const incomingOptions = { collections: ['documents'], db: 'database' }
-  const connection = createConnection(
-    { watch },
-    incomingOptions,
-    undefined,
-    true,
-  )
+  const incomingOptions = {
+    collections: ['documents'],
+    db: 'database',
+    idIsUnique: true,
+  }
+  const connection = createConnection({ watch }, incomingOptions)
   const expectedAction = {
     type: 'DELETE',
     payload: {
@@ -260,13 +256,12 @@ test('should not dispatch action with deleted document when idIsUnique is false'
   const dispatch = sinon.stub().resolves({ status: 'ok' })
   const on = sinon.stub()
   const watch = sinon.stub().returns({ on })
-  const incomingOptions = { collections: ['documents'], db: 'database' }
-  const connection = createConnection(
-    { watch },
-    incomingOptions,
-    undefined,
-    false,
-  )
+  const incomingOptions = {
+    collections: ['documents'],
+    db: 'database',
+    idIsUnique: false,
+  }
+  const connection = createConnection({ watch }, incomingOptions)
 
   const ret = await listen(dispatch, connection, authenticate)
   const handlerFn = on.args[0][1]
@@ -286,12 +281,7 @@ test('should not dispatch action with replaced document', async (t) => {
   const on = sinon.stub()
   const watch = sinon.stub().returns({ on })
   const incomingOptions = { collections: ['documents'], db: 'database' }
-  const connection = createConnection(
-    { watch },
-    incomingOptions,
-    undefined,
-    false,
-  )
+  const connection = createConnection({ watch }, incomingOptions)
 
   const ret = await listen(dispatch, connection, authenticate)
   const handlerFn = on.args[0][1]
@@ -363,7 +353,6 @@ test('should listen to error events', async (t) => {
   const connection = createConnection(
     { watch },
     incomingOptions,
-    undefined,
     undefined,
     emitSpy,
   )

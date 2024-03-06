@@ -110,7 +110,7 @@ export default async function listen(
   }
 
   const db = client.db(dbName)
-  const { idIsUnique = false } = connection || {}
+  const { incoming: { idIsUnique = false } = {} } = connection || {}
   const listener = createListener(dispatch, authenticate, idIsUnique)
 
   await Promise.all(

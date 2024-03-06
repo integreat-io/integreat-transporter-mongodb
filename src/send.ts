@@ -16,6 +16,8 @@ export const getCollection = (
   return db?.collection(options.collection)
 }
 
+const extractIdIsUnique = (action: Action) => !!action.meta?.options?.idIsUnique
+
 export default async function send(
   action: Action,
   connection: Connection | null,
@@ -35,7 +37,7 @@ export default async function send(
       error: 'No valid connection',
     }
   }
-  const useIdAsInternalId = !!connection.idIsUnique
+  const useIdAsInternalId = extractIdIsUnique(action)
 
   switch (action.type) {
     case 'GET':
