@@ -18,6 +18,7 @@
     "test:watch": "npm run dev",
     "dev": "ava --watch",
     "build": "tsc",
+    "prepublishOnly": "npm run build",
     "coverage": "c8 report",
     "lint": "eslint --ext .ts src",
     "verify": "npm run lint && npm test"
