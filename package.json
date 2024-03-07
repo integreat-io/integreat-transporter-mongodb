@@ -37,13 +37,13 @@
     "debug": "^4.3.4",
     "dot-prop": "^8.0.2",
     "map-any": "^1.0.0",
-    "mongodb": "^6.3.0",
+    "mongodb": "^6.4.0",
     "object-hash": "^3.0.0"
   },
   "devDependencies": {
     "@integreat/ts-dev-setup": "^6.0.1",
     "@types/debug": "^4.1.12",
-    "@types/node": "^20.11.20",
+    "@types/node": "^20.11.25",
     "@types/object-hash": "^3.0.6",
     "@types/sinon": "^17.0.3",
     "integreat": "^1.5.8",
