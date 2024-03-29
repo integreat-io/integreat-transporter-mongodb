@@ -718,30 +718,14 @@ test('should return mongo aggregation pipeline with id as _id', (t) => {
   t.deepEqual(ret, expected)
 })
 
-test('should return mongo aggregation with lookup with id as _id', (t) => {
+test('should return mongo aggregation with lookup with id and path as _id', (t) => {
   const useIdAsInternalId = true
   const aggregation = [
     {
       type: 'lookup' as const,
       collection: 'projects',
       field: 'id',
-      variables: { ids: 'include' },
-      pipeline: [
-        {
-          type: 'query' as const,
-          query: [
-            { path: 'id', op: 'in' as const, variable: 'ids', expr: true },
-          ],
-        },
-        { type: 'sort' as const, sortBy: { updatedAt: -1 as const } },
-        {
-          type: 'group' as const,
-          groupBy: ['id'],
-          values: {
-            jobs: { op: 'first' as const, path: 'definitions.jobs' },
-          },
-        },
-      ],
+      path: 'id',
     },
   ]
   const expected = [
@@ -749,19 +733,39 @@ test('should return mongo aggregation with lookup with id as _id', (t) => {
       $lookup: {
         from: 'projects',
         foreignField: '_id',
-        let: { ids: '$include' },
-        pipeline: [
-          {
-            $match: { $expr: { $in: ['$_id', '$$ids'] } },
-          },
-          { $sort: { updatedAt: -1 } },
-          {
-            $group: {
-              _id: { _id: '$_id' },
-              jobs: { $first: '$definitions.jobs' },
-            },
-          },
-        ],
+        localField: '_id',
+        as: '_id',
+      },
+    },
+  ]
+
+  const ret = prepareAggregation(
+    aggregation,
+    { type: 'entry' },
+    undefined,
+    useIdAsInternalId,
+  )
+
+  t.deepEqual(ret, expected)
+})
+
+test('should return mongo aggregation with lookup with id when set with dot prefix', (t) => {
+  const useIdAsInternalId = true
+  const aggregation = [
+    {
+      type: 'lookup' as const,
+      collection: 'projects',
+      field: '.id',
+      path: '.id',
+    },
+  ]
+  const expected = [
+    {
+      $lookup: {
+        from: 'projects',
+        foreignField: 'id',
+        localField: 'id',
+        as: 'id',
       },
     },
   ]

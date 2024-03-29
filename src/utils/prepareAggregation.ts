@@ -43,9 +43,10 @@ const isAggregation = (
 
 const serializeFieldKey = (key: string) => key.replace('.', '\\\\_')
 
-export const makeIdInternal = (key: string) => (key === 'id' ? '_id' : key)
+export const makeIdInternal = (key: string) =>
+  key === '.id' ? 'id' : key === 'id' ? '_id' : key
 export const makeIdInternalIf = (key: string, useIdAsInternalId: boolean) =>
-  useIdAsInternalId ? makeIdInternal(key) : key
+  key === '.id' ? 'id' : useIdAsInternalId ? makeIdInternal(key) : key
 
 export const makeIdInternalInPath = <T extends { path?: string | string[] }>(
   query: T,
