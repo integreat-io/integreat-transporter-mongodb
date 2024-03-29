@@ -20,7 +20,7 @@ export interface QueryObject {
   value?: unknown
   valuePath?: string
   variable?: string
-  expr?: boolean
+  expr?: boolean | Record<string, GroupMethod>
 }
 
 export interface AggregationObjectSort {

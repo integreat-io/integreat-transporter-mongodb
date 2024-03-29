@@ -315,6 +315,23 @@ test('should support expr queries for isArray', (t) => {
   t.deepEqual(ret, expected)
 })
 
+test('should support expr queries with accumulator', (t) => {
+  const type = 'entry'
+  const id = 'ent1'
+  const query = [
+    {
+      path: '_id',
+      op: 'eq' as const,
+      expr: { 'versions._id': 'first' as const },
+    },
+  ]
+  const expected = { $expr: { $eq: ['$_id', { $first: '$versions._id' }] } }
+
+  const ret = prepareFilter(query, { type, id })
+
+  t.deepEqual(ret, expected)
+})
+
 test('should cast date strings as Date', (t) => {
   const params = {
     type: 'entry',

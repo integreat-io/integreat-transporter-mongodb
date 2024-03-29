@@ -33,6 +33,16 @@ test('should return mongo aggregation pipeline', (t) => {
         { path: 'personalia\\.age', op: 'gt', value: 18 },
       ],
     },
+    {
+      type: 'query',
+      query: [
+        {
+          path: '_id',
+          op: 'eq' as const,
+          expr: { 'versions._id': 'first' as const },
+        },
+      ],
+    },
     { type: 'limit', count: 1 },
     { type: 'unwind', path: 'jobs' },
     { type: 'root', path: 'jobs' },
@@ -51,6 +61,18 @@ test('should return mongo aggregation pipeline', (t) => {
       $match: {
         type: 'entry',
         'personalia\\_age': { $gt: 18 },
+      },
+    },
+    {
+      $match: {
+        $expr: {
+          $eq: [
+            '$_id',
+            {
+              $first: '$versions._id',
+            },
+          ],
+        },
       },
     },
     { $limit: 1 },

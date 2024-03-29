@@ -44,7 +44,7 @@ const isAggregation = (
 const serializeFieldKey = (key: string) => key.replace('.', '\\\\_')
 
 export const makeIdInternal = (key: string) => (key === 'id' ? '_id' : key)
-const makeIdInternalIf = (key: string, useIdAsInternalId: boolean) =>
+export const makeIdInternalIf = (key: string, useIdAsInternalId: boolean) =>
   useIdAsInternalId ? makeIdInternal(key) : key
 
 export const makeIdInternalInPath = <T extends { path?: string | string[] }>(
@@ -74,7 +74,7 @@ const prepareGroupId = (fields: string[], useIdAsInternalId: boolean) =>
     {},
   )
 
-const createFieldObject = (
+export const createFieldObject = (
   field: string,
   method: GroupMethod | GroupObject,
 ) => ({ [`$${method}`]: `$${field}` })
