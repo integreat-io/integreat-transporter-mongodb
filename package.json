@@ -48,6 +48,6 @@
     "@types/object-hash": "^3.0.6",
     "@types/sinon": "^17.0.3",
     "integreat": "^1.5.9",
-    "sinon": "^17.0.2"
+    "sinon": "^18.0.0"
   }
 }
