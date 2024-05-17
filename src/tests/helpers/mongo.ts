@@ -12,7 +12,7 @@ export const uri = process.env.MONGO_URI || 'mongodb://127.0.0.1'
 let collectionCount = 1
 
 export async function openMongoWithCollection(
-  dbName: string
+  dbName: string,
 ): Promise<MongoElements> {
   const collectionName = `docs_${Date.now()}_${collectionCount++}`
   const client = await mongo.connect(uri)
@@ -26,7 +26,7 @@ export function closeMongo(client: mongodb.MongoClient): void {
 
 export async function insertDocument(
   collection: mongodb.Collection,
-  doc: Record<string, unknown>
+  doc: Record<string, unknown>,
 ): Promise<number> {
   const r = await collection.insertOne(doc)
   return r.insertedId ? 1 : 0
@@ -34,7 +34,7 @@ export async function insertDocument(
 
 export async function insertDocuments(
   collection: mongodb.Collection,
-  docs: Record<string, unknown>[]
+  docs: Record<string, unknown>[],
 ): Promise<number> {
   const r = await collection.insertMany(docs)
   return r.insertedCount
@@ -42,14 +42,14 @@ export async function insertDocuments(
 
 export async function getDocuments(
   collection: mongodb.Collection,
-  query: Record<string, unknown>
+  query: Record<string, unknown>,
 ): Promise<unknown[]> {
   return collection.find(query).toArray()
 }
 
 export async function deleteDocuments(
   collection: mongodb.Collection,
-  query: Record<string, unknown>
+  query: Record<string, unknown>,
 ): Promise<unknown> {
   return collection.deleteMany(query)
 }

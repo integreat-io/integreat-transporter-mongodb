@@ -11,9 +11,11 @@ import type {
   MongoClient,
   MongoBulkWriteError,
   WriteError,
+  InsertOneResult,
   UpdateResult,
   DeleteResult,
   BulkWriteResult,
+  AnyBulkWriteOperation,
 } from 'mongodb'
 import type { ServiceOptions } from './types.js'
 
@@ -28,7 +30,7 @@ interface ItemResponse {
 
 interface Operation {
   id: string
-  filter: Record<string, unknown>
+  filter: Record<string, unknown> | null
   update: Record<string, unknown>
   updateMany?: boolean
 }
@@ -98,13 +100,16 @@ const createResponse = (
 }
 
 const createOkResponse = (
-  results: BulkWriteResult | UpdateResult | DeleteResult,
+  result: BulkWriteResult | UpdateResult | InsertOneResult | DeleteResult,
   id?: string,
 ) => ({
   id,
-  modifiedCount: (results as UpdateResult).modifiedCount ?? 0,
-  insertedCount: (results as UpdateResult).upsertedCount ?? 0,
-  deletedCount: (results as DeleteResult).deletedCount ?? 0,
+  modifiedCount: (result as UpdateResult | BulkWriteResult).modifiedCount ?? 0,
+  insertedCount:
+    ((result as BulkWriteResult).insertedCount ||
+      (result as UpdateResult | BulkWriteResult).upsertedCount) ??
+    ((result as InsertOneResult).insertedId ? 1 : 0),
+  deletedCount: (result as DeleteResult | BulkWriteResult).deletedCount ?? 0,
   status: 'ok',
 })
 
@@ -130,13 +135,14 @@ function createUpdateByQueryOperation(
 ) {
   const {
     payload: { data, ...params },
-    meta: { options: { keepUndefined = false } = {} } = {},
+    meta: { options: { keepUndefined = false, appendOnly = false } = {} } = {},
   } = action
   const filter = prepareFilter(
     extractQuery(action), // We know we have a query here, or else we wouldn't be here
     params,
     undefined,
     useIdAsInternalId,
+    !!appendOnly,
   )
   const update = {
     $set: {
@@ -158,30 +164,30 @@ const createOperation = (action: Action, useIdAsInternalId: boolean) =>
 
     const {
       payload: { data, ...params },
-      meta: { options: { keepUndefined = false } = {} } = {},
+      meta: {
+        options: { keepUndefined = false, appendOnly = false } = {},
+      } = {},
     } = action
     const options = action.meta?.options as ServiceOptions | undefined
     const id = String(item.id)
     const idKey = useIdAsInternalId ? '_id' : 'id'
 
+    const fields = {
+      ...(serializeItem(removeId(item), keepUndefined === true) as Record<
+        string,
+        unknown
+      >),
+      [idKey]: id,
+    }
+
     const filter = prepareFilter(
       options?.query,
-      {
-        ...params,
-        id: item.id,
-      },
+      { ...params, id: item.id },
       undefined,
       useIdAsInternalId,
+      !!appendOnly,
     )
-    const update = {
-      $set: {
-        ...(serializeItem(removeId(item), keepUndefined === true) as Record<
-          string,
-          unknown
-        >),
-        [idKey]: id,
-      },
-    }
+    const update = filter ? { $set: fields } : fields
 
     return { filter, update, id }
   }
@@ -212,9 +218,14 @@ async function deleteWithQuery(
     payload: { data, ...params },
   } = action
   const options = action.meta?.options as ServiceOptions | undefined
-  const filter = prepareFilter(options?.query, params, undefined)
+  const filter = prepareFilter(
+    options?.query,
+    params,
+    undefined,
+    !!options?.appendOnly,
+  )
 
-  if (Object.keys(filter).length === 0) {
+  if (!filter || Object.keys(filter).length === 0) {
     return { status: 'noaction', error: 'No query to delete with' }
   } else {
     try {
@@ -237,6 +248,18 @@ async function updateOne(
       isDelete(action) ? 'Delete' : 'Update',
       operation.filter,
     )
+    if (!operation.filter) {
+      if (isDelete(action)) {
+        // TODO: Write a test for this branch
+        return createErrorResponse(
+          'error',
+          'No filter to delete with',
+          operation.id,
+        )
+      } else {
+        return createOkResponse(await collection.insertOne(operation.update))
+      }
+    }
     if (isUpdate(action)) {
       const count = await collection.countDocuments(operation.filter)
       if (count === 0) {
@@ -272,7 +295,7 @@ async function updateMany(
 
     if (isUpdate(action)) {
       const count = await collection.countDocuments({
-        $or: operations.map((op) => op.filter),
+        $or: operations.map((op) => op.filter as Record<string, unknown>), // TODO: Filter should never be null here, but should we still handle it?
       })
       if (count < operations.length) {
         return isUpdateMany(operations)
@@ -288,19 +311,21 @@ async function updateMany(
       }
     }
 
-    const bulkOperations = operations.map(
-      ({ filter, update }) =>
-        isDelete(action)
-          ? { deleteOne: { filter } }
-          : isUpdate(action)
+    const bulkOperations = operations.map(({ filter, update }) =>
+      isDelete(action)
+        ? { deleteOne: { filter } }
+        : filter
+          ? isUpdate(action)
             ? isUpdateMany(operations)
               ? { updateMany: { filter, update } } // Use updateMany if we're updating many, typically with a query
               : { updateOne: { filter, update } } // Use updateOne if we're updating one, typically with an id
-            : { updateOne: { filter, update, upsert: true } }, // We're upserting, as this may be a new doc or an updated doc
+            : { updateOne: { filter, update, upsert: true } } // We're upserting, as this may be a new doc or an updated doc
+          : { insertOne: { document: update } },
     )
-    const result = await collection.bulkWrite(bulkOperations, {
-      ordered: false,
-    })
+    const result = await collection.bulkWrite(
+      bulkOperations as AnyBulkWriteOperation[], // TODO: Filter should never be null here, but should we still handle it?
+      { ordered: false },
+    )
     return createOkResponse(result)
   } catch (error) {
     const result = (error as MongoBulkWriteError).result
@@ -326,9 +351,9 @@ async function update(
   action: Action,
 ) {
   if (operations.length === 1 && !operations[0].updateMany) {
-    return await updateOne(operations[0] as Operation, collection, action)
+    return await updateOne(operations[0], collection, action)
   } else {
-    return await updateMany(operations as Operation[], collection, action)
+    return await updateMany(operations, collection, action)
   }
 }
 

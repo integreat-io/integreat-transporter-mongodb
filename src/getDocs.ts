@@ -262,7 +262,7 @@ export default async function getDocs(
     // Prepare filter and run as query when not an aggregation
     const filter = prepareFilter(query, params, pageId, useIdAsInternalId)
     debugMongo('Starting query with filter %o', filter)
-    cursor = collection.find(filter, { allowDiskUse })
+    cursor = collection.find(filter!, { allowDiskUse }) // TODO: We should never get null as filter here, but should we still handle it?
     debugMongo('Sorting with %o', sort)
     cursor = cursor.sort(sort ?? { _id: 1 })
   }
@@ -300,7 +300,7 @@ export default async function getDocs(
         undefined,
         useIdAsInternalId,
       )
-      totalCount = await collection.countDocuments(countFilter)
+      totalCount = await collection.countDocuments(countFilter!) // TODO: We should never get null as filter here, but should we still handle it?
     }
   }
 

@@ -99,6 +99,16 @@ There are also cases where one endpoint may involve more than one collection
 to `idIsUnique` being either `false` or `true`. It's usually a good idea to be
 consistent within a database anyway.
 
+#### Append only
+
+By setting the `appendOnly` option to `true`, any document will be inserted as
+a new document, unless a `query` is also specified. This means that we will
+not update an existing document by the id of the given document, as is the
+default behaviour.
+
+Setting `appendOnly` to `true` will also override `idIsUnique`, which will be
+treated as `false` regardless of what it is set to.
+
 #### Serializing and normalizing
 
 Some characters are not allowed in MongoDB keys, so we have to escape them when
@@ -321,6 +331,7 @@ You may also specify a database in `options.incoming.db`, otherwise `options.db`
 is used.
 
 The incoming action will have the following payload properties:
+
 - `collection`: The name of the collection
 - `db`: The name of the database
 - `data`: The document for `insert` and `update` events

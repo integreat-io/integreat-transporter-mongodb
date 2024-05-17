@@ -276,6 +276,46 @@ test('should update object data (not Integreat typed)', async (t) => {
   t.deepEqual(updateOne.args[0][1], expectedSet)
 })
 
+test('should insert one item instead of updating when appendOnly is true', async (t) => {
+  const updateOne = sinon.stub().returns({
+    matchedCount: 1,
+    modifiedCount: 1,
+    upsertedCount: 0,
+  })
+  const insertOne = sinon.stub().returns({
+    matchedCount: 0,
+    modifiedCount: 0,
+    upsertedCount: 1,
+  })
+  const connection = createConnection({ updateOne, insertOne })
+  const data = { id: 'ent1', $type: 'entry', title: 'Entry 1' }
+  const action = {
+    type: 'SET',
+    payload: { data },
+    meta: {
+      options: {
+        collection: 'documents',
+        db: 'database',
+        appendOnly: true,
+      },
+    },
+  }
+  const expectedData = { modifiedCount: 0, insertedCount: 1, deletedCount: 0 }
+  const expectedSet = {
+    id: 'ent1',
+    '\\$type': 'entry',
+    title: 'Entry 1',
+  }
+
+  const response = await send(action, connection)
+
+  t.is(response?.status, 'ok')
+  t.is(updateOne.callCount, 0)
+  t.is(insertOne.callCount, 1)
+  t.deepEqual(insertOne.args[0][0], expectedSet)
+  t.deepEqual(response?.data, expectedData)
+})
+
 test('should update items with id as internal id', async (t) => {
   const idIsUnique = true
   const updateOne = sinon.stub().returns({})

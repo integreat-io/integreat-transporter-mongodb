@@ -16,7 +16,9 @@ export const getCollection = (
   return db?.collection(options.collection)
 }
 
-const extractIdIsUnique = (action: Action) => !!action.meta?.options?.idIsUnique
+// Extract `idIsUnique`, unless `appendOnly` is true
+const extractIdIsUnique = (action: Action) =>
+  !!action.meta?.options?.idIsUnique && !action.meta?.options?.appendOnly
 
 export default async function send(
   action: Action,

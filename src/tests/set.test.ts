@@ -15,13 +15,14 @@ const test = ava as TestFn<MongoElements>
 
 // Helpers
 
+const dbName = 'test_1'
 const options = { uri }
 const optionsWithIdIsUnique = { ...options, idIsUnique: true }
 const authorization = null
 const emit = () => undefined
 
 test.beforeEach(async (t) => {
-  t.context = await openMongoWithCollection('test')
+  t.context = await openMongoWithCollection(dbName)
 })
 
 test.afterEach.always(async (t) => {
@@ -47,7 +48,7 @@ test.serial('should set one document', async (t) => {
     meta: {
       options: {
         collection: collectionName,
-        db: 'test',
+        db: dbName,
       },
     },
   }
@@ -90,7 +91,7 @@ test.serial('should set array of documents', async (t) => {
     meta: {
       options: {
         collection: collectionName,
-        db: 'test',
+        db: dbName,
       },
     },
   }
@@ -136,7 +137,7 @@ test.serial('should update existing document', async (t) => {
     meta: {
       options: {
         collection: collectionName,
-        db: 'test',
+        db: dbName,
       },
     },
   }
@@ -179,7 +180,7 @@ test.serial('should keep undefined when keepUndefined is true', async (t) => {
     meta: {
       options: {
         collection: collectionName,
-        db: 'test',
+        db: dbName,
         keepUndefined: true,
       },
     },
@@ -218,7 +219,7 @@ test.serial('should set id to _id when idIsUnique is true', async (t) => {
     meta: {
       options: {
         collection: collectionName,
-        db: 'test',
+        db: dbName,
         idIsUnique: true,
       },
     },
@@ -257,7 +258,7 @@ test.serial(
       meta: {
         options: {
           collection: collectionName,
-          db: 'test',
+          db: dbName,
           idIsUnique: true,
         },
       },
@@ -303,7 +304,7 @@ test.serial(
       meta: {
         options: {
           collection: collectionName,
-          db: 'test',
+          db: dbName,
           idIsUnique: true,
         },
       },

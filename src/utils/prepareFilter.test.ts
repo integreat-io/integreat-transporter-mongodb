@@ -26,6 +26,24 @@ test('should return id filter', (t) => {
   t.deepEqual(ret, expected)
 })
 
+test('should not return id filter when appendOnly is true', (t) => {
+  const appendOnly = true
+  const type = 'entry'
+  const id = 'ent1'
+  const query = undefined
+  const expected = null
+
+  const ret = prepareFilter(
+    query,
+    { type, id },
+    undefined,
+    undefined,
+    appendOnly,
+  )
+
+  t.deepEqual(ret, expected)
+})
+
 test('should use options.query as filter', (t) => {
   const type = 'entry'
   const id = 'ent1'

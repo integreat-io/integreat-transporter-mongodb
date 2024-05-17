@@ -169,7 +169,8 @@ export default function prepareFilter(
   params: Params = {},
   pageId?: ParsedPageId,
   useIdAsInternalId = false,
-): Record<string, unknown> {
+  appendOnly = false,
+): Record<string, unknown> | null {
   // Create query object from array of props
   const queries = makeIdInternalInPathIf(
     mergeQueries(queryArray, params.query, pageId?.filter),
@@ -178,14 +179,17 @@ export default function prepareFilter(
   const query = mongoSelectorFromQuery(params, queries, useIdAsInternalId)
 
   // Query for id if no query was provided and this is a member action
-  if (queryArray.length === 0 && params.id) {
-    const id = String(params.id)
-    if (useIdAsInternalId) {
-      query._id = id
-    } else {
-      query.id = id
+  if (queryArray.length === 0)
+    if (appendOnly) {
+      return null
+    } else if (params.id) {
+      const id = String(params.id)
+      if (useIdAsInternalId) {
+        query._id = id
+      } else {
+        query.id = id
+      }
     }
-  }
 
   return castDates(query)
 }
