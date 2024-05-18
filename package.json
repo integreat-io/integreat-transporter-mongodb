@@ -1,6 +1,6 @@
 {
   "name": "integreat-transporter-mongodb",
-  "version": "1.4.0-rc.8",
+  "version": "1.4.0-rc.9",
   "description": "Integreat transporter for mongodb",
   "author": "Kjell-Morten Bratsberg Thorsen <post@kjellmorten.no>",
   "license": "ISC",
@@ -36,9 +36,9 @@
   },
   "dependencies": {
     "debug": "^4.3.4",
-    "dot-prop": "^8.0.2",
+    "dot-prop": "^9.0.0",
     "map-any": "^1.0.0",
-    "mongodb": "^6.6.1",
+    "mongodb": "^6.6.2",
     "object-hash": "^3.0.0"
   },
   "devDependencies": {
@@ -48,6 +48,6 @@
     "@types/object-hash": "^3.0.6",
     "@types/sinon": "^17.0.3",
     "integreat": "^1.5.9",
-    "sinon": "^17.0.2"
+    "sinon": "^18.0.0"
   }
 }
