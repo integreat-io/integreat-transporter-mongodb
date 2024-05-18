@@ -13,7 +13,7 @@ const normalizeKey = (key: string) =>
   key === '**empty**'
     ? ''
     : normalizeDollarHead(key)
-        .replace(/([^\\]|\\\\)\\_/g, '$1.')
+        .replace(/(^|[^\\]|\\\\)\\_/g, '$1.')
         .replace(/\\\\/g, '\\')
 
 export function serializePath(path: string): string {

@@ -4,6 +4,7 @@ import { serializeItem, normalizeItem, serializePath } from './serialize.js'
 
 test('should escape reserved characters and remove undefined values on serialization', (t) => {
   const data = {
+    '.': 'data',
     id: 'ent1',
     $type: 'entry',
     '\\$type': 'Escaped',
@@ -26,6 +27,7 @@ test('should escape reserved characters and remove undefined values on serializa
     '': 'Empty',
   }
   const expected = {
+    '\\_': 'data',
     id: 'ent1',
     '\\$type': 'entry',
     '\\\\$type': 'Escaped',
@@ -83,6 +85,7 @@ test('should keep undefined values on serialization when keepUndefined is true',
 
 test('should remove escape characters on normalization', (t) => {
   const data = {
+    '\\_': 'data',
     id: 'ent1',
     '\\$type': 'entry',
     '\\\\$type': 'Escaped',
@@ -103,6 +106,7 @@ test('should remove escape characters on normalization', (t) => {
     '**empty**': 'Empty',
   }
   const expected = {
+    '.': 'data',
     id: 'ent1',
     $type: 'entry',
     '\\$type': 'Escaped',
