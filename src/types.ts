@@ -94,7 +94,7 @@ export interface AggregationObjectLookUp {
 
 export interface AggregationObjectProject {
   type: 'project'
-  values: Record<string, AggregationObject | AggregationObject[]>
+  values: Record<string, AggregationObject | AggregationObject[] | boolean>
 }
 
 export interface AggregationObjectConcatArrays {

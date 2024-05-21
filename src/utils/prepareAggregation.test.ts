@@ -428,6 +428,8 @@ test('should return mongo aggregation with project', (t) => {
     {
       type: 'project' as const,
       values: {
+        id: true,
+        title: true,
         jobs: {
           type: 'reduce' as const,
           path: 'included.jobs',
@@ -440,6 +442,8 @@ test('should return mongo aggregation with project', (t) => {
   const expected = [
     {
       $project: {
+        id: true,
+        title: true,
         jobs: {
           $reduce: {
             input: '$included.jobs',

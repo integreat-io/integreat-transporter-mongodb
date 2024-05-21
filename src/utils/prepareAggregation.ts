@@ -238,14 +238,16 @@ const projectToMongo = (
   $project: Object.fromEntries(
     Object.entries(values).map(([key, value]) => [
       key,
-      dearrayIfPossible(
-        prepareAggregation(
-          ensureArray(value),
-          params,
-          undefined,
-          useIdAsInternalId,
-        ),
-      ),
+      typeof value === 'boolean'
+        ? value
+        : dearrayIfPossible(
+            prepareAggregation(
+              ensureArray(value),
+              params,
+              undefined,
+              useIdAsInternalId,
+            ),
+          ),
     ]),
   ),
 })
