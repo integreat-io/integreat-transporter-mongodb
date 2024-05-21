@@ -101,7 +101,7 @@ function compareIds(a: unknown, b: string | Record<string, unknown>) {
 const moveToData = async (
   cursor: Cursor,
   useIdAsInternalId: boolean,
-  isAggregation: boolean,
+  isAggregation = false,
   pageAfter?: string | Record<string, unknown>,
 ) => {
   if (!pageAfter) {
@@ -159,7 +159,6 @@ const getData = async (cursor: Cursor, pageSize: number) => {
 const getPage = async (
   cursor: Cursor,
   useIdAsInternalId: boolean,
-  isAggregation: boolean,
   { pageSize = Infinity, pageOffset, pageAfter }: Payload,
   pageId?: ParsedPageId,
 ) => {
@@ -173,7 +172,7 @@ const getPage = async (
     const foundFirst = await moveToData(
       cursor,
       useIdAsInternalId,
-      isAggregation,
+      pageId?.isAgg,
       after,
     )
 
@@ -268,13 +267,7 @@ export default async function getDocs(
   }
 
   debugMongo('Getting page')
-  const data = await getPage(
-    cursor,
-    useIdAsInternalId,
-    !!aggregation,
-    payload,
-    pageId,
-  )
+  const data = await getPage(cursor, useIdAsInternalId, payload, pageId)
   debugMongo('Got result page with %s items', data.length)
 
   if (data.length === 0 && payload.id) {

@@ -132,6 +132,7 @@ test('should decode pageId with default sorting', (t) => {
   const expected = {
     id: 'ent2',
     filter: [{ path: 'id', op: 'gte', value: 'ent2' }],
+    isAgg: false,
   }
 
   const ret = decodePageId(pageId)
@@ -144,6 +145,7 @@ test('should decode pageId with numeric id', (t) => {
   const expected = {
     id: 1001,
     filter: [{ path: 'id', op: 'gte', value: 1001 }],
+    isAgg: false,
   }
 
   const ret = decodePageId(pageId)
@@ -160,6 +162,7 @@ test('should decode pageId with sorting fields', (t) => {
       { path: 'attributes.timestamp', op: 'lte', value: 1584211391000 },
       { path: 'attributes.index', op: 'gte', value: 1 },
     ],
+    isAgg: false,
   }
 
   const ret = decodePageId(pageId)
@@ -175,6 +178,7 @@ test('should decode pageId with encoded string', (t) => {
       { path: 'index', op: 'lte', value: 1 },
       { path: 'message', op: 'lte', value: 'Escape "me"' },
     ],
+    isAgg: false,
   }
 
   const ret = decodePageId(pageId)
@@ -190,6 +194,7 @@ test('should decode pageId with unencoded string', (t) => {
       { path: 'index', op: 'lte', value: 1 },
       { path: 'id', op: 'gte', value: 'ent2' },
     ],
+    isAgg: false,
   }
 
   const ret = decodePageId(pageId)
@@ -202,6 +207,7 @@ test('should decode pageId with date string', (t) => {
   const expected = {
     id: 'ent3',
     filter: [{ path: 'date', op: 'gte', value: '2021-01-18T12:05:11.000Z' }],
+    isAgg: false,
   }
 
   const ret = decodePageId(pageId)
@@ -218,6 +224,7 @@ test('should decode pageId with compound id', (t) => {
   const expected = {
     id: { account: 'acc1', id: 'proj2' },
     filter: [],
+    isAgg: true,
   }
 
   const ret = decodePageId(pageId)

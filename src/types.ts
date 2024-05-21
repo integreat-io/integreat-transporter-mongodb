@@ -11,6 +11,7 @@ export interface MongoData extends Record<string, unknown> {
 export interface ParsedPageId {
   id: string | Record<string, unknown>
   filter: QueryObject[]
+  isAgg?: boolean
 }
 
 export interface QueryObject {

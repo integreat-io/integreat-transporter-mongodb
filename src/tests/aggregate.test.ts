@@ -210,6 +210,103 @@ test('should get first page of documents by aggregation', async (t) => {
   t.deepEqual(response.params?.totalCount, 3)
 })
 
+test('should get first page of documents by aggregation without group', async (t) => {
+  const { collectionName } = t.context
+  const action = {
+    type: 'GET',
+    payload: {
+      pageSize: 4,
+    },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        aggregation: [
+          {
+            type: 'set',
+            values: {
+              isUser: { expr: { path: 'type', op: 'eq', value: 'user' } },
+            },
+          },
+          { type: 'sort', sortBy: { isUser: -1, createdAt: -1 } },
+        ],
+      },
+    },
+  }
+  const expectedPaging = {
+    next: {
+      pageId: 'ImVudDEifD4', // "ent1"
+      pageSize: 4,
+    },
+  }
+
+  const connection = await transporter.connect(
+    options,
+    authentication,
+    null,
+    emit,
+  )
+  const response = await transporter.send(action, connection)
+  await transporter.disconnect(connection)
+
+  t.truthy(response)
+  t.is(response.status, 'ok', response.error)
+  const data = response.data as Record<string, unknown>[]
+  t.is(data.length, 4)
+  t.is(data[0].id, 'user1')
+  t.is(data[1].id, 'user2')
+  t.is(data[2].id, 'user3')
+  t.is(data[3].id, 'ent1')
+  t.deepEqual(response.params?.totalCount, 7)
+  t.deepEqual(response.paging, expectedPaging)
+})
+
+test('should get second page of documents by aggregation without group', async (t) => {
+  const { collectionName } = t.context
+  const action = {
+    type: 'GET',
+    payload: {
+      pageSize: 4,
+      pageId: 'ImVudDEifD4', // "ent1"
+    },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        aggregation: [
+          {
+            type: 'set',
+            values: {
+              isUser: { expr: { path: 'type', op: 'eq', value: 'user' } },
+            },
+          },
+          { type: 'sort', sortBy: { isUser: -1, createdAt: -1 } },
+        ],
+      },
+    },
+  }
+  const expectedPaging = { next: undefined }
+
+  const connection = await transporter.connect(
+    options,
+    authentication,
+    null,
+    emit,
+  )
+  const response = await transporter.send(action, connection)
+  await transporter.disconnect(connection)
+
+  t.truthy(response)
+  t.is(response.status, 'ok', response.error)
+  const data = response.data as Record<string, unknown>[]
+  t.is(data.length, 3)
+  t.is(data[0].id, 'ent2')
+  t.is(data[1].id, 'ent3')
+  t.is(data[2].id, 'ent4')
+  t.deepEqual(response.params?.totalCount, 7)
+  t.deepEqual(response.paging, expectedPaging)
+})
+
 test('should get second page of documents by aggregation', async (t) => {
   const { collectionName } = t.context
   const action = {

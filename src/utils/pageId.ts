@@ -69,8 +69,10 @@ function generatePageId(
   aggregation?: AggregationObject[],
 ) {
   if (aggregation) {
-    if (isMongoData(lastItem)) {
+    if (isMongoData(lastItem) && isObject(lastItem._id)) {
       return generatePageIdFromMongoId(lastItem)
+    } else if (isTypedData(lastItem)) {
+      return generatePageIdFromId(lastItem)
     }
   } else if (isTypedData(lastItem)) {
     return generatePageIdFromId(lastItem, sort)
@@ -80,7 +82,10 @@ function generatePageId(
 
 // Decode
 
-function decodePartValue(value: string) {
+function decodePartValue(value?: string) {
+  if (typeof value !== 'string') {
+    return undefined
+  }
   if (value.startsWith('"')) {
     return decodeURIComponent(value.slice(1, value.lastIndexOf('"')))
   } else {
@@ -130,7 +135,7 @@ function filterFromSortParts(
 
 function extractIdAndParts(
   pageId: string,
-): [string | Record<string, unknown>, string[]] {
+): [string | Record<string, unknown>, string[], boolean] {
   if (pageId.startsWith('|')) {
     // When the pageId starts with a pipe, we know it's a compound id (aggregation)
     const idParts = pageId.slice(1).split('|')
@@ -138,11 +143,11 @@ function extractIdAndParts(
     for (let i = 0; i < idParts.length; i += 2) {
       id[idParts[i]] = decodePartValue(idParts[i + 1])
     }
-    return [id, []] // Aggregations have no sort parts
+    return [id, [], true] // Aggregations have no sort parts
   } else {
     // There is no double pipe, so this is a simple pageId with a simple id
     const parts = pageId.split('|')
-    return [decodePartValue(parts[0]), parts.slice(1)]
+    return [decodePartValue(parts[0]), parts.slice(1), false]
   }
 }
 
@@ -167,8 +172,8 @@ export function decodePageId(encodedPageId?: string): ParsedPageId | undefined {
     return undefined
   }
 
-  const [id, sortParts] = extractIdAndParts(pageId)
+  const [id, sortParts, isAgg] = extractIdAndParts(pageId)
   const filter = filterFromSortParts(sortParts, id)
 
-  return { id, filter }
+  return { id, filter, isAgg }
 }
