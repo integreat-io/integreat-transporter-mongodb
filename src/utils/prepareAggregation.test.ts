@@ -431,6 +431,8 @@ test('should return mongo aggregation with set', (t) => {
         isActive: { expr: { path: 'status', op: 'eq', value: 'active' } },
         title2: { expr: 'title' },
         subtitle: 'A new start',
+        isId: { expr: { path: 'id', op: 'eq', value: '12345' } },
+        isField: { expr: { path: 'author', op: 'eq', valuePath: 'editor' } },
       },
     },
   ]
@@ -440,11 +442,47 @@ test('should return mongo aggregation with set', (t) => {
         isActive: { $eq: ['$status', 'active'] },
         title2: '$title',
         subtitle: 'A new start',
+        isId: { $eq: ['$id', '12345'] },
+        isField: { $eq: ['$author', '$editor'] },
       },
     },
   ]
 
   const ret = prepareAggregation(aggregation, { type: 'entry' })
+
+  t.deepEqual(ret, expected)
+})
+
+test('should return mongo aggregation with set when useIdAsInternalId is true', (t) => {
+  const useIdAsInternalId = true
+  const aggregation = [
+    {
+      type: 'set' as const,
+      values: {
+        isActive: { expr: { path: 'status', op: 'eq', value: 'active' } },
+        title2: { expr: 'title' },
+        subtitle: 'A new start',
+        isId: { expr: { path: 'id', op: 'eq', value: '12345' } },
+      },
+    },
+  ]
+  const expected = [
+    {
+      $set: {
+        isActive: { $eq: ['$status', 'active'] },
+        title2: '$title',
+        subtitle: 'A new start',
+        isId: { $eq: ['$_id', '12345'] },
+      },
+    },
+  ]
+
+  const ret = prepareAggregation(
+    aggregation,
+    { type: 'entry' },
+    undefined,
+    useIdAsInternalId,
+  )
 
   t.deepEqual(ret, expected)
 })

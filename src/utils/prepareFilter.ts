@@ -90,10 +90,19 @@ function mapOp(op: string, expr = false) {
 
 function setMongoSelectorFromQueryObj(
   allParams: Record<string, unknown>,
-  { path, op = 'eq', value, valuePath, param, variable, expr }: QueryObject,
+  {
+    path: rawPath,
+    op = 'eq',
+    value,
+    valuePath,
+    param,
+    variable,
+    expr,
+  }: QueryObject,
   useIdAsInternalId: boolean,
   filter = {},
 ) {
+  const path = rawPath && makeIdInternalIf(rawPath, useIdAsInternalId)
   if (isOpValid(op)) {
     let targetValue = variable
       ? `$$${variable}`
