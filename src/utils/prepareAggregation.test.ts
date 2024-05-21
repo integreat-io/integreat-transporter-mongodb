@@ -423,6 +423,32 @@ test('should return mongo aggregation with lookup with set path', (t) => {
   t.deepEqual(ret, expected)
 })
 
+test('should return mongo aggregation with set', (t) => {
+  const aggregation = [
+    {
+      type: 'set' as const,
+      values: {
+        isActive: { expr: { path: 'status', op: 'eq', value: 'active' } },
+        title2: { expr: 'title' },
+        subtitle: 'A new start',
+      },
+    },
+  ]
+  const expected = [
+    {
+      $set: {
+        isActive: { $eq: ['$status', 'active'] },
+        title2: '$title',
+        subtitle: 'A new start',
+      },
+    },
+  ]
+
+  const ret = prepareAggregation(aggregation, { type: 'entry' })
+
+  t.deepEqual(ret, expected)
+})
+
 test('should return mongo aggregation with project', (t) => {
   const aggregation = [
     {

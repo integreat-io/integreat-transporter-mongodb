@@ -23,6 +23,10 @@ export interface QueryObject {
   expr?: boolean | Record<string, GroupMethod>
 }
 
+export interface ExpressionObject {
+  expr: string | QueryObject
+}
+
 export interface AggregationObjectSort {
   type: 'sort'
   sortBy: Record<string, 1 | -1>
@@ -51,6 +55,11 @@ export interface AggregationObjectGroup {
 export interface AggregationObjectQuery {
   type: 'query'
   query: QueryObject[]
+}
+
+export interface AggregationObjectSet {
+  type: 'set'
+  values: Record<string, string | number | boolean | ExpressionObject>
 }
 
 export interface AggregationObjectReduce {
@@ -118,6 +127,7 @@ export type AggregationObject =
   | AggregationObjectSort
   | AggregationObjectGroup
   | AggregationObjectQuery
+  | AggregationObjectSet
   | AggregationObjectReduce
   | AggregationObjectIf
   | AggregationObjectLimit

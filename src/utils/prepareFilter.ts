@@ -134,7 +134,7 @@ function setMongoSelectorFromQueryObj(
   return filter
 }
 
-const setMongoSelectorFromQuery =
+export const setMongoSelectorFromQuery =
   (allParams: Record<string, unknown>, useIdAsInternalId: boolean) =>
   (filter: Record<string, unknown>, query: QueryObject | QueryObject[]) =>
     Array.isArray(query)

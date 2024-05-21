@@ -1,10 +1,12 @@
 import {
   GroupMethod,
   GroupObject,
+  ExpressionObject,
   AggregationObject,
   AggregationObjectGroup,
   AggregationObjectSort,
   AggregationObjectQuery,
+  AggregationObjectSet,
   AggregationObjectReduce,
   AggregationObjectLimit,
   AggregationObjectUnwind,
@@ -17,7 +19,7 @@ import {
 } from '../types.js'
 import { isObject, isNotEmpty } from './is.js'
 import { ensureArray, dearrayIfPossible } from './array.js'
-import prepareFilter from './prepareFilter.js'
+import prepareFilter, { setMongoSelectorFromQuery } from './prepareFilter.js'
 
 export interface Aggregation extends Record<string, unknown> {
   $sort?: unknown
@@ -132,6 +134,42 @@ const queryToMongo = (
         $match: prepareFilter(query, params, undefined, useIdAsInternalId),
       }
     : undefined
+
+const extractExpression = (selector: unknown) =>
+  isObject(selector) ? selector['$expr'] : selector
+
+const prepareExpression = (
+  { expr }: ExpressionObject,
+  params: Record<string, unknown>,
+  useIdAsInternalId: boolean,
+) =>
+  typeof expr === 'string'
+    ? `$${expr}`
+    : extractExpression(
+        setMongoSelectorFromQuery(params, useIdAsInternalId)(
+          {},
+          { ...expr, expr: true },
+        ),
+      )
+
+const setToMongo = (
+  { values }: AggregationObjectSet,
+  params: Record<string, unknown>,
+  useIdAsInternalId: boolean,
+) => ({
+  $set: Object.fromEntries(
+    Object.entries(values).map(([key, value]) => [
+      key,
+      isObject(value)
+        ? prepareExpression(
+            value as ExpressionObject,
+            params,
+            useIdAsInternalId,
+          )
+        : value,
+    ]),
+  ),
+})
 
 const reduceToMongo = (
   { path, initialPath, pipeline }: AggregationObjectReduce,
@@ -296,6 +334,8 @@ const toMongo = (params: Record<string, unknown>, useIdAsInternalId = false) =>
         return sortToMongo(obj, useIdAsInternalId)
       case 'query':
         return queryToMongo(obj, params, useIdAsInternalId)
+      case 'set':
+        return setToMongo(obj, params, useIdAsInternalId)
       case 'reduce':
         return reduceToMongo(
           makeIdInternalInPath(obj),
