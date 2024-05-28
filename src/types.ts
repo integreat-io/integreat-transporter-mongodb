@@ -116,6 +116,8 @@ export interface SearchObject {
   type: 'autocomplete'
   value: string
   boostScore?: number
+  sequential?: boolean
+  fuzzy?: boolean | number
 }
 
 export interface AggregationObjectSearch {

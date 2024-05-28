@@ -575,8 +575,18 @@ test('should return mongo aggregation with search', (t) => {
       index: 'default',
       values: {
         name: { type: 'autocomplete' as const, value: 'val', boostScore: 5 },
-        group: { type: 'autocomplete' as const, value: 'val' },
-        partner: { type: 'autocomplete' as const, value: 'val' },
+        group: {
+          type: 'autocomplete' as const,
+          value: 'val',
+          sequential: true,
+          fuzzy: true,
+        },
+        partner: {
+          type: 'autocomplete' as const,
+          value: 'val',
+          sequential: false,
+          fuzzy: 1,
+        },
       },
     },
   ]
@@ -591,18 +601,27 @@ test('should return mongo aggregation with search', (t) => {
                 query: 'val',
                 path: 'name',
                 score: { boost: { value: 5 } },
+                tokenOrder: 'any',
               },
             },
             {
               autocomplete: {
                 query: 'val',
                 path: 'group',
+                tokenOrder: 'sequential',
+                fuzzy: {
+                  maxEdits: 2,
+                },
               },
             },
             {
               autocomplete: {
                 query: 'val',
                 path: 'partner',
+                tokenOrder: 'any',
+                fuzzy: {
+                  maxEdits: 1,
+                },
               },
             },
           ],

@@ -312,10 +312,12 @@ const searchToMongo = ({ index, values }: AggregationObjectSearch) => ({
     index,
     compound: {
       should: Object.entries(values).map(
-        ([key, { type, value, boostScore }]) => ({
+        ([key, { type, value, sequential, fuzzy, boostScore }]) => ({
           [type]: {
             query: value,
             path: key,
+            tokenOrder: sequential ? 'sequential' : 'any',
+            ...(fuzzy ? { fuzzy: { maxEdits: fuzzy === 1 ? 1 : 2 } } : {}),
             ...(boostScore && { score: { boost: { value: boostScore } } }),
           },
         }),
