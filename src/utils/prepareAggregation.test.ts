@@ -611,6 +611,7 @@ test('should return mongo aggregation with search', (t) => {
                 tokenOrder: 'sequential',
                 fuzzy: {
                   maxEdits: 2,
+                  prefixLength: 1,
                 },
               },
             },
@@ -621,6 +622,7 @@ test('should return mongo aggregation with search', (t) => {
                 tokenOrder: 'any',
                 fuzzy: {
                   maxEdits: 1,
+                  prefixLength: 1,
                 },
               },
             },

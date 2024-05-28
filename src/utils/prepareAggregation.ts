@@ -317,7 +317,9 @@ const searchToMongo = ({ index, values }: AggregationObjectSearch) => ({
             query: value,
             path: key,
             tokenOrder: sequential ? 'sequential' : 'any',
-            ...(fuzzy ? { fuzzy: { maxEdits: fuzzy === 1 ? 1 : 2 } } : {}),
+            ...(fuzzy
+              ? { fuzzy: { maxEdits: fuzzy === 1 ? 1 : 2, prefixLength: 1 } }
+              : {}),
             ...(boostScore && { score: { boost: { value: boostScore } } }),
           },
         }),
