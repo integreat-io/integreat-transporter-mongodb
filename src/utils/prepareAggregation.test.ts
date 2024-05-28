@@ -574,6 +574,45 @@ test('should return mongo aggregation with search', (t) => {
       type: 'search' as const,
       index: 'default',
       values: {
+        name: {
+          type: 'autocomplete' as const,
+          value: 'val',
+          boostScore: 5,
+          sequential: true,
+          fuzzy: true,
+        },
+      },
+    },
+  ]
+  const expected = [
+    {
+      $search: {
+        index: 'default',
+        autocomplete: {
+          query: 'val',
+          path: 'name',
+          score: { boost: { value: 5 } },
+          tokenOrder: 'sequential',
+          fuzzy: {
+            maxEdits: 2,
+            prefixLength: 1,
+          },
+        },
+      },
+    },
+  ]
+
+  const ret = prepareAggregation(aggregation, { type: 'entry' })
+
+  t.deepEqual(ret, expected)
+})
+
+test('should return mongo aggregation with search for more fields', (t) => {
+  const aggregation = [
+    {
+      type: 'search' as const,
+      index: 'default',
+      values: {
         name: { type: 'autocomplete' as const, value: 'val', boostScore: 5 },
         group: {
           type: 'autocomplete' as const,

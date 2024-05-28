@@ -16,6 +16,7 @@ import {
   AggregationObjectConcatArrays,
   AggregationObjectSearch,
   AggregationObjectIf,
+  SearchObject,
 } from '../types.js'
 import { isObject, isNotEmpty } from './is.js'
 import { ensureArray, dearrayIfPossible } from './array.js'
@@ -307,26 +308,40 @@ const concatArraysToMongo = ({ path }: AggregationObjectConcatArrays) => ({
   $concatArrays: path.map((p) => `$$${p}`),
 })
 
-const searchToMongo = ({ index, values }: AggregationObjectSearch) => ({
-  $search: {
-    index,
-    compound: {
-      should: Object.entries(values).map(
-        ([key, { type, value, sequential, fuzzy, boostScore }]) => ({
-          [type]: {
-            query: value,
-            path: key,
-            tokenOrder: sequential ? 'sequential' : 'any',
-            ...(fuzzy
-              ? { fuzzy: { maxEdits: fuzzy === 1 ? 1 : 2, prefixLength: 1 } }
-              : {}),
-            ...(boostScore && { score: { boost: { value: boostScore } } }),
-          },
-        }),
-      ),
-      minimumShouldMatch: 1,
-    },
+const generateSearchField = (
+  path: string,
+  { type, value, sequential, fuzzy, boostScore }: SearchObject,
+) => ({
+  [type]: {
+    query: value,
+    path,
+    tokenOrder: sequential ? 'sequential' : 'any',
+    ...(fuzzy
+      ? { fuzzy: { maxEdits: fuzzy === 1 ? 1 : 2, prefixLength: 1 } }
+      : {}),
+    ...(boostScore && { score: { boost: { value: boostScore } } }),
   },
+})
+
+const generateSearchFields = (values: Record<string, SearchObject>) =>
+  Object.entries(values).map(([key, searchObject]) =>
+    generateSearchField(key, searchObject),
+  )
+
+const searchToMongo = ({ index, values }: AggregationObjectSearch) => ({
+  $search:
+    Object.keys(values).length === 1
+      ? {
+          index,
+          ...generateSearchFields(values)[0],
+        }
+      : {
+          index,
+          compound: {
+            should: generateSearchFields(values),
+            minimumShouldMatch: 1,
+          },
+        },
 })
 
 const toMongo = (params: Record<string, unknown>, useIdAsInternalId = false) =>
