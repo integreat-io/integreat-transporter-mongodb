@@ -75,8 +75,8 @@ test('should use options.query as filter', (t) => {
     'user.age': { $gte: 18 },
     'user.level': { $lte: 50 },
     limit: { $lt: 1000 },
-    completedAt: { $eq: null },
-    updatedAt: { $ne: null },
+    completedAt: { $exists: false },
+    updatedAt: { $exists: true },
     'escaped\\_dot': { $ne: true },
     id: { $regex: '.+:lastUpdated$' },
     topic: { $in: ['news', 'sports'] },
@@ -207,7 +207,7 @@ test('should skip query objects with non-primitive values', (t) => {
     { path: 'archived', value: true },
     { path: 'meta.author', op: 'in', value: ['johnf', 'lucyk'] },
     { path: 'meta.updatedAt', value: new Date('2017-11-13T18:43:01.000Z') },
-    { path: 'meta.secret', value: { $exists: true } }, // Should skip this
+    { path: 'meta.secret', value: { value: 's3cr3t' } }, // Should skip this
   ]
   const expected = {
     'meta.views': { $gt: 300 },

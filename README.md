@@ -165,7 +165,7 @@ the value of `value` or to the value of the request parameter in `param`. The
 default operand is `eq`, but you may also use `gt`, `gte`, `lt`, `lte`, or `in`.
 
 There are also two special operands: `isset` and `notset`. They will match when
-a field is set or not.
+a field is set or not (using MongoDB operator `$exists`).
 
 To do a match on objects in an array, use the `match` operand. This will match
 any document with an array at `path` that contains an object with the properties

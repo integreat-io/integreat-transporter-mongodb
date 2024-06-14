@@ -43,7 +43,6 @@ const castDates = (query: Record<string, unknown>) =>
 const mergeQueries = (...queries: (QueryArray | QueryObject | undefined)[]) =>
   queries.flat().filter(Boolean) as QueryObject[]
 
-const opsWithoutValue = ['isset', 'notset']
 const opsWithObject = ['match']
 const validOps = [
   'eq',
@@ -57,8 +56,9 @@ const validOps = [
   'regex',
   'isArray',
   'search',
+  'isset',
+  'notset',
   ...opsWithObject,
-  ...opsWithoutValue,
 ]
 const validValueTypes = ['string', 'number', 'boolean']
 
@@ -68,23 +68,40 @@ const isValidValue = (value: unknown, op: string): boolean =>
     ? value.every((value) => isValidValue(value, op))
     : validValueTypes.includes(typeof value) ||
       value instanceof Date ||
-      (opsWithObject.includes(op) && isObject(value)) ||
-      (value === null && opsWithoutValue.includes(op))
+      (opsWithObject.includes(op) && isObject(value))
 
 function mapOp(op: string, expr = false) {
   switch (op) {
     case 'eq':
       return expr ? '$eq' : undefined
     case 'isset':
-      return '$ne'
     case 'notset':
-      return '$eq'
+      return '$exists'
     case 'search':
       return '$text.$search'
     case 'match':
       return '$elemMatch'
     default:
       return `$${op}`
+  }
+}
+
+function getQueryValueForOperator(
+  op: string,
+  params: Record<string, unknown>,
+  value: unknown,
+  path?: string,
+  param?: string,
+) {
+  switch (op) {
+    case 'isArray':
+      return `$${path}`
+    case 'isset':
+      return true // Will be used with $exists
+    case 'notset':
+      return false // Will be used with $exists
+    default:
+      return (param ? params[param] : value) || null // eslint-disable-line security/detect-object-injection
   }
 }
 
@@ -108,9 +125,7 @@ function setMongoSelectorFromQueryObj(
       ? `$$${variable}`
       : valuePath
         ? `$${valuePath}`
-        : op === 'isArray'
-          ? `$${path}`
-          : (param ? allParams[param] : value) || null // eslint-disable-line security/detect-object-injection
+        : getQueryValueForOperator(op, allParams, value, path, param)
 
     if (isObject(expr)) {
       targetValue = [
