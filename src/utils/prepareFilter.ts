@@ -67,6 +67,7 @@ const isValidValue = (value: unknown, op: string): boolean =>
   Array.isArray(value)
     ? value.every((value) => isValidValue(value, op))
     : validValueTypes.includes(typeof value) ||
+      value === null ||
       value instanceof Date ||
       (opsWithObject.includes(op) && isObject(value))
 
