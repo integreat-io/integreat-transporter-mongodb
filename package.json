@@ -42,7 +42,7 @@
     "object-hash": "^3.0.0"
   },
   "devDependencies": {
-    "@integreat/ts-dev-setup": "^6.0.2",
+    "@integreat/ts-dev-setup": "^7.1.1",
     "@types/debug": "^4.1.12",
     "@types/node": "^20.14.8",
     "@types/object-hash": "^3.0.6",
