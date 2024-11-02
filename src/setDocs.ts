@@ -9,6 +9,7 @@ import type { Action, Response } from 'integreat'
 import type {
   Collection,
   MongoClient,
+  MongoServerError,
   MongoBulkWriteError,
   WriteError,
   InsertOneResult,
@@ -328,19 +329,22 @@ async function updateMany(
     )
     return createOkResponse(result)
   } catch (error) {
+    // TODO: This is a bit messy ...
     const result = (error as MongoBulkWriteError).result
-    const okResponse = createOkResponse(result)
+    const okResponse = result ? createOkResponse(result) : undefined
     const errorResponses = ensureArray(
-      (error as MongoBulkWriteError).writeErrors as WriteError | WriteError[],
+      ((error as MongoBulkWriteError).writeErrors as
+        | WriteError
+        | WriteError[]) ?? (error as MongoServerError).errorResponse,
     ).map(({ index, errmsg }: WriteError) =>
       createErrorResponse(
         'error',
         errmsg || 'Unspecified MongoDB error',
-        operations[index].id,
+        operations[index]?.id,
       ),
     )
 
-    return [okResponse, ...errorResponses]
+    return okResponse ? [okResponse, ...errorResponses] : errorResponses
   }
 }
 

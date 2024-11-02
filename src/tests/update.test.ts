@@ -297,12 +297,63 @@ test.serial('should update document when idIsUnique is true', async (t) => {
   const docs = (await getDocuments(collection, {})) as Record<string, unknown>[]
   t.is(docs.length, 1)
   t.is(docs[0]._id, 'ent5')
+  t.is(docs[0].id, undefined)
   t.is(docs[0].title, 'Updated entry 5')
-  t.falsy(docs[0].id)
   t.deepEqual(response.data, expectedData)
 
   await deleteDocuments(collection, {})
 })
+
+test.serial(
+  'should update document with query when idIsUnique is true',
+  async (t) => {
+    const { collection, collectionName } = t.context
+    await insertDocument(collection, {
+      _id: 'ent5',
+      title: 'Entry 5',
+    })
+    const action = {
+      type: 'UPDATE',
+      payload: {
+        id: 'ent5',
+        data: {
+          title: 'Updated entry 5',
+        },
+      },
+      meta: {
+        options: {
+          collection: collectionName,
+          db: 'test',
+          query: [{ path: 'id', param: 'id' }],
+          idIsUnique: true,
+        },
+      },
+    }
+    const expectedData = { insertedCount: 0, modifiedCount: 1, deletedCount: 0 }
+
+    const connection = await transporter.connect(
+      optionsWithIdIsUnique,
+      authorization,
+      null,
+      emit,
+    )
+    const response = await transporter.send(action, connection)
+    await transporter.disconnect(connection)
+
+    t.is(response.status, 'ok', response.error)
+    const docs = (await getDocuments(collection, {})) as Record<
+      string,
+      unknown
+    >[]
+    t.is(docs.length, 1)
+    t.is(docs[0]._id, 'ent5')
+    t.is(docs[0].id, undefined)
+    t.is(docs[0].title, 'Updated entry 5')
+    t.deepEqual(response.data, expectedData)
+
+    await deleteDocuments(collection, {})
+  },
+)
 
 test.serial('should update documents by query', async (t) => {
   const { collection, collectionName } = t.context
@@ -411,6 +462,60 @@ test.serial(
     t.is(docs.length, 2)
     t.is(docs[0].isDeleted, undefined) // Not updated
     t.is(docs[0].isDeleted, undefined) // Not updated
+    t.deepEqual(response.data, expectedData)
+
+    await deleteDocuments(collection, {})
+  },
+)
+
+test.serial(
+  'should handle error comming from invalid mongo filter',
+  async (t) => {
+    const { collection, collectionName } = t.context
+    await insertDocument(collection, {
+      _id: 'ent5',
+      title: 'Entry 5',
+    })
+    const action = {
+      type: 'UPDATE',
+      payload: {
+        id: 'ent5', // Not an array
+        data: {
+          title: 'Updated entry 5',
+        },
+      },
+      meta: {
+        options: {
+          collection: collectionName,
+          db: 'test',
+          query: [{ path: 'id', op: 'in', param: 'id' }], // Expects an array
+          idIsUnique: true,
+        },
+      },
+    }
+    const expectedData = { insertedCount: 0, modifiedCount: 0, deletedCount: 0 }
+
+    const connection = await transporter.connect(
+      optionsWithIdIsUnique,
+      authorization,
+      null,
+      emit,
+    )
+    const response = await transporter.send(action, connection)
+    await transporter.disconnect(connection)
+
+    t.is(response.status, 'error', response.error)
+    const docs = (await getDocuments(collection, {})) as Record<
+      string,
+      unknown
+    >[]
+    t.is(
+      response.error,
+      "Error updating item '<no id>' in mongodb: $in needs an array",
+    )
+    t.is(docs.length, 1)
+    t.is(docs[0]._id, 'ent5')
+    t.is(docs[0].title, 'Entry 5') // Unchanged
     t.deepEqual(response.data, expectedData)
 
     await deleteDocuments(collection, {})
