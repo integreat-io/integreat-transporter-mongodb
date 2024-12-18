@@ -13,8 +13,8 @@
   },
   "scripts": {
     "test": "npm run build && c8 --reporter=text-summary ava --config ./ava-dist.config.js",
-    "test:setup": "docker-compose up",
-    "test:teardown": "docker-compose down",
+    "test:setup": "docker compose up",
+    "test:teardown": "docker compose down",
     "test:watch": "npm run dev",
     "dev": "ava --watch",
     "build": "tsc",
