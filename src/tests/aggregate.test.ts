@@ -372,7 +372,7 @@ test('should get second page of documents by aggregation', async (t) => {
   t.deepEqual(response.paging, expectedPaging)
 })
 
-test.skip('should aggregate with expressions in group', async (t) => {
+test('should aggregate with expressions in group', async (t) => {
   const { collectionName } = t.context
   const action = {
     type: 'GET',
@@ -390,12 +390,12 @@ test.skip('should aggregate with expressions in group', async (t) => {
           },
           {
             type: 'group',
-            groupBy: [
-              { y: { op: 'year', path: 'createdAt' } },
-              { d: { op: 'dayOfYear', path: 'createdAt' } },
-              { h: { op: 'hour', path: 'createdAt' } },
-              'type',
-            ],
+            groupBy: {
+              y: { op: 'year', path: 'createdAt' },
+              d: { op: 'dayOfYear', path: 'createdAt' },
+              h: { op: 'hour', path: 'createdAt' },
+              type: { op: 'field', path: 'type' },
+            },
             values: { 'values.count': 'sum', id: 'first' },
           },
           {
@@ -407,16 +407,31 @@ test.skip('should aggregate with expressions in group', async (t) => {
     },
   }
   const expectedData1 = {
-    _id: { 'values\\_category': 'news' },
+    _id: { y: 2024, d: 323, h: 17, type: 'entry' },
     id: 'ent1',
-    'values\\_category': 'news',
-    'values\\_count': 16,
+    y: 2024,
+    d: 323,
+    h: 17,
+    type: 'entry',
+    'values\\_count': 3,
   }
   const expectedData2 = {
-    _id: { 'values\\_category': 'sports' },
+    _id: { y: 2024, d: 323, h: 19, type: 'entry' },
     id: 'ent2',
-    'values\\_category': 'sports',
-    'values\\_count': 2,
+    y: 2024,
+    d: 323,
+    h: 19,
+    type: 'entry',
+    'values\\_count': 7,
+  }
+  const expectedData3 = {
+    _id: { y: 2024, d: 323, h: 13, type: 'entry' },
+    id: 'ent3',
+    y: 2024,
+    d: 323,
+    h: 13,
+    type: 'entry',
+    'values\\_count': 8,
   }
 
   const connection = await transporter.connect(
@@ -431,10 +446,11 @@ test.skip('should aggregate with expressions in group', async (t) => {
   t.truthy(response)
   t.is(response.status, 'ok', response.error)
   const data = response.data as Record<string, unknown>[]
-  t.is(data.length, 2)
+  t.is(data.length, 3)
   t.deepEqual(data[0], expectedData1)
   t.deepEqual(data[1], expectedData2)
-  t.deepEqual(response.params?.totalCount, 2)
+  t.deepEqual(data[2], expectedData3)
+  t.deepEqual(response.params?.totalCount, 3)
 })
 
 test('should aggregate with lookup', async (t) => {
