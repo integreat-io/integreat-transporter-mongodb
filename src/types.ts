@@ -33,6 +33,8 @@ export interface AggregationObjectSort {
   sortBy: Record<string, 1 | -1>
 }
 
+// Note: We have to change this at some point. We can't keep manually adding
+// all legel keywords in MongoDb.
 export type GroupMethodWithPath =
   | 'first'
   | 'last'
@@ -41,6 +43,10 @@ export type GroupMethodWithPath =
   | 'max'
   | 'min'
   | 'push'
+  | 'year'
+  | 'dayOfYear'
+  | 'hour'
+  | 'field' // This is our method for referencing a field
 
 export interface GroupObjectWithPath {
   op: GroupMethodWithPath
@@ -59,7 +65,7 @@ export type GroupObject = GroupObjectWithPath | GroupObjectWithoutPath
 
 export interface AggregationObjectGroup {
   type: 'group'
-  groupBy: string[]
+  groupBy: string[] | Record<string, GroupMethod | GroupObject>
   values: Record<string, GroupMethod | GroupObject>
 }
 

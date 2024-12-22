@@ -87,7 +87,10 @@ const prepareGroupId = (fields: string[], useIdAsInternalId: boolean) =>
 export const createFieldObject = (
   field: string | undefined,
   method: GroupMethod | GroupObject,
-) => ({ [`$${method}`]: field ? `$${field}` : {} })
+) =>
+  method === 'field'
+    ? `$${field}`
+    : { [`$${method}`]: field ? `$${field}` : {} }
 
 const prepareGroupFields = (
   fields: Record<string, GroupMethod | GroupObject>,
@@ -119,7 +122,9 @@ const groupToMongo = (
   isObject(values)
     ? {
         $group: {
-          _id: prepareGroupId(groupBy, useIdAsInternalId),
+          _id: Array.isArray(groupBy)
+            ? prepareGroupId(groupBy, useIdAsInternalId)
+            : prepareGroupFields(groupBy, useIdAsInternalId),
           ...prepareGroupFields(values, useIdAsInternalId),
         },
       }

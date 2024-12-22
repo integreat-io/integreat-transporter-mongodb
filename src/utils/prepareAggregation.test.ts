@@ -92,6 +92,88 @@ test('should return mongo aggregation pipeline', (t) => {
   t.deepEqual(ret, expected)
 })
 
+test('should return mongo aggregation pipeline with calculations in groupBy', (t) => {
+  const aggregation: AggregationObject[] = [
+    { type: 'sort', sortBy: { updatedAt: -1 } },
+    {
+      type: 'group',
+      groupBy: {
+        account: { op: 'field', path: 'account' },
+        id: { op: 'field', path: 'id' },
+        y: { op: 'year', path: 'createdAt' },
+      },
+      values: {
+        updatedAt: 'first',
+        status: 'first',
+        children: { op: 'push', path: '$ROOT' },
+        count: { op: 'count' },
+      },
+    },
+    {
+      type: 'query',
+      query: [
+        { path: 'type', param: 'type' },
+        { path: 'personalia\\.age', op: 'gt', value: 18 },
+      ],
+    },
+    {
+      type: 'query',
+      query: [
+        {
+          path: '_id',
+          op: 'eq' as const,
+          expr: { 'versions._id': 'first' as const },
+        },
+      ],
+    },
+    { type: 'limit', count: 1 },
+    { type: 'unwind', path: 'jobs' },
+    { type: 'root', path: 'jobs' },
+  ]
+  const expected = [
+    { $sort: { updatedAt: -1 } },
+    {
+      $group: {
+        _id: { account: '$account', id: '$id', y: { $year: '$createdAt' } },
+        updatedAt: { $first: '$updatedAt' },
+        status: { $first: '$status' },
+        children: { $push: '$$ROOT' },
+        count: { $count: {} },
+      },
+    },
+    {
+      $match: {
+        type: 'entry',
+        'personalia\\_age': { $gt: 18 },
+      },
+    },
+    {
+      $match: {
+        $expr: {
+          $eq: [
+            '$_id',
+            {
+              $first: '$versions._id',
+            },
+          ],
+        },
+      },
+    },
+    { $limit: 1 },
+    {
+      $unwind: {
+        path: '$jobs',
+        preserveNullAndEmptyArrays: false,
+      },
+    },
+    { $replaceRoot: { newRoot: '$jobs' } },
+  ]
+
+  const ret = prepareAggregation(aggregation, { type: 'entry' })
+
+  t.deepEqual(ret, expected)
+})
+
 test('should return mongo aggregation pipeline with default sort by _id', (t) => {
   const aggregation = [
     {

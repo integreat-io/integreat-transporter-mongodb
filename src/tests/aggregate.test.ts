@@ -26,6 +26,7 @@ const docs = [
     type: 'entry',
     values: { category: 'news', count: 3 },
     user: 'user1',
+    createdAt: new Date('2024-11-18T18:43:11+01:00'),
   },
   {
     _id: '12346',
@@ -33,6 +34,7 @@ const docs = [
     type: 'entry',
     values: { category: 'sports', count: 2 },
     user: 'user1',
+    createdAt: new Date('2024-11-18T20:09:14+01:00'),
   },
   {
     _id: '12347',
@@ -40,6 +42,7 @@ const docs = [
     type: 'entry',
     values: { category: 'news', count: 8 },
     user: 'user2',
+    createdAt: new Date('2024-11-18T14:11:55+01:00'),
   },
   {
     _id: '12348',
@@ -47,24 +50,28 @@ const docs = [
     type: 'entry',
     values: { category: 'news', count: 5 },
     user: 'user3',
+    createdAt: new Date('2024-11-18T20:10:37+01:00'),
   },
   {
     _id: 'user2', // Looks strange, but we're switching the users when fetching by `_id`
     id: 'user1',
     type: 'user',
     name: 'User 1',
+    createdAt: new Date('2024-11-18T20:15:33+01:00'),
   },
   {
     _id: 'user1', // Looks strange, but we're switching the users when fetching by `_id`
     id: 'user2',
     type: 'user',
     name: 'User 2',
+    createdAt: new Date('2024-11-18T21:04:04+01:00'),
   },
   {
     _id: 'user3',
     id: 'user3',
     type: 'user',
     name: 'User 3',
+    createdAt: new Date('2024-11-19T01:18:11+01:00'),
   },
 ]
 
@@ -235,7 +242,7 @@ test('should get first page of documents by aggregation without group', async (t
   }
   const expectedPaging = {
     next: {
-      pageId: 'ImVudDEifD4', // "ent1"
+      pageId: 'ImVudDQifD4', // "ent4"
       pageSize: 4,
     },
   }
@@ -253,10 +260,10 @@ test('should get first page of documents by aggregation without group', async (t
   t.is(response.status, 'ok', response.error)
   const data = response.data as Record<string, unknown>[]
   t.is(data.length, 4)
-  t.is(data[0].id, 'user1')
+  t.is(data[0].id, 'user3')
   t.is(data[1].id, 'user2')
-  t.is(data[2].id, 'user3')
-  t.is(data[3].id, 'ent1')
+  t.is(data[2].id, 'user1')
+  t.is(data[3].id, 'ent4')
   t.deepEqual(response.params?.totalCount, 7)
   t.deepEqual(response.paging, expectedPaging)
 })
@@ -267,7 +274,7 @@ test('should get second page of documents by aggregation without group', async (
     type: 'GET',
     payload: {
       pageSize: 4,
-      pageId: 'ImVudDEifD4', // "ent1"
+      pageId: 'ImVudDQifD4', // "ent4"
     },
     meta: {
       options: {
@@ -301,8 +308,8 @@ test('should get second page of documents by aggregation without group', async (
   const data = response.data as Record<string, unknown>[]
   t.is(data.length, 3)
   t.is(data[0].id, 'ent2')
-  t.is(data[1].id, 'ent3')
-  t.is(data[2].id, 'ent4')
+  t.is(data[1].id, 'ent1')
+  t.is(data[2].id, 'ent3')
   t.deepEqual(response.params?.totalCount, 7)
   t.deepEqual(response.paging, expectedPaging)
 })
@@ -365,6 +372,71 @@ test('should get second page of documents by aggregation', async (t) => {
   t.deepEqual(response.paging, expectedPaging)
 })
 
+test.skip('should aggregate with expressions in group', async (t) => {
+  const { collectionName } = t.context
+  const action = {
+    type: 'GET',
+    payload: {
+      type: 'entry',
+    },
+    meta: {
+      options: {
+        collection: collectionName,
+        db: 'test',
+        aggregation: [
+          {
+            type: 'query',
+            query: [{ path: 'type', value: 'entry' }],
+          },
+          {
+            type: 'group',
+            groupBy: [
+              { y: { op: 'year', path: 'createdAt' } },
+              { d: { op: 'dayOfYear', path: 'createdAt' } },
+              { h: { op: 'hour', path: 'createdAt' } },
+              'type',
+            ],
+            values: { 'values.count': 'sum', id: 'first' },
+          },
+          {
+            type: 'sort',
+            sortBy: { id: 1 },
+          },
+        ],
+      },
+    },
+  }
+  const expectedData1 = {
+    _id: { 'values\\_category': 'news' },
+    id: 'ent1',
+    'values\\_category': 'news',
+    'values\\_count': 16,
+  }
+  const expectedData2 = {
+    _id: { 'values\\_category': 'sports' },
+    id: 'ent2',
+    'values\\_category': 'sports',
+    'values\\_count': 2,
+  }
+
+  const connection = await transporter.connect(
+    options,
+    authentication,
+    null,
+    emit,
+  )
+  const response = await transporter.send(action, connection)
+  await transporter.disconnect(connection)
+
+  t.truthy(response)
+  t.is(response.status, 'ok', response.error)
+  const data = response.data as Record<string, unknown>[]
+  t.is(data.length, 2)
+  t.deepEqual(data[0], expectedData1)
+  t.deepEqual(data[1], expectedData2)
+  t.deepEqual(response.params?.totalCount, 2)
+})
+
 test('should aggregate with lookup', async (t) => {
   const { collectionName } = t.context
   const action = {
@@ -407,28 +479,64 @@ test('should aggregate with lookup', async (t) => {
       id: 'ent1',
       type: 'entry',
       values: { category: 'news', count: 3 },
-      user: [{ _id: 'user2', id: 'user1', name: 'User 1', type: 'user' }],
+      createdAt: new Date('2024-11-18T18:43:11+01:00'),
+      user: [
+        {
+          _id: 'user2',
+          id: 'user1',
+          name: 'User 1',
+          type: 'user',
+          createdAt: new Date('2024-11-18T20:15:33+01:00'),
+        },
+      ],
     },
     {
       _id: '12346',
       id: 'ent2',
       type: 'entry',
       values: { category: 'sports', count: 2 },
-      user: [{ _id: 'user2', id: 'user1', name: 'User 1', type: 'user' }],
+      createdAt: new Date('2024-11-18T20:09:14+01:00'),
+      user: [
+        {
+          _id: 'user2',
+          id: 'user1',
+          name: 'User 1',
+          type: 'user',
+          createdAt: new Date('2024-11-18T20:15:33+01:00'),
+        },
+      ],
     },
     {
       _id: '12347',
       id: 'ent3',
       type: 'entry',
       values: { category: 'news', count: 8 },
-      user: [{ _id: 'user1', id: 'user2', name: 'User 2', type: 'user' }],
+      createdAt: new Date('2024-11-18T14:11:55+01:00'),
+      user: [
+        {
+          _id: 'user1',
+          id: 'user2',
+          name: 'User 2',
+          type: 'user',
+          createdAt: new Date('2024-11-18T21:04:04+01:00'),
+        },
+      ],
     },
     {
       _id: '12348',
       id: 'ent4',
       type: 'entry',
+      createdAt: new Date('2024-11-18T20:10:37+01:00'),
       values: { category: 'news', count: 5 },
-      user: [{ _id: 'user3', id: 'user3', name: 'User 3', type: 'user' }],
+      user: [
+        {
+          _id: 'user3',
+          id: 'user3',
+          name: 'User 3',
+          type: 'user',
+          createdAt: new Date('2024-11-19T01:18:11+01:00'),
+        },
+      ],
     },
   ]
 
@@ -552,25 +660,57 @@ test('should aggregate with lookup when idIsUnique is true', async (t) => {
       id: '12345',
       type: 'entry',
       values: { category: 'news', count: 3 },
-      user: [{ id: 'user1', name: 'User 2', type: 'user' }],
+      createdAt: new Date('2024-11-18T18:43:11+01:00'),
+      user: [
+        {
+          id: 'user1',
+          name: 'User 2',
+          type: 'user',
+          createdAt: new Date('2024-11-18T21:04:04+01:00'),
+        },
+      ],
     },
     {
       id: '12346',
       type: 'entry',
       values: { category: 'sports', count: 2 },
-      user: [{ id: 'user1', name: 'User 2', type: 'user' }],
+      createdAt: new Date('2024-11-18T20:09:14+01:00'),
+      user: [
+        {
+          id: 'user1',
+          name: 'User 2',
+          type: 'user',
+          createdAt: new Date('2024-11-18T21:04:04+01:00'),
+        },
+      ],
     },
     {
       id: '12347',
       type: 'entry',
+      createdAt: new Date('2024-11-18T14:11:55+01:00'),
       values: { category: 'news', count: 8 },
-      user: [{ id: 'user2', name: 'User 1', type: 'user' }],
+      user: [
+        {
+          id: 'user2',
+          name: 'User 1',
+          type: 'user',
+          createdAt: new Date('2024-11-18T20:15:33+01:00'),
+        },
+      ],
     },
     {
       id: '12348',
       type: 'entry',
       values: { category: 'news', count: 5 },
-      user: [{ id: 'user3', name: 'User 3', type: 'user' }],
+      createdAt: new Date('2024-11-18T20:10:37+01:00'),
+      user: [
+        {
+          id: 'user3',
+          name: 'User 3',
+          type: 'user',
+          createdAt: new Date('2024-11-19T01:18:11+01:00'),
+        },
+      ],
     },
   ]
 
