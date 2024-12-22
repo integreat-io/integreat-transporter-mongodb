@@ -33,7 +33,7 @@ export interface AggregationObjectSort {
   sortBy: Record<string, 1 | -1>
 }
 
-export type GroupMethod =
+export type GroupMethodWithPath =
   | 'first'
   | 'last'
   | 'sum'
@@ -42,10 +42,20 @@ export type GroupMethod =
   | 'min'
   | 'push'
 
-export interface GroupObject {
-  op: GroupMethod
+export interface GroupObjectWithPath {
+  op: GroupMethodWithPath
   path: string
 }
+
+export type GroupMethodWithoutPath = 'count'
+
+export interface GroupObjectWithoutPath {
+  op: GroupMethodWithoutPath
+}
+
+export type GroupMethod = GroupMethodWithPath | GroupMethodWithoutPath
+
+export type GroupObject = GroupObjectWithPath | GroupObjectWithoutPath
 
 export interface AggregationObjectGroup {
   type: 'group'

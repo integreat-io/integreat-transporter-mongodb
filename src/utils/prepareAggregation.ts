@@ -17,6 +17,7 @@ import {
   AggregationObjectSearch,
   AggregationObjectIf,
   SearchObject,
+  GroupObjectWithPath,
 } from '../types.js'
 import { isObject, isNotEmpty } from './is.js'
 import { ensureArray, dearrayIfPossible } from './array.js'
@@ -30,6 +31,11 @@ export interface Aggregation extends Record<string, unknown> {
   $unwind?: unknown
   $root?: unknown
 }
+
+const isGroupObjectWithPath = (
+  groupObj?: GroupObject,
+): groupObj is GroupObjectWithPath =>
+  isObject(groupObj) && typeof groupObj.path === 'string'
 
 const isSortAggregation = (aggregation: Aggregation) => !!aggregation.$sort
 const isRegroupingAggregation = (aggregation: Aggregation) =>
@@ -79,9 +85,9 @@ const prepareGroupId = (fields: string[], useIdAsInternalId: boolean) =>
   )
 
 export const createFieldObject = (
-  field: string,
+  field: string | undefined,
   method: GroupMethod | GroupObject,
-) => ({ [`$${method}`]: `$${field}` })
+) => ({ [`$${method}`]: field ? `$${field}` : {} })
 
 const prepareGroupFields = (
   fields: Record<string, GroupMethod | GroupObject>,
@@ -97,7 +103,9 @@ const prepareGroupFields = (
               method,
             )
           : createFieldObject(
-              makeIdInternalIf(method.path, useIdAsInternalId),
+              isGroupObjectWithPath(method)
+                ? makeIdInternalIf(method.path, useIdAsInternalId)
+                : undefined,
               method.op,
             ),
     }),

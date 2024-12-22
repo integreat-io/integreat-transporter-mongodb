@@ -24,6 +24,7 @@ test('should return mongo aggregation pipeline', (t) => {
         updatedAt: 'first',
         status: 'first',
         children: { op: 'push', path: '$ROOT' },
+        count: { op: 'count' },
       },
     },
     {
@@ -55,6 +56,7 @@ test('should return mongo aggregation pipeline', (t) => {
         updatedAt: { $first: '$updatedAt' },
         status: { $first: '$status' },
         children: { $push: '$$ROOT' },
+        count: { $count: {} },
       },
     },
     {
