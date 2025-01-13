@@ -76,7 +76,10 @@ export interface AggregationObjectQuery {
 
 export interface AggregationObjectSet {
   type: 'set'
-  values: Record<string, string | number | boolean | ExpressionObject>
+  values: Record<
+    string,
+    string | number | boolean | ExpressionObject | AggregationObject
+  >
 }
 
 export interface AggregationObjectReduce {
@@ -128,6 +131,11 @@ export interface AggregationObjectConcatArrays {
   path: string[]
 }
 
+export interface AggregationObjectMergeObjects {
+  type: 'mergeObjects'
+  path: (string | QueryObject)[]
+}
+
 export interface SearchObject {
   type: 'autocomplete'
   value: string
@@ -142,6 +150,8 @@ export interface AggregationObjectSearch {
   values: Record<string, SearchObject>
 }
 
+// TODO: This is a mixture of aggregation steps and other expressions. We should
+// clean this up at some point.
 export type AggregationObject =
   | AggregationObjectSort
   | AggregationObjectGroup
@@ -155,6 +165,7 @@ export type AggregationObject =
   | AggregationObjectLookUp
   | AggregationObjectProject
   | AggregationObjectConcatArrays
+  | AggregationObjectMergeObjects
   | AggregationObjectSearch
 
 export interface IncomingOptions extends Record<string, unknown> {

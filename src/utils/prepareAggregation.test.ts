@@ -517,6 +517,13 @@ test('should return mongo aggregation with set', (t) => {
         subtitle: 'A new start',
         isId: { expr: { path: 'id', op: 'eq', value: '12345' } },
         isField: { expr: { path: 'author', op: 'eq', valuePath: 'editor' } },
+        values: {
+          type: 'mergeObjects' as const,
+          path: [
+            { path: 'accountValues.values', op: 'arrayElemAt', value: 0 },
+            'values',
+          ],
+        },
       },
     },
   ]
@@ -528,6 +535,12 @@ test('should return mongo aggregation with set', (t) => {
         subtitle: 'A new start',
         isId: { $eq: ['$id', '12345'] },
         isField: { $eq: ['$author', '$editor'] },
+        values: {
+          $mergeObjects: [
+            { $arrayElemAt: ['$accountValues.values', 0] },
+            '$values',
+          ],
+        },
       },
     },
   ]

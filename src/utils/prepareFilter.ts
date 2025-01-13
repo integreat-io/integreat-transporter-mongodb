@@ -58,6 +58,7 @@ const validOps = [
   'search',
   'isset',
   'notset',
+  'arrayElemAt',
   ...opsWithObject,
 ]
 const validValueTypes = ['string', 'number', 'boolean']
@@ -102,11 +103,11 @@ function getQueryValueForOperator(
     case 'notset':
       return false // Will be used with $exists
     default:
-      return (param ? params[param] : value) || null // eslint-disable-line security/detect-object-injection
+      return (param ? params[param] : value) ?? null // eslint-disable-line security/detect-object-injection
   }
 }
 
-function setMongoSelectorFromQueryObj(
+export function setMongoSelectorFromQueryObj(
   allParams: Record<string, unknown>,
   {
     path: rawPath,

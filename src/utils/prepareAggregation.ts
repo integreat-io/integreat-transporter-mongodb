@@ -18,10 +18,14 @@ import {
   AggregationObjectIf,
   SearchObject,
   GroupObjectWithPath,
+  AggregationObjectMergeObjects,
 } from '../types.js'
 import { isObject, isNotEmpty } from './is.js'
 import { ensureArray, dearrayIfPossible } from './array.js'
-import prepareFilter, { setMongoSelectorFromQuery } from './prepareFilter.js'
+import prepareFilter, {
+  setMongoSelectorFromQuery,
+  setMongoSelectorFromQueryObj,
+} from './prepareFilter.js'
 
 export interface Aggregation extends Record<string, unknown> {
   $sort?: unknown
@@ -43,6 +47,9 @@ const isRegroupingAggregation = (aggregation: Aggregation) =>
 
 const isAggregationObject = (expr: unknown): expr is AggregationObject =>
   isObject(expr) && typeof expr.type === 'string'
+
+const isExpressionObject = (obj: unknown): obj is ExpressionObject =>
+  isObject(obj) && !!obj.expr
 
 const isAggregation = (
   expr: unknown,
@@ -152,19 +159,28 @@ const queryToMongo = (
 const extractExpression = (selector: unknown) =>
   isObject(selector) ? selector['$expr'] : selector
 
-const prepareExpression = (
-  { expr }: ExpressionObject,
+function prepareExpression(
+  obj: ExpressionObject | AggregationObject,
   params: Record<string, unknown>,
   useIdAsInternalId: boolean,
-) =>
-  typeof expr === 'string'
-    ? `$${expr}`
-    : extractExpression(
-        setMongoSelectorFromQuery(params, useIdAsInternalId)(
-          {},
-          { ...expr, expr: true },
-        ),
-      )
+) {
+  if (isExpressionObject(obj)) {
+    return typeof obj.expr === 'string'
+      ? `$${obj.expr}`
+      : extractExpression(
+          setMongoSelectorFromQuery(params, useIdAsInternalId)(
+            {},
+            { ...obj.expr, expr: true },
+          ),
+        )
+  } else if (isAggregationObject(obj)) {
+    return dearrayIfPossible(
+      prepareAggregation(ensureArray(obj), params, useIdAsInternalId),
+    )
+  } else {
+    return {}
+  }
+}
 
 const setToMongo = (
   { values }: AggregationObjectSet,
@@ -176,7 +192,7 @@ const setToMongo = (
       key,
       isObject(value)
         ? prepareExpression(
-            value as ExpressionObject,
+            value as ExpressionObject | AggregationObject,
             params,
             useIdAsInternalId,
           )
@@ -321,6 +337,24 @@ const concatArraysToMongo = ({ path }: AggregationObjectConcatArrays) => ({
   $concatArrays: path.map((p) => `$$${p}`),
 })
 
+const mergeObjectsToMongo = (
+  { path }: AggregationObjectMergeObjects,
+  params: Record<string, unknown>,
+  useIdAsInternalId: boolean,
+) => ({
+  $mergeObjects: path.map((p) =>
+    typeof p === 'string'
+      ? `$${p}`
+      : extractExpression(
+          setMongoSelectorFromQueryObj(
+            params,
+            { ...p, expr: true },
+            useIdAsInternalId,
+          ),
+        ),
+  ),
+})
+
 const generateSearchField = (
   path: string,
   { type, value, sequential, fuzzy, boostScore }: SearchObject,
@@ -392,6 +426,8 @@ const toMongo = (params: Record<string, unknown>, useIdAsInternalId = false) =>
         return rootToMongo(makeIdInternalInPath(obj))
       case 'concatArrays':
         return concatArraysToMongo(makeIdInternalInPath(obj))
+      case 'mergeObjects':
+        return mergeObjectsToMongo(obj, params, useIdAsInternalId)
       case 'search':
         return searchToMongo(obj)
       default:
