@@ -533,7 +533,7 @@ test('should return mongo aggregation with set', (t) => {
         isActive: { $eq: ['$status', 'active'] },
         title2: '$title',
         subtitle: 'A new start',
-        isId: { $eq: ['$id', '12345'] },
+        isId: { $eq: ['$_id', '12345'] },
         isField: { $eq: ['$author', '$editor'] },
         values: {
           $mergeObjects: [
@@ -545,7 +545,7 @@ test('should return mongo aggregation with set', (t) => {
     },
   ]
 
-  const ret = prepareAggregation(aggregation, { type: 'entry' })
+  const ret = prepareAggregation(aggregation, { type: 'entry' }, false, true)
 
   t.deepEqual(ret, expected)
 })

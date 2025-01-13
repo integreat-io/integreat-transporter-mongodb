@@ -175,7 +175,12 @@ function prepareExpression(
         )
   } else if (isAggregationObject(obj)) {
     return dearrayIfPossible(
-      prepareAggregation(ensureArray(obj), params, useIdAsInternalId),
+      prepareAggregation(
+        ensureArray(obj),
+        params,
+        undefined,
+        useIdAsInternalId,
+      ),
     )
   } else {
     return {}
@@ -233,11 +238,19 @@ const reduceToMongo = (
 const expressionToMongo = (
   expr: AggregationObject | AggregationObject[] | unknown,
   params: Record<string, unknown>,
+  useIdAsInternalId: boolean,
 ) =>
   typeof expr === 'string'
     ? `$${expr}`
     : isAggregation(expr)
-      ? dearrayIfPossible(prepareAggregation(ensureArray(expr), params))
+      ? dearrayIfPossible(
+          prepareAggregation(
+            ensureArray(expr),
+            params,
+            undefined,
+            useIdAsInternalId,
+          ),
+        )
       : expr
 
 const ifToMongo = (
@@ -254,8 +267,8 @@ const ifToMongo = (
         useIdAsInternalId,
       ),
     ),
-    then: expressionToMongo(thenArg, params),
-    else: expressionToMongo(elseArg, params),
+    then: expressionToMongo(thenArg, params, useIdAsInternalId),
+    else: expressionToMongo(elseArg, params, useIdAsInternalId),
   },
 })
 
