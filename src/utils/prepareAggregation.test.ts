@@ -25,6 +25,7 @@ test('should return mongo aggregation pipeline', (t) => {
         status: 'first',
         children: { op: 'push', path: '$ROOT' },
         count: { op: 'count' },
+        clientId: { op: 'first', path: 'clientId', default: '12345' },
       },
     },
     {
@@ -57,6 +58,7 @@ test('should return mongo aggregation pipeline', (t) => {
         status: { $first: '$status' },
         children: { $push: '$$ROOT' },
         count: { $count: {} },
+        clientId: { $first: { $ifNull: ['$clientId', '12345'] } },
       },
     },
     {

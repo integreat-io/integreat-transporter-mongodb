@@ -51,12 +51,14 @@ export type GroupMethodWithPath =
 export interface GroupObjectWithPath {
   op: GroupMethodWithPath
   path: string
+  default?: string
 }
 
 export type GroupMethodWithoutPath = 'count'
 
 export interface GroupObjectWithoutPath {
   op: GroupMethodWithoutPath
+  default?: string
 }
 
 export type GroupMethod = GroupMethodWithPath | GroupMethodWithoutPath

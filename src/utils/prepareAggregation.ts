@@ -91,13 +91,19 @@ const prepareGroupId = (fields: string[], useIdAsInternalId: boolean) =>
     {},
   )
 
-export const createFieldObject = (
+export function createFieldObject(
   field: string | undefined,
   method: GroupMethod | GroupObject,
-) =>
-  method === 'field'
-    ? `$${field}`
-    : { [`$${method}`]: field ? `$${field}` : {} }
+  def?: string,
+) {
+  const expression =
+    typeof def === 'string' && field
+      ? { $ifNull: [`$${field}`, def] }
+      : field
+        ? `$${field}`
+        : {}
+  return method === 'field' ? expression : { [`$${method}`]: expression }
+}
 
 const prepareGroupFields = (
   fields: Record<string, GroupMethod | GroupObject>,
@@ -117,6 +123,7 @@ const prepareGroupFields = (
                 ? makeIdInternalIf(method.path, useIdAsInternalId)
                 : undefined,
               method.op,
+              method.default,
             ),
     }),
     {},
