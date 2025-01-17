@@ -107,6 +107,9 @@ function getQueryValueForOperator(
   }
 }
 
+const createPathWithDefault = (path: string, def?: unknown) =>
+  def !== undefined ? { $ifNull: [`$${path}`, def] } : `$${path}`
+
 export function setMongoSelectorFromQueryObj(
   allParams: Record<string, unknown>,
   {
@@ -117,11 +120,13 @@ export function setMongoSelectorFromQueryObj(
     param,
     variable,
     expr,
+    default: def,
   }: QueryObject,
   useIdAsInternalId: boolean,
   filter = {},
 ) {
   const path = rawPath && makeIdInternalIf(rawPath, useIdAsInternalId)
+  // TODO: Handle when `path` is `undefined`
   if (isOpValid(op)) {
     let targetValue = variable
       ? `$$${variable}`
@@ -131,17 +136,17 @@ export function setMongoSelectorFromQueryObj(
 
     if (isObject(expr)) {
       targetValue = [
-        `$${path}`,
+        createPathWithDefault(path!, def),
         createFieldObject(
           makeIdInternalIf(Object.keys(expr)[0], useIdAsInternalId), // We only use the first key and value here for now ...
           Object.values(expr)[0],
         ),
       ]
     } else if (expr && op !== 'isArray') {
-      targetValue = [`$${path}`, targetValue]
+      targetValue = [createPathWithDefault(path!, def), targetValue]
     }
 
-    if (isValidValue(targetValue, op) || isObject(expr)) {
+    if (isValidValue(targetValue, op) || isObject(expr) || def !== undefined) {
       const targetPath = [
         expr
           ? '$expr'

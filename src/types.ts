@@ -22,6 +22,7 @@ export interface QueryObject {
   valuePath?: string
   variable?: string
   expr?: boolean | Record<string, GroupMethod>
+  default?: unknown
 }
 
 export interface ExpressionObject {
@@ -51,14 +52,14 @@ export type GroupMethodWithPath =
 export interface GroupObjectWithPath {
   op: GroupMethodWithPath
   path: string
-  default?: string
+  default?: unknown
 }
 
 export type GroupMethodWithoutPath = 'count'
 
 export interface GroupObjectWithoutPath {
   op: GroupMethodWithoutPath
-  default?: string
+  default?: unknown
 }
 
 export type GroupMethod = GroupMethodWithPath | GroupMethodWithoutPath

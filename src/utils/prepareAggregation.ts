@@ -94,10 +94,10 @@ const prepareGroupId = (fields: string[], useIdAsInternalId: boolean) =>
 export function createFieldObject(
   field: string | undefined,
   method: GroupMethod | GroupObject,
-  def?: string,
+  def?: unknown,
 ) {
   const expression =
-    typeof def === 'string' && field
+    def !== undefined && field
       ? { $ifNull: [`$${field}`, def] }
       : field
         ? `$${field}`

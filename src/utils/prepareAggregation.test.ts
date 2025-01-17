@@ -417,7 +417,13 @@ test('should return mongo aggregation with lookup pipeline', (t) => {
         {
           type: 'query' as const,
           query: [
-            { path: 'id', op: 'in' as const, variable: 'ids', expr: true },
+            {
+              path: 'id',
+              op: 'in' as const,
+              variable: 'ids',
+              expr: true,
+              default: '12345',
+            },
           ],
         },
         { type: 'sort' as const, sortBy: { updatedAt: -1 as const } },
@@ -438,7 +444,9 @@ test('should return mongo aggregation with lookup pipeline', (t) => {
         let: { ids: '$include' },
         pipeline: [
           {
-            $match: { $expr: { $in: ['$id', '$$ids'] } },
+            $match: {
+              $expr: { $in: [{ $ifNull: ['$id', '12345'] }, '$$ids'] },
+            },
           },
           { $sort: { updatedAt: -1 } },
           {
