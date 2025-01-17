@@ -402,6 +402,10 @@ test('should return mongo aggregation with lookup', (t) => {
 })
 
 test('should return mongo aggregation with lookup pipeline', (t) => {
+  const params = {
+    type: 'entry',
+    query: [{ path: 'id', op: 'gte', value: 'ent4' }], // The query should affect this pipeline
+  }
   const aggregation = [
     {
       type: 'lookup' as const,
@@ -446,7 +450,7 @@ test('should return mongo aggregation with lookup pipeline', (t) => {
     },
   ]
 
-  const ret = prepareAggregation(aggregation, { type: 'entry' })
+  const ret = prepareAggregation(aggregation, params)
 
   t.deepEqual(ret, expected)
 })

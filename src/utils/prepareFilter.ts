@@ -196,10 +196,15 @@ export default function prepareFilter(
   pageId?: ParsedPageId,
   useIdAsInternalId = false,
   appendOnly = false,
+  shouldIncludeParamsQuery = true,
 ): Record<string, unknown> | null {
   // Create query object from array of props
   const queries = makeIdInternalInPathIf(
-    mergeQueries(queryArray, params.query, pageId?.filter),
+    mergeQueries(
+      queryArray,
+      shouldIncludeParamsQuery ? params.query : undefined,
+      pageId?.filter,
+    ),
     useIdAsInternalId,
   )
   const query = mongoSelectorFromQuery(params, queries, useIdAsInternalId)

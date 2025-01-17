@@ -149,10 +149,18 @@ const queryToMongo = (
   { query }: AggregationObjectQuery,
   params: Record<string, unknown>,
   useIdAsInternalId: boolean,
+  isTopLevelPipeline: boolean,
 ) =>
   Array.isArray(query) && query.length > 0
     ? {
-        $match: prepareFilter(query, params, undefined, useIdAsInternalId),
+        $match: prepareFilter(
+          query,
+          params,
+          undefined,
+          useIdAsInternalId,
+          undefined,
+          isTopLevelPipeline, // Only include params query on top level
+        ),
       }
     : undefined
 
@@ -404,7 +412,11 @@ const searchToMongo = ({ index, values }: AggregationObjectSearch) => ({
         },
 })
 
-const toMongo = (params: Record<string, unknown>, useIdAsInternalId = false) =>
+const toMongo = (
+  params: Record<string, unknown>,
+  useIdAsInternalId = false,
+  isTopLevelPipeline = false,
+) =>
   function toMongo(obj: AggregationObject) {
     switch (obj.type) {
       case 'group':
@@ -412,7 +424,7 @@ const toMongo = (params: Record<string, unknown>, useIdAsInternalId = false) =>
       case 'sort':
         return sortToMongo(obj, useIdAsInternalId)
       case 'query':
-        return queryToMongo(obj, params, useIdAsInternalId)
+        return queryToMongo(obj, params, useIdAsInternalId, isTopLevelPipeline)
       case 'set':
         return setToMongo(obj, params, useIdAsInternalId)
       case 'reduce':
@@ -475,7 +487,7 @@ export default function prepareAggregation(
   }
 
   const pipeline = aggregation
-    .map(toMongo(params, useIdAsInternalId))
+    .map(toMongo(params, useIdAsInternalId, isTopLevelPipeline))
     .filter(isNotEmpty)
   return pipeline.length > 0
     ? isTopLevelPipeline
