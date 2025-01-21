@@ -106,26 +106,29 @@ export function createFieldObject(
 }
 
 const prepareGroupFields = (
-  fields: Record<string, GroupMethod | GroupObject>,
+  fields: Record<string, GroupMethod | GroupObject | undefined>,
   useIdAsInternalId: boolean,
 ) =>
   Object.entries(fields).reduce(
-    (obj, [field, method]) => ({
-      ...obj,
-      [serializeFieldKey(field)]:
-        typeof method === 'string'
-          ? createFieldObject(
-              makeIdInternalIf(field, useIdAsInternalId),
-              method,
-            )
-          : createFieldObject(
-              isGroupObjectWithPath(method)
-                ? makeIdInternalIf(method.path, useIdAsInternalId)
-                : undefined,
-              method.op,
-              method.default,
-            ),
-    }),
+    (obj, [field, method]) =>
+      method
+        ? {
+            ...obj,
+            [serializeFieldKey(field)]:
+              typeof method === 'string'
+                ? createFieldObject(
+                    makeIdInternalIf(field, useIdAsInternalId),
+                    method,
+                  )
+                : createFieldObject(
+                    isGroupObjectWithPath(method)
+                      ? makeIdInternalIf(method.path, useIdAsInternalId)
+                      : undefined,
+                    method.op,
+                    method.default,
+                  ),
+          }
+        : obj, // Skip empty method
     {},
   )
 

@@ -69,7 +69,7 @@ export type GroupObject = GroupObjectWithPath | GroupObjectWithoutPath
 export interface AggregationObjectGroup {
   type: 'group'
   groupBy: string[] | Record<string, GroupMethod | GroupObject>
-  values: Record<string, GroupMethod | GroupObject>
+  values: Record<string, GroupMethod | GroupObject | undefined>
 }
 
 export interface AggregationObjectQuery {

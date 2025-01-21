@@ -26,6 +26,7 @@ test('should return mongo aggregation pipeline', (t) => {
         children: { op: 'push', path: '$ROOT' },
         count: { op: 'count' },
         clientId: { op: 'first', path: 'clientId', default: '12345' },
+        missing: undefined, // Should skip
       },
     },
     {
