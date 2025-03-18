@@ -41,8 +41,8 @@ The data returns from `GET` actions will be the retrieved documents, while for
 `SET`, `UPDATE`, and `DELETE` actions the data will be result stats in the form
 of `{ modifiedCount: 1, insertedCount: 2, deletedCount: 0 }`.
 
-`UPDATE` actions may update a given array of items or use the given data item to
-update all documents matched by a given query. In the first case, the action
+`UPDATE` actions may update a given array of items or use the given data item
+to update all documents matched by a given query. In the first case, the action
 will respond with a `notfound` error if one or more of the provided data items
 are not already in the database. In the second case, the action will respond
 with `noaction` if no documents are matched by the query.
@@ -113,9 +113,15 @@ treated as `false` regardless of what it is set to.
 
 Some characters are not allowed in MongoDB keys, so we have to escape them when
 setting data to MongoDB. Leading `$` is escape as `\$`, and `.` is escaped as
-`\_`. Consequently, `\` is mapped to `\\` as well. This is done automatically by
-the transporter, and reverted when values are fetched, but you will see it if
-you query data directly from the database.
+`\_`. Consequently, `\` is mapped to `\\` as well. This is done automatically
+by the transporter, and reverted when values are fetched, but you will see it
+if you query data directly from the database.
+
+Note that there are a special case where a `$` is not just escaped. In an
+`UPDATE` action you may set the value on a field to `{ $inc: 5 }`, for example.
+This will be treated as Mongo's `$inc` operator and joined with other fields on
+the same object with `$inc`. This is not a very robust implementation, so be
+sure to test if you use this.
 
 Integreat accepts using an empty string `''` as a key in an object (as does
 JavaScript and JSON), but MongoDB does not. We therefore replace empty strings
@@ -162,19 +168,20 @@ Here's an example:
 
 The `path` property describes what property to set, and the property is set to
 the value of `value` or to the value of the request parameter in `param`. The
-default operand is `eq`, but you may also use `gt`, `gte`, `lt`, `lte`, or `in`.
+default operand is `eq`, but you may also use `gt`, `gte`, `lt`, `lte`, or
+`in`.
 
 There are also two special operands: `isset` and `notset`. They will match when
 a field is set or not (using MongoDB operator `$exists`).
 
 To do a match on objects in an array, use the `match` operand. This will match
-any document with an array at `path` that contains an object with the properties
-specified in `value` or `param`. This uses MongoDB's `$elemMatch` operator under
-the hood.
+any document with an array at `path` that contains an object with the
+properties specified in `value` or `param`. This uses MongoDB's `$elemMatch`
+operator under the hood.
 
-To do a text search in the text index set up for th collection, use the `search`
-operand and set `value` to search string or `param` to the parameter that holds
-the search string. See MongoDB docs for more on
+To do a text search in the text index set up for th collection, use the
+`search` operand and set `value` to search string or `param` to the parameter
+that holds the search string. See MongoDB docs for more on
 [setting up a text index](https://www.mongodb.com/docs/drivers/node/current/fundamentals/crud/read-operations/text/).
 
 The query object will look like this, for a request for items of type `entry`:
@@ -223,8 +230,8 @@ query: [
 ]
 ```
 
-When no query is specified and the action has an `id` param, the following query
-will be used by default (the value of `id` is `'ent1'` in this example):
+When no query is specified and the action has an `id` param, the following
+query will be used by default (the value of `id` is `'ent1'` in this example):
 
 ```javascript
 {
@@ -278,22 +285,23 @@ page of documents is returned, and the `paging.next` prop on the response will
 hold a params object that may be used to get the next page.
 
 There are two types of pagination; `pageId` or `pageOffset`. The first one is
-used by default, and returns an id for the next page in the dataset. All details
-around this id is internal to the transporter and may change without being
-considered a breaking change. Just treat it as an id and you'll be find.
+used by default, and returns an id for the next page in the dataset. All
+details around this id is internal to the transporter and may change without
+being considered a breaking change. Just treat it as an id and you'll be find.
 
-The `pageOffset` approach kicks in when a `pageOffset` param is specified on the
-action, so to use this approach, you need to set `pageOffset: 0` for the first
-page. If the `pageSize` is e.g. `100`, the next `pageOffset` will be `100`, etc.
+The `pageOffset` approach kicks in when a `pageOffset` param is specified on
+the action, so to use this approach, you need to set `pageOffset: 0` for the
+first page. If the `pageSize` is e.g. `100`, the next `pageOffset` will be
+`100`, etc.
 
 Pagination works for both aggregations and simple queries.
 
 #### Authentication
 
-We recommend using Integreat's built in authentication mechanism to authenticate
-with MongoDB. To do this, set the id of an auth object on the `auth` prop of the
-service definition -- in the example above this is set to `mongoAuth`. Then
-define an auth object like this:
+We recommend using Integreat's built in authentication mechanism to
+authenticate with MongoDB. To do this, set the id of an auth object on the
+`auth` prop of the service definition -- in the example above this is set to
+`mongoAuth`. Then define an auth object like this:
 
 ```javascript
 {
@@ -306,29 +314,29 @@ define an auth object like this:
 }
 ```
 
-The `options` authenticator will simply pass on the options object to Integreat,
-which will again pass it on to the MongoDB transport -- which will know how to
-use this to authenticate with MongoDB.
+The `options` authenticator will simply pass on the options object to
+Integreat, which will again pass it on to the MongoDB transport -- which will
+know how to use this to authenticate with MongoDB.
 
 **Note:** Including credential in the connection uri, is a fairly common
-practice with MongoDB. When using this approach, tell Integreat that the service
-is authenticated by setting `auth: true` on the service definition. However, we
-not recommend this approach, as the username and password is then included in
-the definition file and this makes the chance of it being e.g. commited to a git
-repo, much higher.
+practice with MongoDB. When using this approach, tell Integreat that the
+service is authenticated by setting `auth: true` on the service definition.
+However, we not recommend this approach, as the username and password is then
+included in the definition file and this makes the chance of it being e.g.
+commited to a git repo, much higher.
 
 #### Listening to changes
 
-The MongoDB transporter supports listening to changes in the database. To enable
-this, set an array of collections to listen to in the `collections` property on
-the `incoming` object on `options`. When the Integreat instance is set up, call
-`listen()` on the instance, and Integreat will dispatch `SET` actions for
-`insert` and `update` events, and and `DELETE` actions for `delete` events. Note
-that `DELETE` will only be dispatched when `idIsUnique` is `true`, as we would
-otherwise not know the id of the deleted document.
+The MongoDB transporter supports listening to changes in the database. To
+enable this, set an array of collections to listen to in the `collections`
+property on the `incoming` object on `options`. When the Integreat instance is
+set up, call `listen()` on the instance, and Integreat will dispatch `SET`
+actions for `insert` and `update` events, and and `DELETE` actions for
+`delete` events. Note that `DELETE` will only be dispatched when `idIsUnique`
+is `true`, as we would otherwise not know the id of the deleted document.
 
-You may also specify a database in `options.incoming.db`, otherwise `options.db`
-is used.
+You may also specify a database in `options.incoming.db`, otherwise
+`options.db` is used.
 
 The incoming action will have the following payload properties:
 
@@ -342,8 +350,8 @@ The incoming action will have the following payload properties:
 Note that we disregard any incoming settings in endpoint `options` for now. You
 may use the endpoint `match` settings to direct incoming actions for different
 collections and event types, to different endpoints. In the future we may allow
-different incoming settings for different endpoints, so only specify this on the
-service to make sure you are future compatible.
+different incoming settings for different endpoints, so only specify this on
+the service to make sure you are future compatible.
 
 We use MongoDB's change streams to listen to changes, so this feature requires
 a replica set or a shared cluster. See

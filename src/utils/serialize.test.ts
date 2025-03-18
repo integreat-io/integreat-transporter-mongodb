@@ -53,6 +53,41 @@ test('should escape reserved characters and remove undefined values on serializa
   t.deepEqual(ret, expected)
 })
 
+test('should handle special $inc object', (t) => {
+  const data = {
+    id: 'ent1',
+    author: { id: 'johnf' },
+    count: { $inc: 2 },
+  }
+  const expected = {
+    id: 'ent1',
+    author: { id: 'johnf' },
+    $inc: { count: 2 },
+  }
+
+  const ret = serializeItem(data)
+
+  t.deepEqual(ret, expected)
+})
+
+test('should join several $inc objects', (t) => {
+  const data = {
+    id: 'ent1',
+    author: { id: 'johnf' },
+    count: { $inc: 2 },
+    sum: { $inc: 100 },
+  }
+  const expected = {
+    id: 'ent1',
+    author: { id: 'johnf' },
+    $inc: { count: 2, sum: 100 },
+  }
+
+  const ret = serializeItem(data)
+
+  t.deepEqual(ret, expected)
+})
+
 test('should keep undefined values on serialization when keepUndefined is true', (t) => {
   const keepUndefined = true
   const data = {

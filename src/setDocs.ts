@@ -146,15 +146,26 @@ function createUpdateByQueryOperation(
     !!appendOnly,
   )
   const update = {
-    $set: {
-      ...(serializeItem(item, keepUndefined === true) as Record<
-        string,
-        unknown
-      >),
-    },
+    $set: serializeItem(item, keepUndefined === true) as Record<
+      string,
+      unknown
+    >,
   }
 
   return { filter, update, updateMany: true }
+}
+
+const removeInc = ({ $inc, ...fields }: Record<string, unknown>) => fields
+
+function extractSetAndInc(
+  fields: Record<string, unknown>,
+): [Record<string, unknown>, Record<string, unknown> | undefined] {
+  if (isObject(fields.$inc)) {
+    const incFields = fields.$inc
+    return [removeInc(fields), incFields]
+  } else {
+    return [fields, undefined]
+  }
 }
 
 const createOperation = (action: Action, useIdAsInternalId: boolean) =>
@@ -188,9 +199,16 @@ const createOperation = (action: Action, useIdAsInternalId: boolean) =>
       useIdAsInternalId,
       !!appendOnly,
     )
-    const update = filter ? { $set: fields } : fields
 
-    return { filter, update, id }
+    if (filter) {
+      const [setFields, incFields] = extractSetAndInc(fields)
+      const update = incFields
+        ? { $set: setFields, $inc: incFields }
+        : { $set: setFields }
+      return { filter, update, id }
+    } else {
+      return { filter, update: fields, id }
+    }
   }
 
 function createOperations(

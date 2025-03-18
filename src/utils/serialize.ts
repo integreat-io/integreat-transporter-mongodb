@@ -27,6 +27,9 @@ export function serializePath(path: string): string {
 
 const shouldSkipProp = (key: string) => key === '__totalCount'
 
+const isInc = (value: unknown): value is { $inc: number } =>
+  isObject(value) && typeof value.$inc === 'number'
+
 /**
  * Prepare data for MongoDB. We need to escape all dots and leading dollars in
  * keys, as they are reserved. They will be unescaped in `normalizeItem`.
@@ -37,14 +40,20 @@ export function serializeItem(item: unknown, keepUndefined = false): unknown {
   } else if (!isObject(item)) {
     return item
   }
-  return Object.fromEntries(
-    Object.entries(item)
-      .filter(([, value]) => keepUndefined || value !== undefined) // Remove all `undefined` values
-      .map(([key, value]) => [
-        serializeKey(key),
-        serializeItem(value, keepUndefined),
-      ]),
-  )
+  return Object.entries(item)
+    .filter(([, value]) => keepUndefined || value !== undefined) // Remove all `undefined` values
+    .map(([key, value]): [string, unknown] =>
+      isInc(value)
+        ? ['$inc', { [key]: value.$inc }]
+        : [serializeKey(key), serializeItem(value, keepUndefined)],
+    )
+    .reduce(
+      (obj, [key, value]) =>
+        key === '$inc' && obj.$inc && isObject(value)
+          ? { ...obj, $inc: { ...obj.$inc, ...value } }
+          : { ...obj, [key]: value },
+      {} as Record<string, unknown>,
+    )
 }
 
 /**

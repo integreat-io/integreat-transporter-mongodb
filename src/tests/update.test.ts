@@ -38,6 +38,7 @@ test.serial('should update document', async (t) => {
     id: 'ent1',
     title: 'Entry 1',
     theOld: true,
+    count: 3,
     comments: [{ id: 'com1', text: 'Comment 1' }],
     meta: { section: 'news', 'archived\\_flag': false },
   })
@@ -51,6 +52,7 @@ test.serial('should update document', async (t) => {
         theNew: true,
         date: new Date('2021-03-14T18:43:11Z'),
         text: undefined, // Should not set `undefined` values
+        count: { $inc: 2 },
         meta: {
           section: 'oldies',
           'archived.flag': true,
@@ -84,6 +86,7 @@ test.serial('should update document', async (t) => {
   t.is(docs[0].title, 'Updated entry 1')
   t.true(docs[0].theNew)
   t.true(docs[0].theOld)
+  t.is(docs[0].count, 5)
   t.deepEqual(docs[0].comments, [{ id: 'com1', text: 'Comment 1' }])
   t.deepEqual(docs[0].date, new Date('2021-03-14T18:43:11Z'))
   t.deepEqual(docs[0].meta, expectedMeta)
