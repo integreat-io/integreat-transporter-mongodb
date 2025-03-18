@@ -68,7 +68,12 @@ test.serial('should listen and recieve new document', async (t) => {
     null,
     emit,
   )
-  const ret = await transporter.listen!(dispatch, connection, authenticate)
+  const ret = await transporter.listen!(
+    dispatch,
+    connection,
+    authenticate,
+    emit,
+  )
   // Wait for 500 ms to be sure we're listening
   await new Promise((resolve) => setTimeout(resolve, 500, undefined))
   await insertDocument(collection, data)
@@ -119,7 +124,12 @@ test.serial('should listen and recieve updated document', async (t) => {
     null,
     emit,
   )
-  const ret = await transporter.listen!(dispatch, connection, authenticate)
+  const ret = await transporter.listen!(
+    dispatch,
+    connection,
+    authenticate,
+    emit,
+  )
   // Wait for 500 ms to be sure we're listening
   await new Promise((resolve) => setTimeout(resolve, 500, undefined))
   await collection.updateOne({ id: 'ent101' }, [
@@ -175,7 +185,12 @@ test.serial(
       null,
       emit,
     )
-    const ret = await transporter.listen!(dispatch, connection, authenticate)
+    const ret = await transporter.listen!(
+      dispatch,
+      connection,
+      authenticate,
+      emit,
+    )
     // Wait for 500 ms to be sure we're listening
     await new Promise((resolve) => setTimeout(resolve, 500, undefined))
     await insertDocument(collection, data)
