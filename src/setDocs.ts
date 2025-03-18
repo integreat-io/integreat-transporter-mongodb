@@ -127,7 +127,19 @@ const createErrorResponse = (
   error,
 })
 
+function extractSetAndInc(
+  fields: Record<string, unknown>,
+): [Record<string, unknown>, Record<string, unknown> | undefined] {
+  if (isObject(fields.$inc)) {
+    const incFields = fields.$inc
+    return [removeInc(fields), incFields]
+  } else {
+    return [fields, undefined]
+  }
+}
+
 const removeId = ({ id, ...item }: ObjectWithId) => item
+const removeInc = ({ $inc, ...fields }: Record<string, unknown>) => fields
 
 function createUpdateByQueryOperation(
   item: Record<string, unknown>,
@@ -145,27 +157,16 @@ function createUpdateByQueryOperation(
     useIdAsInternalId,
     !!appendOnly,
   )
-  const update = {
-    $set: serializeItem(item, keepUndefined === true) as Record<
-      string,
-      unknown
-    >,
-  }
+  const fields = serializeItem(item, keepUndefined === true) as Record<
+    string,
+    unknown
+  >
+  const [setFields, incFields] = extractSetAndInc(fields)
+  const update = incFields
+    ? { $set: setFields, $inc: incFields }
+    : { $set: setFields }
 
   return { filter, update, updateMany: true }
-}
-
-const removeInc = ({ $inc, ...fields }: Record<string, unknown>) => fields
-
-function extractSetAndInc(
-  fields: Record<string, unknown>,
-): [Record<string, unknown>, Record<string, unknown> | undefined] {
-  if (isObject(fields.$inc)) {
-    const incFields = fields.$inc
-    return [removeInc(fields), incFields]
-  } else {
-    return [fields, undefined]
-  }
 }
 
 const createOperation = (action: Action, useIdAsInternalId: boolean) =>

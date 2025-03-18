@@ -315,6 +315,7 @@ test.serial(
       _id: 'ent5',
       title: 'Entry 5',
       acknowledgedBy: 'admin',
+      count: 0,
     })
     const action = {
       type: 'UPDATE',
@@ -323,6 +324,7 @@ test.serial(
         data: {
           title: 'Updated entry 5',
           acknowledgedBy: null,
+          count: { $inc: 2 },
         },
       },
       meta: {
@@ -355,6 +357,7 @@ test.serial(
     t.is(docs[0].id, undefined)
     t.is(docs[0].title, 'Updated entry 5')
     t.is(docs[0].acknowledgedBy, null)
+    t.is(docs[0].count, 2)
     t.deepEqual(response.data, expectedData)
 
     await deleteDocuments(collection, {})
