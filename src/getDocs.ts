@@ -32,7 +32,7 @@ interface ItemWithIdObject extends Record<string, unknown> {
 const resolveInternalId = (_id: unknown, id: unknown) =>
   isObject(_id) && id !== undefined
     ? id // When `_id` is an object (i.e. a compund id), and `id` is set, use `id` to not override intentional mapping
-    : _id ?? id // Fall back to `id` if `_id` is not present
+    : (_id ?? id) // Fall back to `id` if `_id` is not present
 
 const useInternalId = ({
   _id,
@@ -231,8 +231,8 @@ export default async function getDocs(
   const params = paramsFromPayload(payload)
   const pageId = decodePageId(payload.pageId)
 
-  debugMongo('Incoming options %o', options)
-  debugMongo('Incoming params %o', params)
+  debugMongo('Incoming options %s', JSON.stringify(options))
+  debugMongo('Incoming params %s', JSON.stringify(params))
 
   const {
     query,
@@ -255,14 +255,17 @@ export default async function getDocs(
   let cursor
   if (aggregation) {
     // Run aggregation
-    debugMongo('Starting query with aggregation %o', aggregation)
+    debugMongo(
+      'Starting query with aggregation %s',
+      JSON.stringify(aggregation),
+    )
     cursor = collection.aggregate(aggregation, { allowDiskUse })
   } else {
     // Prepare filter and run as query when not an aggregation
     const filter = prepareFilter(query, params, pageId, useIdAsInternalId)
-    debugMongo('Starting query with filter %o', filter)
+    debugMongo('Starting query with filter %s', JSON.stringify(filter))
     cursor = collection.find(filter!, { allowDiskUse }) // TODO: We should never get null as filter here, but should we still handle it?
-    debugMongo('Sorting with %o', sort)
+    debugMongo('Sorting with %s', JSON.stringify(sort))
     cursor = cursor.sort(sort ?? { _id: 1 })
   }
 
