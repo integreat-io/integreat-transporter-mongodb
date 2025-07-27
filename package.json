@@ -38,16 +38,16 @@
     "debug": "^4.4.1",
     "dot-prop": "^9.0.0",
     "map-any": "^1.0.0",
-    "mongodb": "^6.17.0",
+    "mongodb": "^6.18.0",
     "object-hash": "^3.0.0"
   },
   "devDependencies": {
     "@integreat/ts-dev-setup": "^6.0.4",
     "@types/debug": "^4.1.12",
-    "@types/node": "^20.19.7",
+    "@types/node": "^24.1.0",
     "@types/object-hash": "^3.0.6",
     "@types/sinon": "^17.0.4",
     "integreat": "^1.6.3",
-    "sinon": "^19.0.5"
+    "sinon": "^21.0.0"
   }
 }
