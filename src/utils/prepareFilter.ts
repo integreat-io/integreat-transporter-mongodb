@@ -53,6 +53,8 @@ const validOps = [
   'gte',
   'in',
   'nin',
+  'include',
+  'notInclude',
   'regex',
   'isArray',
   'search',
@@ -64,13 +66,19 @@ const validOps = [
 const validValueTypes = ['string', 'number', 'boolean']
 
 const isOpValid = (op: string) => validOps.includes(op)
-const isValidValue = (value: unknown, op: string): boolean =>
-  Array.isArray(value)
-    ? value.every((value) => isValidValue(value, op))
-    : validValueTypes.includes(typeof value) ||
+
+function isValidValue(value: unknown, op: string): boolean {
+  if (Array.isArray(value)) {
+    return value.every((value) => isValidValue(value, op))
+  } else {
+    return (
+      validValueTypes.includes(typeof value) ||
       value === null ||
       value instanceof Date ||
       (opsWithObject.includes(op) && isObject(value))
+    )
+  }
+}
 
 function mapOp(op: string, expr = false) {
   switch (op) {
@@ -133,6 +141,12 @@ export function setMongoSelectorFromQueryObj(
       : valuePath
         ? `$${valuePath}`
         : getQueryValueForOperator(op, allParams, value, path, param)
+
+    if (path && (op === 'include' || op === 'notInclude')) {
+      const expr =
+        op === 'include' ? { $eq: targetValue } : { $ne: targetValue }
+      return setProperty(filter, serializePath(path), { $elemMatch: expr })
+    }
 
     if (isObject(expr)) {
       targetValue = [

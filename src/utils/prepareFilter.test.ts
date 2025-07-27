@@ -63,6 +63,8 @@ test('should use options.query as filter', (t) => {
     { path: 'topic', op: 'in', value: ['news', 'sports'] },
     { path: 'status', op: 'in', variable: 'statuslist' },
     { path: 'user.id', op: 'nin', value: ['banned1', 'banned2'] },
+    { path: 'participants', op: 'include', value: 'johnf' },
+    { path: 'banlist', op: 'notInclude', value: 'innocent' },
     { path: 'jobs', op: 'isArray' },
     {
       path: 'tokens',
@@ -85,6 +87,8 @@ test('should use options.query as filter', (t) => {
     topic: { $in: ['news', 'sports'] },
     status: { $in: '$$statuslist' },
     'user.id': { $nin: ['banned1', 'banned2'] },
+    participants: { $elemMatch: { $eq: 'johnf' } },
+    banlist: { $elemMatch: { $ne: 'innocent' } },
     $isArray: '$jobs',
     tokens: {
       $elemMatch: { id: 'user1', issuer: 'rawreporting.io/googleaddon' },

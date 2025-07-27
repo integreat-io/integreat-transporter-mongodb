@@ -168,16 +168,18 @@ Here's an example:
 
 The `path` property describes what property to set, and the property is set to
 the value of `value` or to the value of the request parameter in `param`. The
-default operand is `eq`, but you may also use `gt`, `gte`, `lt`, `lte`, or
-`in`.
+default operand is `eq`, but you may also use `gt`, `gte`, `lt`, `lte`,
+`in`, or `nin`.
 
-There are also two special operands: `isset` and `notset`. They will match when
-a field is set or not (using MongoDB operator `$exists`).
-
-To do a match on objects in an array, use the `match` operand. This will match
-any document with an array at `path` that contains an object with the
-properties specified in `value` or `param`. This uses MongoDB's `$elemMatch`
-operator under the hood.
+There are also some special operands:
+- `isset` and `notset`: They will match when a field is set or not (using
+   MongoDB operator `$exists`).
+- `match`: Will do a match on objects in an array. This will match any document
+  with an array at `path` that contains an object with the properties specified
+  in `value` or `param`. Uses MongoDB's `$elemMatch` operator under the hood.
+- `include` and `notInclude`: Will match when the field is an array and includes
+  or does not include the given value. Uses MongoDB's `$elemMatch` operator
+  under the hood.
 
 To do a text search in the text index set up for th collection, use the
 `search` operand and set `value` to search string or `param` to the parameter
