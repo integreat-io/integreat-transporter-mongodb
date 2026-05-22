@@ -53,8 +53,8 @@ const validOps = [
   'gte',
   'in',
   'nin',
-  'include',
-  'notInclude',
+  'includes',
+  'notIncludes',
   'regex',
   'isArray',
   'search',
@@ -142,9 +142,9 @@ export function setMongoSelectorFromQueryObj(
         ? `$${valuePath}`
         : getQueryValueForOperator(op, allParams, value, path, param)
 
-    if (path && (op === 'include' || op === 'notInclude')) {
+    if (path && (op === 'includes' || op === 'notIncludes')) {
       const expr =
-        op === 'include' ? { $eq: targetValue } : { $ne: targetValue }
+        op === 'includes' ? { $eq: targetValue } : { $ne: targetValue }
       return setProperty(filter, serializePath(path), { $elemMatch: expr })
     }
 

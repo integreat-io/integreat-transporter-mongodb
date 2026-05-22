@@ -177,9 +177,9 @@ There are also some special operands:
 - `match`: Will do a match on objects in an array. This will match any document
   with an array at `path` that contains an object with the properties specified
   in `value` or `param`. Uses MongoDB's `$elemMatch` operator under the hood.
-- `include` and `notInclude`: Will match when the field is an array and includes
-  or does not include the given value. Uses MongoDB's `$elemMatch` operator
-  under the hood.
+- `includes` and `notIncludes`: Will match when the field is an array and
+  includes or does not include the given value. Uses MongoDB's `$elemMatch`
+  operator under the hood.
 
 To do a text search in the text index set up for th collection, use the
 `search` operand and set `value` to search string or `param` to the parameter
