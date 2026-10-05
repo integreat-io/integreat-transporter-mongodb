@@ -35,19 +35,19 @@
     "node": ">= 18.18"
   },
   "dependencies": {
-    "debug": "^4.4.1",
+    "debug": "^4.4.3",
     "dot-prop": "^9.0.0",
     "map-any": "^1.0.0",
-    "mongodb": "^6.18.0",
+    "mongodb": "^6.21.0",
     "object-hash": "^3.0.0"
   },
   "devDependencies": {
     "@integreat/ts-dev-setup": "^6.0.4",
-    "@types/debug": "^4.1.12",
-    "@types/node": "^24.1.0",
+    "@types/debug": "^4.1.13",
+    "@types/node": "^24.19.1",
     "@types/object-hash": "^3.0.6",
     "@types/sinon": "^17.0.4",
-    "integreat": "^1.6.3",
-    "sinon": "^21.0.0"
+    "integreat": "^1.7.1",
+    "sinon": "^21.1.2"
   }
 }
