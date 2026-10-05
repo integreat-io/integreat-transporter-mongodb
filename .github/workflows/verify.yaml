@@ -13,13 +13,13 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.19, 20.x, 22.x, 23.x]
+        node-version: [18.19, 20, 22, 24]
         mongodb-version: ['5.0', '6.0']
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
@@ -29,5 +29,6 @@ jobs:
           mongodb-version: ${{ matrix.mongodb-version }}
           mongodb-replica-set: rs0
       - run: npm ci
+      - run: npm run check-types
       - run: npm run lint
       - run: npm test
